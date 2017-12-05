@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input, err := ioutil.ReadFile("D:/go/src/adventofcode2017/aoc1/input.txt")
+	input, err := ioutil.ReadFile("D:/go/src/adventofcode2017/aoc1.1/input.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -15,7 +15,7 @@ func main() {
 	total := 0
 
 	inputStr := string(input)
-	if len(input) > 0 {
+	if len(inputStr) > 0 {
 		prevDigit := -1
 		for i := 0; i < len(input); i++ {
 			curDigit, err := strconv.Atoi(inputStr[i:i+1])
