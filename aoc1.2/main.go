@@ -15,7 +15,7 @@ func main() {
 	inputStr := string(input)
 	var data []int
 
-	for i := 0; i < len(input); i++ {
+	for i := 0; i < len(inputStr); i++ {
 		curDigit, err := strconv.Atoi(inputStr[i:i+1])
 		if err != nil {
 			panic(err)
