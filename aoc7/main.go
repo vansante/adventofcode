@@ -49,7 +49,8 @@ func main() {
 
 		children := programs[name].children
 
-		if ok, weights := consistentChildrenWeight(children); ok {
+		ok, weights := consistentChildrenWeight(children)
+		if len(children) > 2 && ok {
 			consistent := true
 			for i := range children {
 				childProgram := programs[children[i]]
@@ -62,8 +63,11 @@ func main() {
 				//diff := weights[0] - weights[len(weights)-1]
 				fmt.Printf("Inconsistent parent program: %#v, %#v \n\n", programs[name], weights)
 				for i := range children {
-					weight := programWeightRecursive(programs[children[i]])
-					fmt.Printf("Child: %#v (%d)\n", programs[children[i]], weight)
+					childProgram := programs[children[i]]
+					weight := programWeightRecursive(childProgram)
+					if weight != weights[1] {
+						fmt.Printf("Child: %s (%d should be %d)\n", childProgram.name, childProgram.weight, childProgram.weight - (weight - weights[1]))
+					}
 				}
 			}
 		}
