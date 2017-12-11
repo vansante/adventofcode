@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"strings"
 )
 
@@ -29,73 +30,48 @@ func main() {
 		directions = append(directions, Direction(dirArr[i]))
 	}
 
-	x, y := 0, 0
+	x, y, z := 0, 0, 0
+	distance := 0
+	maxDistance := 0
 	for i := range directions {
-		x, y = directions[i].applyDirection(x, y)
-		fmt.Printf("%s: %d, %d\n", directions[i], x, y)
-	}
+		x, y, z = directions[i].applyDirection(x, y, z)
 
-	fmt.Printf("Last Coords [%d, %d]\n", x, y)
-
-	steps := 0
-	for x != 0 || y != 0 {
-		var dir Direction
-		if x < 0 {
-			if y <= 0 {
-				dir = se
-			} else if y > 0 {
-				dir = ne
-			}
-		} else if x > 0 {
-			if y <= 0 {
-				dir = sw
-			} else if y > 0 {
-				dir = nw
-			}
-		} else {
-			if y < 0 {
-				dir = s
-			} else if y > 0 {
-				dir = n
-			}
+		distance = int(math.Abs(float64(x))+math.Abs(float64(y))+math.Abs(float64(z))) / 2
+		if distance > maxDistance {
+			maxDistance = distance
 		}
-		x, y = dir.applyDirection(x, y)
-		//fmt.Printf("%s: %d, %d\n", dir, x, y)
-		steps++
+		fmt.Printf("%s: %d, %d, %d\n", directions[i], x, y, z)
 	}
 
-	fmt.Printf("Distance: %d\n", steps)
+	fmt.Printf("Last Coords [%d, %d, %d]\n", x, y, z)
+
+	distance = int(math.Abs(float64(x))+math.Abs(float64(y))+math.Abs(float64(z))) / 2
+
+	fmt.Printf("Distance: %d, Max distance: %d\n", distance, maxDistance)
 }
 
-func (dir Direction) applyDirection(x, y int) (newX, newY int) {
-	newX, newY = x, y
-	evenCol := x%2 == 0
+func (dir Direction) applyDirection(x, y, z int) (newX, newY, newZ int) {
+	newX, newY, newZ = x, y, z
 
 	switch dir {
 	case n:
-		newY--
-	case ne:
-		if evenCol {
-			newY--
-		}
-		newX++
-	case se:
-		if !evenCol {
-			newY++
-		}
-		newX++
-	case s:
 		newY++
+		newZ--
+	case ne:
+		newX++
+		newZ--
+	case se:
+		newX++
+		newY--
+	case s:
+		newY--
+		newZ++
 	case sw:
-		if !evenCol {
-			newY++
-		}
 		newX--
+		newZ++
 	case nw:
-		if evenCol {
-			newY--
-		}
 		newX--
+		newY++
 	default:
 		panic(dir)
 	}
