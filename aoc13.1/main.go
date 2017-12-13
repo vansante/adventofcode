@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
-	"math"
-	"sync"
 )
 
 type Layer struct {
@@ -21,7 +19,7 @@ var layers = make(map[int]*Layer)
 var maxDepth = 0
 
 func main() {
-	input, err := ioutil.ReadFile("D:/go/src/adventofcode2017/aoc13/input.txt")
+	input, err := ioutil.ReadFile("D:/go/src/adventofcode2017/aoc13.1/input.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -33,38 +31,8 @@ func main() {
 		addLayerFromLine(lines[i])
 	}
 
-	delay := math.MaxInt32
-	//wg := sync.WaitGroup{}
-	//wg.Add(20)
-	//for i := 0; i < 20; i++ {
-	//	go func(val int) {
-	//		for i := val; i < val*10000; i++ {
-	//			collision, _ := travel(i, true)
-	//			if !collision && i < delay {
-	//				delay = i
-	//				break
-	//			}
-	//		}
-	//		wg.Done()
-	//		return
-	//	}(i)
-	//}
-	//wg.Wait()
-
-	//for i := 16459; ; i++ {
-	//	collision, _ := travel(i, true)
-	//	if !collision {
-	//		delay = i
-	//		break
-	//	}
-	//	fmt.Println(i)
-	//	if i > 1000000 {
-	//		break
-	//	}
-	//}
-
 	_, severity := travel(0, false)
-	fmt.Printf("Severity at picosecond zero: %d, Delay without collisions: %d\n", severity, delay)
+	fmt.Printf("Severity at picosecond zero: %d\n", severity)
 }
 
 func travel(delay int, stopOnCollision bool) (collision bool, severity int) {
@@ -106,8 +74,8 @@ func addLayerFromLine(line string) {
 	}
 
 	layers[depth] = &Layer{
-		depth:     depth,
-		height:    height,
+		depth:  depth,
+		height: height,
 	}
 	if depth > maxDepth {
 		maxDepth = depth
