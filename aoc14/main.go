@@ -16,7 +16,7 @@ func main() {
 	grid := make([][]int, 128)
 	usedBits := 0
 	groupId := 1
-	for i := 0; i < 128; i++ {
+	for i := 0; i < len(grid); i++ {
 		curInput := []byte(fmt.Sprintf("%s-%d", input, i))
 
 		denseHash := KnotHash(curInput)
@@ -35,13 +35,6 @@ func main() {
 		}
 	}
 	fmt.Printf("Used bits: %#v\n", usedBits)
-
-	//for i := range grid {
-	//	for j := range grid[i] {
-	//		fmt.Printf("%4d ", grid[i][j])
-	//	}
-	//	fmt.Printf("\n")
-	//}
 
 	for i := 0; i < len(grid)*2; i++ {
 		for y := 0; y < len(grid); y++ {
@@ -84,7 +77,7 @@ func main() {
 	}
 
 	// FIXME: Why are we off by one
-	fmt.Printf("Total groups: %#v\n", len(groupMap))
+	fmt.Printf("Total groups: %#v\n", len(groupMap)-1)
 }
 
 func getAdjacentPoints(x, y, max int) []Point {
