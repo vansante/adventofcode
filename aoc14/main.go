@@ -76,7 +76,7 @@ func main() {
 		}
 	}
 
-	// FIXME: Why are we off by one
+	// FIXME: Subtract 1 for the zero group
 	fmt.Printf("Total groups: %#v\n", len(groupMap)-1)
 }
 
