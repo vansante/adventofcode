@@ -4,62 +4,114 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"sync"
+	"time"
 )
 
-var registers = make(map[string]int64)
-var instructions []Instruction
+type Program struct {
+	lastFreq   int64
+	registers  map[string]int64
+	inQueue    chan int64
+	outQueue   chan int64
+	valuesSent int
+	waiting    bool
+}
 
 type Instruction struct {
 	name      string
 	registerA string
 	registerB string
-	useValue  bool
-	value     int64
+	aIsValue  bool
+	bIsValue  bool
+	valueA    int64
+	valueB    int64
 }
 
-func (ins *Instruction) execute(lastFreq int64) (jump int64, freq int64) {
+func (prog *Program) execute(ins *Instruction) (jump int64, freq int64) {
 	switch ins.name {
 	case "snd":
-		freq = registers[ins.registerA]
-	case "set":
-		if ins.useValue {
-			registers[ins.registerA] = ins.value
+		if prog.outQueue != nil {
+			prog.outQueue <- prog.registers[ins.registerA]
+			prog.valuesSent++
 		} else {
-			registers[ins.registerA] = registers[ins.registerB]
+			freq = prog.registers[ins.registerA]
+		}
+	case "set":
+		if ins.bIsValue {
+			prog.registers[ins.registerA] = ins.valueB
+		} else {
+			prog.registers[ins.registerA] = prog.registers[ins.registerB]
 		}
 	case "add":
-		if ins.useValue {
-			registers[ins.registerA] += ins.value
+		if ins.bIsValue {
+			prog.registers[ins.registerA] += ins.valueB
 		} else {
-			registers[ins.registerA] += registers[ins.registerB]
+			prog.registers[ins.registerA] += prog.registers[ins.registerB]
 		}
 	case "mul":
-		if ins.useValue {
-			registers[ins.registerA] *= ins.value
+		if ins.bIsValue {
+			prog.registers[ins.registerA] *= ins.valueB
 		} else {
-			registers[ins.registerA] *= registers[ins.registerB]
+			prog.registers[ins.registerA] *= prog.registers[ins.registerB]
 		}
 	case "mod":
-		if ins.useValue {
-			registers[ins.registerA] %= ins.value
+		if ins.bIsValue {
+			prog.registers[ins.registerA] %= ins.valueB
 		} else {
-			registers[ins.registerA] %= registers[ins.registerB]
+			prog.registers[ins.registerA] %= prog.registers[ins.registerB]
 		}
 	case "rcv":
-		if registers[ins.registerA] != 0 {
-			freq = lastFreq
+		if prog.inQueue != nil {
+			prog.waiting = true
+			prog.registers[ins.registerA] = <-prog.inQueue
+			prog.waiting = false
+		} else {
+			if prog.registers[ins.registerA] != 0 {
+				freq = prog.lastFreq
+			}
 		}
 	case "jgz":
-		if registers[ins.registerA] > 0 {
-			if ins.useValue {
-				jump = ins.value
+		compareVal := prog.registers[ins.registerA]
+		if ins.aIsValue {
+			compareVal = ins.valueA
+		}
+		if compareVal > 0 {
+			if ins.bIsValue {
+				jump = ins.valueB
 			} else {
-				jump = registers[ins.registerB]
+				jump = prog.registers[ins.registerB]
 			}
 		}
 	default:
 		panic(ins.name)
 	}
+	return
+}
+
+func (prog *Program) run(instructions []Instruction) (frequency int64) {
+	var position int
+	for {
+		ins := instructions[position]
+
+		jump, newFreq := prog.execute(&ins)
+		if newFreq != 0 {
+			prog.lastFreq = newFreq
+			if ins.name == "rcv" {
+				break
+			}
+		}
+
+		if jump == 0 {
+			position++
+		} else {
+			position += int(jump)
+		}
+
+		if position < 0 || position >= len(instructions) {
+			break
+		}
+	}
+	frequency = prog.lastFreq
 	return
 }
 
@@ -72,35 +124,47 @@ func main() {
 	inputStr := string(input)
 	lines := strings.Split(inputStr, "\n")
 
+	var instructions []Instruction
 	for i := range lines {
-		instruction := instructionFromLine(lines[i])
-		instructions = append(instructions, *instruction)
+		instructions = append(instructions, *instructionFromLine(lines[i]))
 	}
 
-	var position, frequency int64
-	for {
-		ins := instructions[position]
-
-		jump, newFreq := ins.execute(frequency)
-		if newFreq != 0 {
-			frequency = newFreq
-			if ins.name == "rcv" {
-				break
-			}
-		}
-
-		if jump == 0 {
-			position++
-		} else {
-			position += jump
-		}
-
-		if position < 0 || position >= int64(len(instructions)) {
-			break
-		}
+	program := Program{
+		registers: make(map[string]int64),
 	}
+	frequency := program.run(instructions)
 
 	fmt.Printf("Frequency: %d\n", frequency)
+
+	queue0 := make(chan int64, 100000)
+	queue1 := make(chan int64, 100000)
+
+	program0 := Program{
+		registers: make(map[string]int64),
+		inQueue:   queue1,
+		outQueue:  queue0,
+	}
+	program1 := Program{
+		registers: make(map[string]int64),
+		inQueue:   queue0,
+		outQueue:  queue1,
+	}
+	program1.registers["p"] = 1
+
+	//wg := sync.WaitGroup{}
+	//wg.Add(2)
+	go func() {
+		program0.run(instructions)
+		//wg.Done()
+	}()
+	go func() {
+		program1.run(instructions)
+		//wg.Done()
+	}()
+	// FIXME: Find an elegant solution to detect they are both waiting
+	time.Sleep(5 * time.Second)
+
+	fmt.Printf("Prog 1 times sent: %d\n", program1.valuesSent)
 }
 
 func instructionFromLine(line string) (in *Instruction) {
@@ -113,13 +177,18 @@ func instructionFromLine(line string) (in *Instruction) {
 			panic(err)
 		}
 	default:
-		in.useValue = true
-		_, err := fmt.Sscanf(line, "%s %s %d", &in.name, &in.registerA, &in.value)
+		in.aIsValue = true
+		in.bIsValue = true
+		_, err := fmt.Sscanf(line, "%s %d %d", &in.name, &in.valueA, &in.valueB)
 		if err != nil {
-			_, err = fmt.Sscanf(line, "%s %s %s", &in.name, &in.registerA, &in.registerB)
-			in.useValue = false
+			_, err := fmt.Sscanf(line, "%s %s %d", &in.name, &in.registerA, &in.valueB)
+			in.aIsValue = false
 			if err != nil {
-				panic(err)
+				_, err = fmt.Sscanf(line, "%s %s %s", &in.name, &in.registerA, &in.registerB)
+				in.bIsValue = false
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
