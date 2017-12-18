@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
-	"fmt"
 )
 
-var registers = make(map[string]int)
+var registers = make(map[string]int64)
 var instructions []Instruction
 
 type Instruction struct {
@@ -14,10 +14,10 @@ type Instruction struct {
 	registerA string
 	registerB string
 	useValue  bool
-	value     int
+	value     int64
 }
 
-func (ins *Instruction) execute(lastFreq int) (jump int, freq int) {
+func (ins *Instruction) execute(lastFreq int64) (jump int64, freq int64) {
 	switch ins.name {
 	case "snd":
 		freq = registers[ins.registerA]
@@ -77,15 +77,16 @@ func main() {
 		instructions = append(instructions, *instruction)
 	}
 
-	position := 0
-	freq := 0
+	var position, frequency int64
 	for {
 		ins := instructions[position]
 
-		//fmt.Printf("%d %v\n%v\n", position, ins, registers)
-		jump, newFreq := ins.execute(freq)
+		jump, newFreq := ins.execute(frequency)
 		if newFreq != 0 {
-			freq = newFreq
+			frequency = newFreq
+			if ins.name == "rcv" {
+				break
+			}
 		}
 
 		if jump == 0 {
@@ -94,12 +95,12 @@ func main() {
 			position += jump
 		}
 
-		if position < 0 || position >= len(instructions) {
+		if position < 0 || position >= int64(len(instructions)) {
 			break
 		}
 	}
 
-	fmt.Printf("Frequency: %d\n", freq)
+	fmt.Printf("Frequency: %d\n", frequency)
 }
 
 func instructionFromLine(line string) (in *Instruction) {
