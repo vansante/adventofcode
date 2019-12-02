@@ -9,7 +9,7 @@ fun main() {
     // Replace values:
     input1[1] = 12
     input1[2] = 2
-    val result = executeProgram(input1)
+    var result = executeProgram(input1)
 
     println("Part I: Position zero holds: $result")
 
@@ -21,7 +21,7 @@ fun main() {
 
             input2[1] = i
             input2[2] = j
-            val result =executeProgram(input2)
+            result = executeProgram(input2)
             if (result == 19690720) {
                 value1 = i
                 value2 = j
