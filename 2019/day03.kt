@@ -10,56 +10,52 @@ fun main() {
     val coordinates = mutableMapOf<String, Int>()
     var closest = Int.MAX_VALUE
     var wireID = 1
+    
     wires.forEach { wire ->
         var x = 0
         var y = 0
         coordinates[coord(0, 0)] = wireID
         wire.forEach { direction ->
-            var deltaX = 0
-            var deltaY = 0
-            val delta = direction.substring(1).toInt()
+            var delta = direction.substring(1).toInt()
+            var inc = 1
             when (direction.substring(0, 1)) {
-                "U" -> deltaY -= delta
-                "D" -> deltaY += delta
-                "L" -> deltaX -= delta
-                "R" -> deltaX += delta
-            }
+                "U", "D" -> {
+                    if (direction.substring(0, 1) == "D") {
+                        delta = -delta
+                        inc = -1
+                    }
+                    val origX = x
+                    while (true) {
+                        val closer = checkCoordinateDistance(coordinates, wireID, x, y)
+                        if (closer in 0 until closest) {
+                            closest = closer
+                        }
 
-            if (deltaY < 0) {
-                for (i in -1..deltaY) {
-                    val closer = checkCoordinateDistance(coordinates, wireID, x, y+i)
-                    if (closer in 0 until closest) {
-                        closest = closer
+                        if (x == origX + delta) {
+                            break
+                        }
+                        x += inc
                     }
                 }
-            }
-            if (deltaY > 0) {
-                for (i in 1..deltaY) {
-                    val closer = checkCoordinateDistance(coordinates, wireID, x, y+i)
-                    if (closer in 0 until closest) {
-                        closest = closer
+                "L", "R" -> {
+                    if (direction.substring(0, 1) == "L") {
+                        delta = -delta
+                        inc = -1
                     }
-                }
-            }
-            if (deltaX < 0) {
-                for (i in -1..deltaX) {
-                    val closer = checkCoordinateDistance(coordinates, wireID, x+i, y)
-                    if (closer in 0 until closest) {
-                        closest = closer
-                    }
-                }
-            }
-            if (deltaX > 0) {
-                for (i in 1..deltaX) {
-                    val closer = checkCoordinateDistance(coordinates, wireID, x+i, y)
-                    if (closer in 0 until closest) {
-                        closest = closer
-                    }
-                }
-            }
+                    val origY = y
+                    while (true) {
+                        val closer = checkCoordinateDistance(coordinates, wireID, x, y)
+                        if (closer in 0 until closest) {
+                            closest = closer
+                        }
 
-            x += deltaX
-            y += deltaY
+                        if (y == origY + delta) {
+                            break
+                        }
+                        y += inc
+                    }
+                }
+            }
         }
         wireID++
     }
