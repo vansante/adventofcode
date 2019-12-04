@@ -15,10 +15,9 @@ fun main() {
         var exclusiveDoubleChar = false
         var lastChar = 'a' // never matches
         var charMatches = 1
-         i.toString().forEach loop@{ char ->
+        i.toString().forEach { char ->
             if (char.toInt() < highest) {
                 match = false
-                return@loop
             }
             highest = char.toInt()
             if (lastChar == char) {
