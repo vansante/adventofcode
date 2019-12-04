@@ -12,8 +12,9 @@ fun main() {
         var highest = 0
         var match = true
         var doubleChar = false
+        var exclusiveDoubleChar = false
         var lastChar = 'a' // never matches
-        var charMatches = 0
+        var charMatches = 1
          i.toString().forEach loop@{ char ->
             if (char.toInt() < highest) {
                 match = false
@@ -21,15 +22,33 @@ fun main() {
             }
             highest = char.toInt()
             if (lastChar == char) {
-                doubleChar = true
+                charMatches++
+            } else {
+                if (charMatches > 2) {
+                    doubleChar = true
+                } else if (charMatches == 2) {
+                    doubleChar = true
+                    exclusiveDoubleChar = true
+                }
+                charMatches = 1
             }
             lastChar = char
         }
+        if (charMatches > 2) {
+            doubleChar = true
+        } else if (charMatches == 2) {
+            doubleChar = true
+            exclusiveDoubleChar = true
+        }
+
         if (match && doubleChar) {
             part1Matches++
+        }
+        if (match && exclusiveDoubleChar) {
+            part2Matches++
         }
     }
 
     println("Part I: Total matches: $part1Matches")
-    println("Part II: Total matches: $part1Matches")
+    println("Part II: Total matches: $part2Matches")
 }
