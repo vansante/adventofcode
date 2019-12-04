@@ -21,20 +21,9 @@ fun main() {
             }
             highest = char.toInt()
             if (lastChar == char) {
-                charMatches++
-//                if (charMatches > 2) {
-//
-//                }
-            } else {
-                if (charMatches == 2) {
-                    doubleChar = true
-                }
-                charMatches = 0
+                doubleChar = true
             }
             lastChar = char
-        }
-        if (charMatches == 2) {
-            doubleChar = true
         }
         if (match && doubleChar) {
             part1Matches++
