@@ -6,9 +6,13 @@ fun main() {
     val input = File("day05.txt").readText()
     val numbers = input.splitToSequence(",").map { it.toInt() }.toList().toIntArray()
 
-    val machine = Machine(memory = numbers, input = 1)
-    machine.run()
-    println("Part I: Answer is: ${machine.output}")
+    val machine1 = Machine(memory = numbers.copyOf(), input = 1)
+    machine1.run()
+    println("Part I: Answer is: ${machine1.output}")
+
+    val machine2 = Machine(memory = numbers.copyOf(), input = 5)
+    machine2.run()
+    println("Part II: Answer is: ${machine2.output}")
 }
 
 
@@ -29,14 +33,12 @@ class Machine(private val memory: IntArray, private val input: Int) {
             1 -> {
                 val value1 = getValue(isModeImmediate(instruction, 2), idx + 1)
                 val value2 = getValue(isModeImmediate(instruction, 1), idx + 2)
-                println("add: $value1 + $value2")
                 setValue(memory[idx+3], value1 + value2)
                 return idx + 4
             }
             2 -> {
                 val value1 = getValue(isModeImmediate(instruction, 2), idx + 1)
                 val value2 = getValue(isModeImmediate(instruction, 1), idx + 2)
-                println("multiply: $value1 * $value2")
                 setValue(memory[idx+3], value1 * value2)
                 return idx + 4
             }
@@ -48,6 +50,42 @@ class Machine(private val memory: IntArray, private val input: Int) {
             4 -> {
                 output = getValue(isModeImmediate(instruction, 2), idx + 1)
                 return idx + 2
+            }
+            5 -> {
+                val value1 = getValue(isModeImmediate(instruction, 2), idx + 1)
+                val value2 = getValue(isModeImmediate(instruction, 1), idx + 2)
+                if (value1 != 0) {
+                    return value2
+                }
+                return idx + 3
+            }
+            6 -> {
+                val value1 = getValue(isModeImmediate(instruction, 2), idx + 1)
+                val value2 = getValue(isModeImmediate(instruction, 1), idx + 2)
+                if (value1 == 0) {
+                    return value2
+                }
+                return idx + 3
+            }
+            7 -> {
+                val value1 = getValue(isModeImmediate(instruction, 2), idx + 1)
+                val value2 = getValue(isModeImmediate(instruction, 1), idx + 2)
+                if (value1 < value2) {
+                    setValue(memory[idx+3], 1)
+                } else {
+                    setValue(memory[idx+3], 0)
+                }
+                return idx + 4
+            }
+            8 -> {
+                val value1 = getValue(isModeImmediate(instruction, 2), idx + 1)
+                val value2 = getValue(isModeImmediate(instruction, 1), idx + 2)
+                if (value1 == value2) {
+                    setValue(memory[idx+3], 1)
+                } else {
+                    setValue(memory[idx+3], 0)
+                }
+                return idx + 4
             }
             99 -> {
                 return Int.MAX_VALUE
@@ -65,7 +103,6 @@ class Machine(private val memory: IntArray, private val input: Int) {
     }
 
     private fun setValue(address: Int, value: Int) {
-        println("storing $address -> $value")
         memory[address] = value
     }
 
