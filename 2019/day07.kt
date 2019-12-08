@@ -1,6 +1,8 @@
 import java.io.File
 import java.lang.Exception
 import java.nio.file.Paths
+import java.util.*
+import kotlin.collections.ArrayList
 
 fun main() {
     val input = File("day07.txt").readText()
@@ -13,31 +15,34 @@ fun main() {
     var e = -1
     var highest = 0
     for (A in 0..4) {
-        val machineA = Machine07(memory = numbers.copyOf(), input1 = A, input2 = 0)
+        val machineA = Machine07(memory = numbers.copyOf(), input = mutableListOf(A, 0))
         machineA.run()
+
         for (B in 0..4) {
             if (B == A) { continue }
 
-            val machineB = Machine07(memory = numbers.copyOf(), input1 = B, input2 = machineA.output)
+            val machineB = Machine07(memory = numbers.copyOf(), input = mutableListOf(B, machineA.lastOutput()))
             machineB.run()
 
             for (C in 0..4) {
                 if (C == A || C == B) { continue }
 
-                val machineC = Machine07(memory = numbers.copyOf(), input1 = C, input2 = machineB.output)
+                val machineC = Machine07(memory = numbers.copyOf(), input = mutableListOf(C, machineB.lastOutput()))
                 machineC.run()
+
                 for (D in 0..4) {
                     if (D == A || D == B || D == C) { continue }
 
-                    val machineD = Machine07(memory = numbers.copyOf(), input1 = D, input2 = machineC.output)
+                    val machineD = Machine07(memory = numbers.copyOf(), input = mutableListOf(D, machineC.lastOutput()))
                     machineD.run()
+
                     for (E in 0..4) {
                         if (E == A || E == B || E == C || E == D) { continue }
 
-                        val machineE = Machine07(memory = numbers.copyOf(), input1 = E, input2 = machineD.output)
+                        val machineE = Machine07(memory = numbers.copyOf(), input = mutableListOf(E, machineD.lastOutput()))
                         machineE.run()
-                        if (machineE.output > highest) {
-                            highest = machineE.output
+                        if (machineE.lastOutput() > highest) {
+                            highest = machineE.lastOutput()
                             a = A
                             b = B
                             c = C
@@ -51,18 +56,33 @@ fun main() {
     }
 
     println("Part I: Highest signal: $highest. Settings: a$a b$b c$c d$d e$e ")
+
+    
 }
 
 
-class Machine07(private val memory: IntArray, private val input1: Int, private val input2: Int) {
-    var output = Int.MIN_VALUE
-    private var input = 0
+class Machine07(private val memory: IntArray, private val input: MutableList<Int>) {
+    private var output = ArrayList<Int>()
+    private var idx = 0
 
     fun run() {
-        var idx = 0
         while (idx < memory.count()) {
             idx = execute(idx)
         }
+    }
+
+    fun runUntilOutput() {
+        val startLen = output.count()
+        while (idx < memory.count()) {
+            idx = execute(idx)
+            if (output.count() > startLen) {
+                break
+            }
+        }
+    }
+
+    fun lastOutput(): Int {
+        return output.last()
     }
 
     fun execute(idx: Int): Int {
@@ -82,24 +102,16 @@ class Machine07(private val memory: IntArray, private val input1: Int, private v
             }
             3 -> {
                 val param = getValue(true, idx + 1)
-                when (input) {
-                    0 -> {
-                        setValue(param, input1)
-                        input++
-                    }
-                    1 -> {
-                        setValue(param, input2)
-                        input++
-                    }
-                    else -> throw Exception("too many input instructions")
+                if (input.count() == 0) {
+                    throw Exception("no input")
                 }
+                setValue(param, input.first())
+                input.removeAt(0)
                 return idx + 2
             }
             4 -> {
-                if (output != Int.MIN_VALUE) {
-                    throw Exception("output already set")
-                }
-                output = getValue(isModeImmediate(instruction, 2), idx + 1)
+                val value = getValue(isModeImmediate(instruction, 2), idx + 1)
+                output.add(value)
                 return idx + 2
             }
             5 -> {
