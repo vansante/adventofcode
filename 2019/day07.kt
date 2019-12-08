@@ -57,13 +57,82 @@ fun main() {
 
     println("Part I: Highest signal: $highest. Settings: a$a b$b c$c d$d e$e ")
 
-    
+    a = -1
+    b = -1
+    c = -1
+    d = -1
+    e = -1
+    highest = 0
+    for (A in 5..9) {
+        for (B in 5..9) {
+            if (B == A) { continue }
+            for (C in 5..9) {
+                if (C == A || C == B)  {continue }
+                for (D in 5..9) {
+                    if (D == A || D == B || D == C) { continue }
+                    for (E in 5..9) {
+                        if (E == A || E == B || E == C || E == D) { continue }
+
+                        val temp = mutableListOf<Int>()
+                        val machineA = Machine07(numbers.copyOf(), temp)
+                        machineA.output().add(B)
+                        val machineB = Machine07(numbers.copyOf(), machineA.output())
+                        machineB.output().add(C)
+                        val machineC = Machine07(numbers.copyOf(), machineB.output())
+                        machineC.output().add(D)
+                        val machineD = Machine07(numbers.copyOf(), machineC.output())
+                        machineD.output().add(E)
+                        val machineE = Machine07(numbers.copyOf(), machineD.output())
+                        machineE.setOutput(temp)
+                        machineE.output().add(A)
+                        machineE.output().add(0)
+
+                        val list = listOf(machineA, machineB, machineC, machineD, machineE)
+                        var running = false
+                        while (true) {
+                            list.forEach {
+                                if (!it.done()) {
+                                    running = true
+                                    if (it.runUntilInput()) {
+                                        running = false
+                                    }
+                                }
+                            }
+                            if (!running) {
+                                break
+                            }
+                        }
+
+                        if (machineE.lastOutput() > highest) {
+                            highest = machineE.lastOutput()
+                            a = A
+                            b = B
+                            c = C
+                            d = D
+                            e = E
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    println("Part II: Highest signal: $highest. Settings: a$a b$b c$c d$d e$e ")
 }
 
+class InputRequired(message: String) : Exception(message)
 
-class Machine07(private val memory: IntArray, private val input: MutableList<Int>) {
-    private var output = ArrayList<Int>()
+class Machine07(private val memory: IntArray, private var input: MutableList<Int>) {
+    private var output = mutableListOf<Int>()
     private var idx = 0
+
+    fun setOutput(outp: MutableList<Int>) {
+        output = outp
+    }
+
+    fun done(): Boolean {
+        return idx >= memory.count()
+    }
 
     fun run() {
         while (idx < memory.count()) {
@@ -81,8 +150,23 @@ class Machine07(private val memory: IntArray, private val input: MutableList<Int
         }
     }
 
+    fun runUntilInput(): Boolean {
+        while (idx < memory.count()) {
+            try {
+                idx = execute(idx)
+            } catch (e: InputRequired) {
+                return false
+            }
+        }
+        return true
+    }
+
     fun lastOutput(): Int {
         return output.last()
+    }
+
+    fun output(): MutableList<Int> {
+        return output
     }
 
     fun execute(idx: Int): Int {
@@ -103,7 +187,7 @@ class Machine07(private val memory: IntArray, private val input: MutableList<Int
             3 -> {
                 val param = getValue(true, idx + 1)
                 if (input.count() == 0) {
-                    throw Exception("no input")
+                    throw InputRequired("no input")
                 }
                 setValue(param, input.first())
                 input.removeAt(0)
