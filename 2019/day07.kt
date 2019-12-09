@@ -1,8 +1,5 @@
 import java.io.File
 import java.lang.Exception
-import java.nio.file.Paths
-import java.util.*
-import kotlin.collections.ArrayList
 
 fun main() {
     val input = File("day07.txt").readText()
@@ -120,7 +117,7 @@ fun main() {
     println("Part II: Highest signal: $highest. Settings: a$a b$b c$c d$d e$e ")
 }
 
-class InputRequired(message: String) : Exception(message)
+class InputRequired07(message: String) : Exception(message)
 
 class Machine07(private val memory: IntArray, private var input: MutableList<Int>) {
     private var output = mutableListOf<Int>()
@@ -154,7 +151,7 @@ class Machine07(private val memory: IntArray, private var input: MutableList<Int
         while (idx < memory.count()) {
             try {
                 idx = execute(idx)
-            } catch (e: InputRequired) {
+            } catch (e: InputRequired07) {
                 return false
             }
         }
@@ -187,7 +184,7 @@ class Machine07(private val memory: IntArray, private var input: MutableList<Int
             3 -> {
                 val param = getValue(true, idx + 1)
                 if (input.count() == 0) {
-                    throw InputRequired("no input")
+                    throw InputRequired07("no input")
                 }
                 setValue(param, input.first())
                 input.removeAt(0)
