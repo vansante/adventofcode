@@ -56,16 +56,10 @@ func findSlopeTrees(g grid, sl slope) int {
 	var x, trees int
 
 	for y := 0; y < len(g); y += sl.y {
-		curX := x
-		if curX >= len(g[y]) {
-			curX %= len(g[y])
-		}
-
-		//fmt.Printf("x: %d y: %d | %v\n", x, y, g[y][curX])
+		curX := x % len(g[y])
 		if g[y][curX] {
 			trees++
 		}
-
 		x += sl.x
 	}
 	return trees
