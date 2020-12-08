@@ -19,9 +19,10 @@ func retrieveInputLines(file string) []string {
 	var input []string
 	for i := range split {
 		line := strings.TrimSpace(split[i])
-		if line != "" {
-			input = append(input, line)
+		if line == "" {
+			continue
 		}
+		input = append(input, line)
 	}
 	return input
 }

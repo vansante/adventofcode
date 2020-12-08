@@ -29,9 +29,10 @@ func retrieveGroups(file string) []group {
 		parts := strings.Split(split[i], "\n")
 		for i := range parts {
 			data := strings.TrimSpace(parts[i])
-			if data != "" {
-				g.answers = append(g.answers, answers(data))
+			if data == "" {
+				continue
 			}
+			g.answers = append(g.answers, answers(data))
 		}
 		if len(g.answers) > 0 {
 			g.summarize()
