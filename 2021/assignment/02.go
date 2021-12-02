@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type Day02 struct {}
+type Day02 struct{}
 
 const (
 	d02Up = iota + 1
@@ -13,15 +13,15 @@ const (
 	d02Forward
 )
 
-type D02Vector struct {
+type d02Vector struct {
 	Direction int
-	Amount int
+	Amount    int
 }
 
-func (d *Day02) SplitInput(lines []string) []D02Vector {
-	vs := make([]D02Vector, 0, len(lines))
+func (d *Day02) SplitInput(lines []string) []d02Vector {
+	vs := make([]d02Vector, 0, len(lines))
 	for _, line := range lines {
-		v := D02Vector{}
+		v := d02Vector{}
 		spl := strings.Split(line, " ")
 		switch spl[0] {
 		case "up":
