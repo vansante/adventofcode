@@ -1,23 +1,21 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-var colorRegex = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
+type Day04 struct{}
 
-var passportIDRegex = regexp.MustCompile(`^[0-9]{9}$`)
+var d04ColorRegex = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
+var d04PassportIDRegex = regexp.MustCompile(`^[0-9]{9}$`)
 
-type passport map[string]string
+type d04Passport map[string]string
 
-var mandatory = []string{
+var d04Mandatory = []string{
 	"byr",
 	"iyr",
 	"eyr",
@@ -27,8 +25,8 @@ var mandatory = []string{
 	"pid",
 }
 
-func (p passport) isValidPtI() bool {
-	for _, key := range mandatory {
+func (p d04Passport) isValidPtI() bool {
+	for _, key := range d04Mandatory {
 		if p[key] == "" {
 			return false
 		}
@@ -36,7 +34,7 @@ func (p passport) isValidPtI() bool {
 	return true
 }
 
-func (p passport) isValidPtII() bool {
+func (p d04Passport) isValidPtII() bool {
 	if !p.isValidPtI() {
 		return false
 	}
@@ -75,7 +73,7 @@ func (p passport) isValidPtII() bool {
 		log.Panicf("[%s] invalid height unit: %d%s", p["hgt"], height, unit)
 	}
 
-	if !colorRegex.MatchString(p["hcl"]) {
+	if !d04ColorRegex.MatchString(p["hcl"]) {
 		return false
 	}
 
@@ -85,27 +83,19 @@ func (p passport) isValidPtII() bool {
 		return false
 	}
 
-	if !passportIDRegex.MatchString(p["pid"]) {
-		return false
-	}
-
-	return true
+	return d04PassportIDRegex.MatchString(p["pid"])
 }
 
-func retrievePassports(file string) []passport {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n\n")
+func retrievePassports(content string) []d04Passport {
+	split := strings.Split(content, "\n\n")
 
 	const separator = ":"
 
-	var passports []passport
+	var passports []d04Passport
 	for i := range split {
 		data := strings.TrimSpace(strings.ReplaceAll(split[i], "\n", " "))
 		parts := strings.Split(data, " ")
-		p := passport{}
+		p := d04Passport{}
 		for i := range parts {
 			idx := strings.Index(parts[i], separator)
 			if idx < 0 {
@@ -118,20 +108,26 @@ func retrievePassports(file string) []passport {
 	return passports
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	passports := retrievePassports(filepath.Join(wd, "04/input.txt"))
+func (d *Day04) SolveI(input string) int64 {
+	passports := retrievePassports(input)
 
-	partOneValid := 0
-	partTwoValid := 0
+	valid := 0
 	for i := range passports {
 		if passports[i].isValidPtI() {
-			partOneValid++
-		}
-		if passports[i].isValidPtII() {
-			partTwoValid++
+			valid++
 		}
 	}
-	fmt.Printf("Part I: There are %d valid passwords\n", partOneValid)
-	fmt.Printf("Part II: There are %d valid passwords\n", partTwoValid)
+	return int64(valid)
+}
+
+func (d *Day04) SolveII(input string) int64 {
+	passports := retrievePassports(input)
+
+	valid := 0
+	for i := range passports {
+		if passports[i].isValidPtII() {
+			valid++
+		}
+	}
+	return int64(valid)
 }
