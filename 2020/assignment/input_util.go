@@ -30,3 +30,15 @@ func MakeIntegers(input []string) []int64 {
 	}
 	return ints
 }
+
+func MakeInts(input []string) []int {
+	ints := make([]int, 0, len(input))
+	for i := range input {
+		num, err := strconv.ParseInt(input[i], 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		ints = append(ints, int(num))
+	}
+	return ints
+}
