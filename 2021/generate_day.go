@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
@@ -45,13 +46,29 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
 
 	dayTemplate.Execute(file, struct {
-		Num int64
+		Num string
 	}{
-		Num: day,
+		Num: fmt.Sprintf("%02d", day),
 	})
+	_ = file.Close()
+
+	mainGo, err := os.ReadFile("main.go")
+	if err != nil {
+		panic(err)
+	}
+
+	mainGo = bytes.Replace(
+		mainGo,
+		[]byte("// <generator:add:days>"),
+		[]byte(fmt.Sprintf("%d: &assignment.Day%02d{},\n\t\t// <generator:add:days>", day, day)),
+		1,
+	)
+	err = os.WriteFile("main.go", mainGo, 0755)
+	if err != nil {
+		panic(err)
+	}
 }
 
 var dayTemplate = template.Must(template.New("").Parse(`
