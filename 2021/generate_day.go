@@ -71,8 +71,8 @@ func main() {
 	}
 }
 
-var dayTemplate = template.Must(template.New("").Parse(`
-package assignment
+var dayTemplate = template.Must(template.New("").Parse(
+	`package assignment
 
 type Day{{ .Num }} struct{}
 
