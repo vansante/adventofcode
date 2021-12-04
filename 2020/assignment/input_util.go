@@ -8,7 +8,7 @@ import (
 func SplitLines(input string) []string {
 	split := strings.Split(input, "\n")
 
-	var lines []string
+	lines := make([]string, 0, len(input))
 	for i := range split {
 		line := strings.TrimSpace(split[i])
 		if line == "" {
@@ -20,7 +20,7 @@ func SplitLines(input string) []string {
 }
 
 func MakeIntegers(input []string) []int64 {
-	var ints []int64
+	ints := make([]int64, 0, len(input))
 	for i := range input {
 		num, err := strconv.ParseInt(input[i], 10, 64)
 		if err != nil {
