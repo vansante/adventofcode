@@ -1,21 +1,16 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
-type grid [][]string
+type Day11 struct{}
 
-func retrieveGrid(file string) grid {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+type d11Grid [][]string
+
+func (d *Day11) retrieveGrid(in string) d11Grid {
+	split := strings.Split(in, "\n")
 
 	var input [][]string
 	for i := range split {
@@ -28,7 +23,7 @@ func retrieveGrid(file string) grid {
 	return input
 }
 
-func (g grid) doTheShufflePtI() (grid, bool) {
+func (g d11Grid) doTheShufflePtI() (d11Grid, bool) {
 	newGrid := g.copy()
 	var changed bool
 	for y := range g {
@@ -62,7 +57,7 @@ func (g grid) doTheShufflePtI() (grid, bool) {
 	return newGrid, changed
 }
 
-func (g grid) doTheShufflePtII() (grid, bool) {
+func (g d11Grid) doTheShufflePtII() (d11Grid, bool) {
 	newGrid := g.copy()
 	var changed bool
 	for y := range g {
@@ -90,7 +85,7 @@ func (g grid) doTheShufflePtII() (grid, bool) {
 	return newGrid, changed
 }
 
-func (g grid) getSurroundings(y, x int) []string {
+func (g d11Grid) getSurroundings(y, x int) []string {
 	var seats []string
 	if y-1 >= 0 {
 		if x-1 >= 0 {
@@ -119,7 +114,7 @@ func (g grid) getSurroundings(y, x int) []string {
 	return seats
 }
 
-func (g grid) countDirectionOccupied(y, x int) int {
+func (g d11Grid) countDirectionOccupied(y, x int) int {
 	total := 0
 	if g.isDirectionOccupied(y, x, -1, -1) {
 		total++
@@ -148,7 +143,7 @@ func (g grid) countDirectionOccupied(y, x int) int {
 	return total
 }
 
-func (g grid) isDirectionOccupied(y, x, yOff, xOff int) bool {
+func (g d11Grid) isDirectionOccupied(y, x, yOff, xOff int) bool {
 	for {
 		y += yOff
 		x += xOff
@@ -164,8 +159,8 @@ func (g grid) isDirectionOccupied(y, x, yOff, xOff int) bool {
 	}
 }
 
-func (g grid) copy() grid {
-	newGrid := make(grid, len(g))
+func (g d11Grid) copy() d11Grid {
+	newGrid := make(d11Grid, len(g))
 	for y := range g {
 		newGrid[y] = make([]string, len(g[y]))
 		for x := range g[y] {
@@ -175,7 +170,7 @@ func (g grid) copy() grid {
 	return newGrid
 }
 
-func (g grid) print() {
+func (g d11Grid) print() {
 	fmt.Println()
 	for y := range g {
 		fmt.Println(g[y])
@@ -183,7 +178,7 @@ func (g grid) print() {
 	fmt.Println()
 }
 
-func (g grid) countOccupied() int {
+func (g d11Grid) countOccupied() int {
 	total := 0
 	for y := range g {
 		for x := range g[y] {
@@ -195,31 +190,30 @@ func (g grid) countOccupied() int {
 	return total
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	g := retrieveGrid(filepath.Join(wd, "11/input.txt"))
+func (d *Day11) SolveI(input string) int64 {
+	g := d.retrieveGrid(input)
 
-	ptI := g.copy()
 	for {
 		var changed bool
-		ptI, changed = ptI.doTheShufflePtI()
+		g, changed = g.doTheShufflePtI()
 		if !changed {
 			break
 		}
 	}
-	ptI.print()
+	g.print()
+	return int64(g.countOccupied())
+}
 
-	fmt.Printf("Part I: Amount occupied: %d\n\n", ptI.countOccupied())
+func (d *Day11) SolveII(input string) int64 {
+	g := d.retrieveGrid(input)
 
-	ptII := g.copy()
 	for {
 		var changed bool
-		ptII, changed = ptII.doTheShufflePtII()
+		g, changed = g.doTheShufflePtII()
 		if !changed {
 			break
 		}
 	}
-	ptII.print()
-
-	fmt.Printf("Part II: Amount occupied: %d\n\n", ptII.countOccupied())
+	g.print()
+	return int64(g.countOccupied())
 }

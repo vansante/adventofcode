@@ -1,36 +1,10 @@
-package main
+package assignment
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"sort"
-	"strconv"
-	"strings"
 )
 
-func retrieveInputNumbers(file string) []int64 {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
-
-	var input []int64
-	for i := range split {
-		line := strings.TrimSpace(split[i])
-		if line == "" {
-			continue
-		}
-		num, err := strconv.ParseInt(line, 10, 64)
-		if err != nil {
-			panic(err)
-		}
-		input = append(input, num)
-	}
-	return input
-}
+type Day10 struct{}
 
 func findDifferences(current int64, numbers []int64) (diff1, diff2, diff3 int) {
 	for i := range numbers {
@@ -76,22 +50,28 @@ func findCombinations(current int64, numbers []int64, values map[int64]int64) in
 	return val
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	numbers := retrieveInputNumbers(filepath.Join(wd, "10/input.txt"))
+func (d *Day10) SolveI(input string) int64 {
+	numbers := MakeIntegers(SplitLines(input))
 
 	sort.Slice(numbers, func(i, j int) bool {
 		return numbers[i] < numbers[j]
 	})
 
-	diff1, diff2, diff3 := findDifferences(0, numbers)
+	diff1, _, diff3 := findDifferences(0, numbers)
 	diff3++ // For the device adapter
 
-	fmt.Printf("The number of differences are: %d, %d, %d\n\n", diff1, diff2, diff3)
-	fmt.Printf("Part I multiplied: %d\n", diff1*diff3)
+	return int64(diff1) * int64(diff3)
+}
+
+func (d *Day10) SolveII(input string) int64 {
+	numbers := MakeIntegers(SplitLines(input))
+
+	sort.Slice(numbers, func(i, j int) bool {
+		return numbers[i] < numbers[j]
+	})
 
 	adapters := make(map[int64]int64)
-
 	combinations := findCombinations(0, numbers, adapters)
-	fmt.Printf("Part II combinations: %d\n", combinations)
+
+	return combinations
 }
