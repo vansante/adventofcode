@@ -1,22 +1,16 @@
-package main
+package assignment
 
 import (
-	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
-func retrieveTickets(file string) []ticket {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+type Day05 struct{}
 
-	var tickets []ticket
+func (d *Day05) retrieveTickets(input string) []d05Ticket {
+	split := strings.Split(input, "\n")
+
+	var tickets []d05Ticket
 	for i := range split {
 		line := strings.TrimSpace(split[i])
 		if line == "" {
@@ -30,9 +24,9 @@ func retrieveTickets(file string) []ticket {
 	return tickets
 }
 
-type ticket []string
+type d05Ticket []string
 
-func (t ticket) findRow() int {
+func (t d05Ticket) findRow() int {
 	directives := t[:7]
 	upper := 127
 	lower := 0
@@ -51,7 +45,7 @@ func (t ticket) findRow() int {
 	return lower
 }
 
-func (t ticket) findColumn() int {
+func (t d05Ticket) findColumn() int {
 	directives := t[7:]
 	upper := 7
 	lower := 0
@@ -70,23 +64,20 @@ func (t ticket) findColumn() int {
 	return lower
 }
 
-func (t ticket) id() int {
+func (t d05Ticket) id() int {
 	return t.findRow()*8 + t.findColumn()
 }
 
-type row [8]bool
-type plane [128]row
+type d05Row [8]bool
+type d05Plane [128]d05Row
 
-func main() {
-	wd, _ := os.Getwd()
-	tickets := retrieveTickets(filepath.Join(wd, "05/input.txt"))
+func (d *Day05) SolveI(input string) int64 {
+	tickets := d.retrieveTickets(input)
 
-	var p plane
-
+	var p d05Plane
 	highestID := 0
-	for i := range tickets {
-		//fmt.Printf("%s: row: %d column: %d id: %d\n", tickets[i], tickets[i].findRow(), tickets[i].findColumn(), tickets[i].id())
 
+	for i := range tickets {
 		p[tickets[i].findRow()][tickets[i].findColumn()] = true
 
 		if tickets[i].id() > highestID {
@@ -94,18 +85,27 @@ func main() {
 		}
 	}
 
-	fmt.Printf("The highest seat ID: %d\n\n", highestID)
+	return int64(highestID)
+}
 
-	fmt.Println("Finding empty seats:")
+func (d *Day05) SolveII(input string) int64 {
+	tickets := d.retrieveTickets(input)
+
+	var p d05Plane
+	for i := range tickets {
+		p[tickets[i].findRow()][tickets[i].findColumn()] = true
+	}
+
 	for i := range p {
 		if i <= 4 || i == 127 {
 			continue
 		}
 		for j := range p[i] {
 			if !p[i][j] {
-				fmt.Printf("empty seat at row: %d column: %d id: %d\n", i, j, i*8+j)
-				return
+				return int64(i*8 + j)
 			}
 		}
 	}
+
+	panic("no result")
 }
