@@ -1,29 +1,24 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
-func retrieveInstructions(file string) []operand {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+type Day08 struct{}
 
-	var input []operand
+func (d *Day08) retrieveInstructions(in string) []d08Operand {
+	split := strings.Split(in, "\n")
+
+	var input []d08Operand
 	for i := range split {
 		line := strings.ReplaceAll(strings.TrimSpace(split[i]), "+", "")
 		if line == "" {
 			continue
 		}
 
-		op := operand{}
+		op := d08Operand{}
 		n, err := fmt.Sscanf(line, "%s %d", &op.operator, &op.argument)
 		if err != nil || n != 2 {
 			log.Panicf("[%s] error parsing operand: %v | %d", line, err, n)
@@ -33,20 +28,20 @@ func retrieveInstructions(file string) []operand {
 	return input
 }
 
-type operand struct {
+type d08Operand struct {
 	operator string
 	argument int
 }
 
-type computer struct {
+type d08Computer struct {
 	idx          int
-	memory       []operand
+	memory       []d08Operand
 	accumulator  int64
 	instrCounter map[int]int
 	haltOn       int
 }
 
-func (c *computer) run() {
+func (c *d08Computer) run() {
 	for c.idx < len(c.memory) {
 		c.instrCounter[c.idx]++
 		if c.haltOn > 1 && c.instrCounter[c.idx] > c.haltOn {
@@ -67,18 +62,21 @@ func (c *computer) run() {
 	}
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	instr := retrieveInstructions(filepath.Join(wd, "08/input.txt"))
+func (d *Day08) SolveI(input string) int64 {
+	instr := d.retrieveInstructions(input)
 
-	c := computer{
+	c := d08Computer{
 		memory:       instr,
 		instrCounter: make(map[int]int),
 		haltOn:       2,
 	}
 	c.run()
 
-	fmt.Printf("Part I: The accumulator has: %d\n\n", c.accumulator)
+	return c.accumulator
+}
+
+func (d *Day08) SolveII(input string) int64 {
+	instr := d.retrieveInstructions(input)
 
 	for i := range instr {
 		prevOp := instr[i].operator
@@ -89,7 +87,7 @@ func main() {
 			instr[i].operator = "jmp"
 		}
 
-		c := computer{
+		c := d08Computer{
 			memory:       instr,
 			idx:          0,
 			instrCounter: make(map[int]int),
@@ -97,10 +95,10 @@ func main() {
 		}
 		c.run()
 		if c.idx == len(c.memory) {
-			fmt.Println("Found an instruction ending at the last operand")
-			fmt.Printf("Part II: The accumulator has: %d\n\n", c.accumulator)
-			break
+			return c.accumulator
 		}
 		instr[i].operator = prevOp
 	}
+
+	panic("no result")
 }
