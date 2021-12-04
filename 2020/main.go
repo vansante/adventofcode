@@ -13,15 +13,15 @@ import (
 
 var (
 	days = map[int]assignment.Assignment{
-		1: &assignment.Day01{},
-		2: &assignment.Day02{},
-		3: &assignment.Day03{},
-		4: &assignment.Day04{},
-		5: &assignment.Day05{},
-		6: &assignment.Day06{},
-		7: &assignment.Day07{},
-		8: &assignment.Day08{},
-		9: &assignment.Day09{},
+		1:  &assignment.Day01{},
+		2:  &assignment.Day02{},
+		3:  &assignment.Day03{},
+		4:  &assignment.Day04{},
+		5:  &assignment.Day05{},
+		6:  &assignment.Day06{},
+		7:  &assignment.Day07{},
+		8:  &assignment.Day08{},
+		9:  &assignment.Day09{},
 		10: &assignment.Day10{},
 		11: &assignment.Day11{},
 		12: &assignment.Day12{},
@@ -58,19 +58,23 @@ func main() {
 	inputs := findInputs(int(dayNum), inputArg)
 
 	for name, input := range inputs {
-		fmt.Printf("Solving 2020 day %d first assignment with '%s'\n", dayNum, name)
-		start := time.Now()
-		resultI := day.SolveI(input)
-		fmt.Printf("Solved first assignment: %d\n", resultI)
-		fmt.Printf("Time taken: %v\n", time.Since(start))
-		fmt.Println()
+		if !strings.HasPrefix(name, "2_") {
+			fmt.Printf("Solving 2020 day %d first assignment with '%s'\n", dayNum, name)
+			start := time.Now()
+			resultI := day.SolveI(input)
+			fmt.Printf("Solved first assignment: %d\n", resultI)
+			fmt.Printf("Time taken: %v\n", time.Since(start))
+			fmt.Println()
+		}
 
-		fmt.Printf("Solving 2020 day %d second assignment with '%s'\n", dayNum, name)
-		start = time.Now()
-		resultII := day.SolveII(input)
-		fmt.Printf("Solved second assignment: %d\n", resultII)
-		fmt.Printf("Time taken: %v\n", time.Since(start))
-		fmt.Println()
+		if !strings.HasPrefix(name, "1_") {
+			fmt.Printf("Solving 2020 day %d second assignment with '%s'\n", dayNum, name)
+			start := time.Now()
+			resultII := day.SolveII(input)
+			fmt.Printf("Solved second assignment: %d\n", resultII)
+			fmt.Printf("Time taken: %v\n", time.Since(start))
+			fmt.Println()
+		}
 	}
 }
 

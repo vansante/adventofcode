@@ -46,19 +46,23 @@ func main() {
 	inputs := findInputs(int(dayNum), inputArg)
 
 	for name, input := range inputs {
-		fmt.Printf("Solving 2021 day %d first assignment with '%s'\n", dayNum, name)
-		start := time.Now()
-		resultI := day.SolveI(input)
-		fmt.Printf("Solved first assignment: %d\n", resultI)
-		fmt.Printf("Time taken: %v\n", time.Since(start))
-		fmt.Println()
+		if !strings.HasPrefix(name, "2_") {
+			fmt.Printf("Solving 2020 day %d first assignment with '%s'\n", dayNum, name)
+			start := time.Now()
+			resultI := day.SolveI(input)
+			fmt.Printf("Solved first assignment: %d\n", resultI)
+			fmt.Printf("Time taken: %v\n", time.Since(start))
+			fmt.Println()
+		}
 
-		fmt.Printf("Solving 2021 day %d second assignment with '%s'\n", dayNum, name)
-		start = time.Now()
-		resultII := day.SolveII(input)
-		fmt.Printf("Solved second assignment: %d\n", resultII)
-		fmt.Printf("Time taken: %v\n", time.Since(start))
-		fmt.Println()
+		if !strings.HasPrefix(name, "1_") {
+			fmt.Printf("Solving 2020 day %d second assignment with '%s'\n", dayNum, name)
+			start := time.Now()
+			resultII := day.SolveII(input)
+			fmt.Printf("Solved second assignment: %d\n", resultII)
+			fmt.Printf("Time taken: %v\n", time.Since(start))
+			fmt.Println()
+		}
 	}
 }
 
