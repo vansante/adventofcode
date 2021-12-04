@@ -1,53 +1,32 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-var (
-	regex = regexp.MustCompile(`^mem\[(\d+)\] = (\d+)$`)
-)
+type Day14 struct{}
 
-func retrieveInputLines(file string) []string {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+var d14regex = regexp.MustCompile(`^mem\[(\d+)\] = (\d+)$`)
 
-	var input []string
-	for i := range split {
-		line := strings.TrimSpace(split[i])
-		if line == "" {
-			continue
-		}
-		input = append(input, line)
-	}
-	return input
-}
-
-type value struct {
+type d14Value struct {
 	idx int64
 	val int64
 }
 
-type program struct {
+type d14Program struct {
 	xMask    int64
 	zeroMask int64
 	oneMask  int64
-	values   []value
+	values   []d14Value
 }
 
-func getPrograms(lines []string) []program {
-	var pros []program
-	var pro program
+func (d *Day14) getPrograms(lines []string) []d14Program {
+	var pros []d14Program
+	var pro d14Program
 	for i := range lines {
 		if strings.HasPrefix(lines[i], "mask = ") {
 			maskStr := strings.ReplaceAll(strings.TrimPrefix(lines[i], "mask = "), "1", "0")
@@ -73,14 +52,14 @@ func getPrograms(lines []string) []program {
 			}
 
 			pros = append(pros, pro)
-			pro = program{
+			pro = d14Program{
 				xMask:    xMask,
 				zeroMask: zeroMask,
 				oneMask:  oneMask,
 			}
 			continue
 		}
-		matches := regex.FindStringSubmatch(lines[i])
+		matches := d14regex.FindStringSubmatch(lines[i])
 		if len(matches) != 3 {
 			panic(fmt.Sprintf("[%s]: %d", lines[i], len(matches)))
 		}
@@ -92,13 +71,13 @@ func getPrograms(lines []string) []program {
 		if err != nil {
 			panic(err)
 		}
-		pro.values = append(pro.values, value{idx, val})
+		pro.values = append(pro.values, d14Value{idx, val})
 	}
 	pros = append(pros, pro)
 	return pros[1:]
 }
 
-func (p program) executePtI(memory map[int64]int64) {
+func (p d14Program) executePtI(memory map[int64]int64) {
 	for i := range p.values {
 		val := p.values[i]
 		v := val.val & ^p.zeroMask
@@ -106,7 +85,7 @@ func (p program) executePtI(memory map[int64]int64) {
 	}
 }
 
-func (p program) executePtII(memory map[int64]int64) {
+func (p d14Program) executePtII(memory map[int64]int64) {
 	for i := range p.values {
 		val := p.values[i]
 
@@ -133,11 +112,8 @@ func (p program) executePtII(memory map[int64]int64) {
 	}
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	lines := retrieveInputLines(filepath.Join(wd, "14/input.txt"))
-
-	pros := getPrograms(lines)
+func (d *Day14) SolveI(input string) int64 {
+	pros := d.getPrograms(SplitLines(input))
 
 	memory := make(map[int64]int64)
 	for i := range pros {
@@ -148,18 +124,20 @@ func main() {
 	for idx := range memory {
 		sum += memory[idx]
 	}
+	return sum
+}
 
-	fmt.Printf("Part I sum: %d\n\n", sum)
+func (d *Day14) SolveII(input string) int64 {
+	pros := d.getPrograms(SplitLines(input))
 
-	memory = make(map[int64]int64)
+	memory := make(map[int64]int64)
 	for i := range pros {
 		pros[i].executePtII(memory)
 	}
 
-	sum = int64(0)
+	sum := int64(0)
 	for idx := range memory {
 		sum += memory[idx]
 	}
-
-	fmt.Printf("Part II sum: %d\n\n", sum)
+	return sum
 }
