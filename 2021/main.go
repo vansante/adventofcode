@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/vansante/adventofcode/2021/assignment"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/vansante/adventofcode/2021/assignment"
 )
 
 var (
@@ -15,6 +16,7 @@ var (
 		1: &assignment.Day01{},
 		2: &assignment.Day02{},
 		3: &assignment.Day03{},
+		4: &assignment.Day04{},
 	}
 )
 
