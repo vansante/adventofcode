@@ -1,28 +1,23 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-type instruction struct {
+type Day12 struct{}
+
+type d12Instruction struct {
 	action string
 	value  int
 }
 
-func retrieveInstructions(file string) []instruction {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+func (d *Day12) retrieveInstructions(in string) []d12Instruction {
+	split := strings.Split(in, "\n")
 
-	var input []instruction
+	var input []d12Instruction
 	for i := range split {
 		line := strings.TrimSpace(split[i])
 		if line == "" {
@@ -32,7 +27,7 @@ func retrieveInstructions(file string) []instruction {
 		if err != nil {
 			panic(err)
 		}
-		input = append(input, instruction{
+		input = append(input, d12Instruction{
 			action: line[:1],
 			value:  int(value),
 		})
@@ -40,7 +35,7 @@ func retrieveInstructions(file string) []instruction {
 	return input
 }
 
-type ship struct {
+type d12Ship struct {
 	direction int
 	n         int
 	e         int
@@ -48,7 +43,7 @@ type ship struct {
 	waypointE int
 }
 
-func (s *ship) applyPtI(i instruction) {
+func (s *d12Ship) applyPtI(i d12Instruction) {
 	switch strings.ToUpper(i.action) {
 	case "N":
 		s.n += i.value
@@ -80,7 +75,7 @@ func (s *ship) applyPtI(i instruction) {
 	}
 }
 
-func (s *ship) rotateWaypoint(value int) {
+func (s *d12Ship) rotateWaypoint(value int) {
 	if value < 0 {
 		value += 360
 	}
@@ -96,7 +91,7 @@ func (s *ship) rotateWaypoint(value int) {
 		panic(fmt.Sprintf("Rotating left with value %d", value))
 	}
 }
-func (s *ship) applyPtII(i instruction) {
+func (s *d12Ship) applyPtII(i d12Instruction) {
 	switch strings.ToUpper(i.action) {
 	case "N":
 		s.waypointN += i.value
@@ -118,36 +113,40 @@ func (s *ship) applyPtII(i instruction) {
 	}
 }
 
-func (s ship) printI() {
+func (s d12Ship) printI() {
 	fmt.Printf("Ship [N %d, E %d] facing %d\n", s.n, s.e, s.direction)
 }
 
-func (s ship) printII() {
+func (s d12Ship) printII() {
 	fmt.Printf("Ship [N %d, E %d] waypoint [N %d, E %d]\n", s.n, s.e, s.waypointN, s.waypointE)
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	instr := retrieveInstructions(filepath.Join(wd, "12/input.txt"))
+func (d *Day12) SolveI(input string) int64 {
+	instr := d.retrieveInstructions(input)
 
-	s := ship{
+	s := d12Ship{
 		direction: 90,
 	}
 
 	for i := range instr {
 		s.applyPtI(instr[i])
-		//s.printI()
 	}
+	s.printI()
 
-	fmt.Printf("Part I: Coordinates: [N %d, E %d] Distance: %d\n\n", s.n, s.e, int(math.Abs(float64(s.n))+math.Abs(float64(s.e))))
+	return int64(math.Abs(float64(s.n)) + math.Abs(float64(s.e)))
+}
 
-	s = ship{
+func (d *Day12) SolveII(input string) int64 {
+	instr := d.retrieveInstructions(input)
+
+	s := d12Ship{
 		waypointN: 1,
 		waypointE: 10,
 	}
 	for i := range instr {
 		s.applyPtII(instr[i])
-		//s.printII()
 	}
-	fmt.Printf("Part II: Coordinates: [N %d, E %d] Distance: %d\n\n", s.n, s.e, int(math.Abs(float64(s.n))+math.Abs(float64(s.e))))
+	s.printII()
+
+	return int64(math.Abs(float64(s.n)) + math.Abs(float64(s.e)))
 }
