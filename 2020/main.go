@@ -18,6 +18,7 @@ var (
 		3: &assignment.Day03{},
 		4: &assignment.Day04{},
 		5: &assignment.Day05{},
+		6: &assignment.Day06{},
 		// <generator:add:days>
 	}
 )
