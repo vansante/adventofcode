@@ -1,44 +1,25 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-func retrieveInputLines(file string) []string {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+type Day16 struct{}
 
-	var input []string
-	for i := range split {
-		line := strings.TrimSpace(split[i])
-		if line == "" {
-			continue
-		}
-		input = append(input, line)
-	}
-	return input
-}
-
-type property struct {
+type d16Property struct {
 	name   string
-	ranges []numRange
+	ranges []d16NumRange
 }
 
-type numRange struct {
+type d16NumRange struct {
 	min int
 	max int
 }
 
-func readProperties(lines []string) (remainder []string, props []property) {
+func (d *Day16) readProperties(lines []string) (remainder []string, props []d16Property) {
 	for i := range lines {
 		if lines[i] == "your ticket:" {
 			return lines[i:], props
@@ -48,13 +29,13 @@ func readProperties(lines []string) (remainder []string, props []property) {
 		if len(pieces) != 2 {
 			panic(lines[i])
 		}
-		p := property{
+		p := d16Property{
 			name: strings.ReplaceAll(pieces[0], " ", "-"),
 		}
 
 		ranges := strings.Split(pieces[1], " or ")
 		for j := range ranges {
-			r := numRange{}
+			r := d16NumRange{}
 			n, err := fmt.Sscanf(strings.TrimSpace(ranges[j]), "%d-%d", &r.min, &r.max)
 			if n != 2 || err != nil {
 				log.Panicf("[%s] %d matches, err: %v", ranges[j], n, err)
@@ -66,7 +47,7 @@ func readProperties(lines []string) (remainder []string, props []property) {
 	panic("no your ticket line")
 }
 
-func readTickets(lines []string) (mine ticket, nearby []ticket) {
+func (d *Day16) readTickets(lines []string) (mine d16Ticket, nearby []d16Ticket) {
 	isMine := true
 	for i := range lines {
 		if lines[i] == "your ticket:" {
@@ -77,7 +58,7 @@ func readTickets(lines []string) (mine ticket, nearby []ticket) {
 			continue
 		}
 
-		var t ticket
+		var t d16Ticket
 		ticketNums := strings.Split(lines[i], ",")
 		for j := range ticketNums {
 			num, err := strconv.ParseInt(ticketNums[j], 10, 32)
@@ -96,7 +77,7 @@ func readTickets(lines []string) (mine ticket, nearby []ticket) {
 	return mine, nearby
 }
 
-func (p property) valid(num int) bool {
+func (p d16Property) valid(num int) bool {
 	for _, r := range p.ranges {
 		if num >= r.min && num <= r.max {
 			return true
@@ -105,9 +86,9 @@ func (p property) valid(num int) bool {
 	return false
 }
 
-type ticket []int
+type d16Ticket []int
 
-func (t ticket) errorRate(props []property) (rate int, validFor map[int][]string) {
+func (t d16Ticket) errorRate(props []d16Property) (rate int, validFor map[int][]string) {
 	validFor = make(map[int][]string)
 	for i, num := range t {
 		var valid []string
@@ -125,7 +106,7 @@ func (t ticket) errorRate(props []property) (rate int, validFor map[int][]string
 	return rate, validFor
 }
 
-func findErrorRate(props []property, tickets []ticket) int {
+func (d *Day16) findErrorRate(props []d16Property, tickets []d16Ticket) int {
 	var rate int
 	for i := range tickets {
 		fieldRate, _ := tickets[i].errorRate(props)
@@ -134,7 +115,7 @@ func findErrorRate(props []property, tickets []ticket) int {
 	return rate
 }
 
-func filterInvalidTickets(props []property, tickets []ticket) (valid []ticket, fieldIndex map[string]int) {
+func (d *Day16) filterInvalidTickets(props []d16Property, tickets []d16Ticket) (valid []d16Ticket, fieldIndex map[string]int) {
 	validFor := make(map[int][]string)
 	for i := range tickets {
 		rate, fields := tickets[i].errorRate(props)
@@ -147,7 +128,7 @@ func filterInvalidTickets(props []property, tickets []ticket) (valid []ticket, f
 			validFor = fields
 			continue
 		}
-		validFor = intersect(validFor, fields)
+		validFor = d.intersect(validFor, fields)
 	}
 
 	fieldIndex = make(map[string]int)
@@ -161,11 +142,11 @@ func filterInvalidTickets(props []property, tickets []ticket) (valid []ticket, f
 	return valid, fieldIndex
 }
 
-func intersect(a, b map[int][]string) map[int][]string {
+func (d *Day16) intersect(a, b map[int][]string) map[int][]string {
 	result := make(map[int][]string)
 	for i := range a {
 		for j := range a[i] {
-			if len(b[i]) == 0 || contains(b[i], a[i][j]) {
+			if len(b[i]) == 0 || d.contains(b[i], a[i][j]) {
 				result[i] = append(result[i], a[i][j])
 			}
 		}
@@ -179,7 +160,7 @@ func intersect(a, b map[int][]string) map[int][]string {
 	}
 
 	for {
-		if !eliminateSingles(result) && !eliminateUniques(result) {
+		if !d.eliminateSingles(result) && !d.eliminateUniques(result) {
 			break
 		}
 	} // Repeat until none remain
@@ -187,7 +168,7 @@ func intersect(a, b map[int][]string) map[int][]string {
 	return result
 }
 
-func eliminateSingles(m map[int][]string) bool {
+func (d *Day16) eliminateSingles(m map[int][]string) bool {
 	removed := false
 	for i := range m {
 		if len(m[i]) != 1 {
@@ -198,7 +179,7 @@ func eliminateSingles(m map[int][]string) bool {
 			if j == i {
 				continue
 			}
-			m[j], removed = remove(m[j], m[i][0])
+			m[j], removed = d.remove(m[j], m[i][0])
 		}
 		if removed {
 			break
@@ -207,7 +188,7 @@ func eliminateSingles(m map[int][]string) bool {
 	return removed
 }
 
-func eliminateUniques(m map[int][]string) bool {
+func (d *Day16) eliminateUniques(m map[int][]string) bool {
 	ctr := make(map[string]int)
 	for i := range m {
 		for f := range m[i] {
@@ -221,7 +202,7 @@ func eliminateUniques(m map[int][]string) bool {
 		}
 
 		for i := range m {
-			if contains(m[i], f) && len(m[i]) != 1 {
+			if d.contains(m[i], f) && len(m[i]) != 1 {
 				m[i] = []string{f}
 				return true
 			}
@@ -230,7 +211,7 @@ func eliminateUniques(m map[int][]string) bool {
 	return false
 }
 
-func contains(strs []string, str string) bool {
+func (d *Day16) contains(strs []string, str string) bool {
 	for i := range strs {
 		if strs[i] == str {
 			return true
@@ -239,7 +220,7 @@ func contains(strs []string, str string) bool {
 	return false
 }
 
-func remove(strs []string, str string) ([]string, bool) {
+func (d *Day16) remove(strs []string, str string) ([]string, bool) {
 	nw := make([]string, 0, len(strs))
 	for i := range strs {
 		if strs[i] == str {
@@ -250,18 +231,20 @@ func remove(strs []string, str string) ([]string, bool) {
 	return nw, len(nw) != len(strs)
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	lines := retrieveInputLines(filepath.Join(wd, "16/input.txt"))
+func (d *Day16) SolveI(input string) int64 {
+	lines := SplitLines(input)
+	lines, props := d.readProperties(lines)
+	_, nearby := d.readTickets(lines)
 
-	lines, props := readProperties(lines)
-	mine, nearby := readTickets(lines)
+	return int64(d.findErrorRate(props, nearby))
+}
 
-	fmt.Printf("Part I: Error rate is %d\n\n", findErrorRate(props, nearby))
+func (d *Day16) SolveII(input string) int64 {
+	lines := SplitLines(input)
+	lines, props := d.readProperties(lines)
+	mine, nearby := d.readTickets(lines)
 
-	_, fields := filterInvalidTickets(props, nearby)
-
-	fmt.Printf("Part II: The fields are:\n%v\n\n", fields)
+	_, fields := d.filterInvalidTickets(props, nearby)
 
 	var multi int64
 	for f := range fields {
@@ -273,6 +256,5 @@ func main() {
 			}
 		}
 	}
-
-	fmt.Printf("The fields with departure multiplied are: %d\n\n", multi)
+	return multi
 }
