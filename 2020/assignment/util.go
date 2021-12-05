@@ -48,3 +48,25 @@ func CheckErr(err error) {
 		panic(err)
 	}
 }
+
+func UniqueStrings(sl []string) []string {
+	m := make(map[string]struct{}, len(sl))
+	for i := range sl {
+		m[sl[i]] = struct{}{}
+	}
+
+	nw := make([]string, 0, len(m))
+	for s := range m {
+		nw = append(nw, s)
+	}
+	return nw
+}
+
+func StringsContains(sl []string, s string) bool {
+	for i := range sl {
+		if sl[i] == s {
+			return true
+		}
+	}
+	return false
+}
