@@ -16,7 +16,7 @@ func main() {
 		panic(err)
 	}
 
-	_ = os.Mkdir(fmt.Sprintf("%02d", day), 0644)
+	_ = os.Mkdir(fmt.Sprintf("%02d", day), 0755)
 
 	example := fmt.Sprintf("%02d/example.txt", day)
 	if _, err := os.Stat(example); err != nil {
