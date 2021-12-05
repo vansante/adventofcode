@@ -1,33 +1,14 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-func retrieveInputLines(file string) []string {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+type Day18 struct{}
 
-	var input []string
-	for i := range split {
-		line := strings.TrimSpace(split[i])
-		if line == "" {
-			continue
-		}
-		input = append(input, line)
-	}
-	return input
-}
-
-func tokenize(in string) []string {
+func (d *Day18) tokenize(in string) []string {
 	in = strings.ReplaceAll(in, "(", "( ")
 	in = strings.ReplaceAll(in, ")", " )")
 	tkns := strings.Split(in, " ")
@@ -40,7 +21,7 @@ func tokenize(in string) []string {
 }
 
 // https://en.wikipedia.org/wiki/Shunting-yard_algorithm#The_algorithm_in_detail
-func parse(tkns []string, precedence map[string]int) []string {
+func (d *Day18) parse(tkns []string, precedence map[string]int) []string {
 	var operators, out []string
 
 	// while there are tokens to be read: read a token.
@@ -112,7 +93,7 @@ func parse(tkns []string, precedence map[string]int) []string {
 	return out
 }
 
-func calculate(tkns []string) int64 {
+func (d *Day18) calculate(tkns []string) int64 {
 	var stack []int64
 	for _, tkn := range tkns {
 		num, err := strconv.ParseInt(tkn, 10, 64)
@@ -133,16 +114,22 @@ func calculate(tkns []string) int64 {
 	return stack[0]
 }
 
-func main() {
-	wd, _ := os.Getwd()
-	lines := retrieveInputLines(filepath.Join(wd, "18/input.txt"))
+func (d *Day18) SolveI(input string) int64 {
+	lines := SplitLines(input)
 
-	var totalPtI, totalPtII int64
+	var total int64
 	for i := range lines {
-		totalPtI += calculate(parse(tokenize(lines[i]), map[string]int{}))
-		totalPtII += calculate(parse(tokenize(lines[i]), map[string]int{"+": 1}))
+		total += d.calculate(d.parse(d.tokenize(lines[i]), map[string]int{}))
 	}
-	fmt.Printf("Part I: %d\n\n", totalPtI)
+	return total
+}
 
-	fmt.Printf("Part II: %d\n\n", totalPtII)
+func (d *Day18) SolveII(input string) int64 {
+	lines := SplitLines(input)
+
+	var total int64
+	for i := range lines {
+		total += d.calculate(d.parse(d.tokenize(lines[i]), map[string]int{"+": 1}))
+	}
+	return total
 }
