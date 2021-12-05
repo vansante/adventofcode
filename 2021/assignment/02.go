@@ -35,9 +35,7 @@ func (d *Day02) SplitInput(lines []string) []d02Vector {
 		}
 		var err error
 		v.Amount, err = strconv.Atoi(spl[1])
-		if err != nil {
-			panic(err)
-		}
+		CheckErr(err)
 
 		vs = append(vs, v)
 	}

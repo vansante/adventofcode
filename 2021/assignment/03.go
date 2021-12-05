@@ -28,9 +28,7 @@ func (d *Day03) GetNumbers(lines []string) []d03Number {
 	ns := make([]d03Number, 0, len(lines))
 	for _, line := range lines {
 		n, err := strconv.ParseInt(line, 2, 16)
-		if err != nil {
-			panic(err)
-		}
+		CheckErr(err)
 		ns = append(ns, d03Number(n))
 	}
 	return ns

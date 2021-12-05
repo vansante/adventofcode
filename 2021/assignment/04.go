@@ -118,9 +118,7 @@ func (d *Day04) GetNumbers(input, split string) (numbers []d04number) {
 	numStrs := strings.Split(input, split)
 	for _, numStr := range numStrs {
 		num, err := strconv.ParseInt(numStr, 10, 8)
-		if err != nil {
-			panic(err)
-		}
+		CheckErr(err)
 
 		numbers = append(numbers, d04number{val: num})
 	}

@@ -30,3 +30,9 @@ func MakeIntegers(input []string) []int64 {
 	}
 	return ints
 }
+
+func CheckErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
