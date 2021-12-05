@@ -1,26 +1,24 @@
-package main
+package assignment
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 )
 
-type coord bool
-type plane [][]coord
-type grid []plane
-type hgrid []grid
+type Day17 struct {
+	neighborVectors  []d17Vector
+	neighborHVectors []d17HVector
+}
 
-func retrieveGridPlane(file string) plane {
-	content, err := ioutil.ReadFile(file)
-	if err != nil {
-		panic(err)
-	}
-	split := strings.Split(string(content), "\n")
+type d17Coord bool
+type d17Plane [][]d17Coord
+type d17Grid []d17Plane
+type d17HGrid []d17Grid
 
-	var input plane
+func (d *Day17) retrieveGridPlane(in string) d17Plane {
+	split := strings.Split(in, "\n")
+
+	var input d17Plane
 	for i := range split {
 		line := strings.TrimSpace(split[i])
 		if line == "" {
@@ -28,7 +26,7 @@ func retrieveGridPlane(file string) plane {
 		}
 
 		chars := strings.Split(line, "")
-		var dim []coord
+		var dim []d17Coord
 		for i := range chars {
 			switch chars[i] {
 			case ".":
@@ -45,10 +43,10 @@ func retrieveGridPlane(file string) plane {
 	return input
 }
 
-func (p plane) expand(expandSize int) plane {
-	newP := make(plane, expandSize)
+func (p d17Plane) expand(expandSize int) d17Plane {
+	newP := make(d17Plane, expandSize)
 	for y := range newP {
-		newP[y] = make([]coord, expandSize)
+		newP[y] = make([]d17Coord, expandSize)
 	}
 
 	for y := range p {
@@ -61,26 +59,26 @@ func (p plane) expand(expandSize int) plane {
 	return newP
 }
 
-func makeGrid(expandPlanes int, startPlane plane) grid {
-	grid := make(grid, 2*expandPlanes+1)
+func (d *Day17) makeGrid(expandPlanes int, startPlane d17Plane) d17Grid {
+	grid := make(d17Grid, 2*expandPlanes+1)
 	for z := range grid {
-		grid[z] = make(plane, len(startPlane))
+		grid[z] = make(d17Plane, len(startPlane))
 		for y := range grid[z] {
-			grid[z][y] = make([]coord, len(startPlane[y]))
+			grid[z][y] = make([]d17Coord, len(startPlane[y]))
 		}
 	}
 	grid[expandPlanes] = startPlane
 	return grid
 }
 
-func makeHGrid(expandPlanes int, startPlane plane) hgrid {
-	nwG := make(hgrid, 2*expandPlanes+1)
+func (d *Day17) makeHGrid(expandPlanes int, startPlane d17Plane) d17HGrid {
+	nwG := make(d17HGrid, 2*expandPlanes+1)
 	for w := range nwG {
-		nwG[w] = make(grid, len(startPlane))
+		nwG[w] = make(d17Grid, len(startPlane))
 		for z := range nwG[w] {
-			nwG[w][z] = make(plane, len(startPlane))
+			nwG[w][z] = make(d17Plane, len(startPlane))
 			for y := range nwG[w][z] {
-				nwG[w][z][y] = make([]coord, len(startPlane[y]))
+				nwG[w][z][y] = make([]d17Coord, len(startPlane[y]))
 			}
 		}
 	}
@@ -88,24 +86,23 @@ func makeHGrid(expandPlanes int, startPlane plane) hgrid {
 	return nwG
 }
 
-type vector struct {
+type d17Vector struct {
 	x, y, z int
 }
 
-type hvector struct {
+type d17HVector struct {
 	x, y, z, w int
 }
 
-var neighborVectors []vector
-var neighborHVectors []hvector
-
-func init() {
+func (d *Day17) init() {
+	d.neighborVectors = make([]d17Vector, 0, 3*3*3)
+	d.neighborHVectors = make([]d17HVector, 0, 3*3*3*3)
 	// Generate some vectors (tedious)
 	for z := -1; z <= 1; z++ {
 		for y := -1; y <= 1; y++ {
 			for x := -1; x <= 1; x++ {
 				if x != 0 || y != 0 || z != 0 {
-					neighborVectors = append(neighborVectors, vector{
+					d.neighborVectors = append(d.neighborVectors, d17Vector{
 						x: x,
 						y: y,
 						z: z,
@@ -115,7 +112,7 @@ func init() {
 					if x == 0 && y == 0 && z == 0 && w == 0 {
 						continue
 					}
-					neighborHVectors = append(neighborHVectors, hvector{
+					d.neighborHVectors = append(d.neighborHVectors, d17HVector{
 						x: x,
 						y: y,
 						z: z,
@@ -127,7 +124,7 @@ func init() {
 	}
 }
 
-func (g grid) get(x, y, z int, defaultVal coord) coord {
+func (g d17Grid) get(x, y, z int, defaultVal d17Coord) d17Coord {
 	if z < 0 || z >= len(g) {
 		return defaultVal
 	}
@@ -140,12 +137,12 @@ func (g grid) get(x, y, z int, defaultVal coord) coord {
 	return g[z][y][x]
 }
 
-func (g grid) copy() grid {
-	newGrid := make(grid, len(g))
+func (g d17Grid) copy() d17Grid {
+	newGrid := make(d17Grid, len(g))
 	for z := range g {
-		newGrid[z] = make(plane, len(g[z]))
+		newGrid[z] = make(d17Plane, len(g[z]))
 		for y := range g[z] {
-			newGrid[z][y] = make([]coord, len(g[z][y]))
+			newGrid[z][y] = make([]d17Coord, len(g[z][y]))
 			for x := range g[z][y] {
 				newGrid[z][y][x] = g[z][y][x]
 			}
@@ -154,14 +151,14 @@ func (g grid) copy() grid {
 	return newGrid
 }
 
-func (g grid) simulate() grid {
+func (d *Day17) simulateGrid(g d17Grid) d17Grid {
 	newG := g.copy()
 	for z := range g {
 		for y := range g[z] {
 			for x := range g[z][y] {
 				count := 0
-				for i := range neighborVectors {
-					v := neighborVectors[i]
+				for i := range d.neighborVectors {
+					v := d.neighborVectors[i]
 					if g.get(x+v.x, y+v.y, z+v.z, false) {
 						count++
 					}
@@ -174,7 +171,7 @@ func (g grid) simulate() grid {
 	return newG
 }
 
-func (g hgrid) countActive() int {
+func (g d17HGrid) countActive() int {
 	count := 0
 	for w := range g {
 		for z := range g[w] {
@@ -190,7 +187,7 @@ func (g hgrid) countActive() int {
 	return count
 }
 
-func (g hgrid) get(x, y, z, w int, defaultVal coord) coord {
+func (g d17HGrid) get(x, y, z, w int, defaultVal d17Coord) d17Coord {
 	if w < 0 || w >= len(g) {
 		return defaultVal
 	}
@@ -206,23 +203,23 @@ func (g hgrid) get(x, y, z, w int, defaultVal coord) coord {
 	return g[w][z][y][x]
 }
 
-func (g hgrid) copy() hgrid {
-	newGrid := make(hgrid, len(g))
+func (g d17HGrid) copy() d17HGrid {
+	newGrid := make(d17HGrid, len(g))
 	for w := range g {
 		newGrid[w] = g[w].copy()
 	}
 	return newGrid
 }
 
-func (g hgrid) simulate() hgrid {
+func (d *Day17) simulateHGrid(g d17HGrid) d17HGrid {
 	newG := g.copy()
 	for w := range g {
 		for z := range g[w] {
 			for y := range g[w][z] {
 				for x := range g[w][z][y] {
 					count := 0
-					for i := range neighborHVectors {
-						v := neighborHVectors[i]
+					for i := range d.neighborHVectors {
+						v := d.neighborHVectors[i]
 						if g.get(x+v.x, y+v.y, z+v.z, w+v.w, false) {
 							count++
 						}
@@ -236,7 +233,7 @@ func (g hgrid) simulate() hgrid {
 	return newG
 }
 
-func (g grid) countActive() int {
+func (g d17Grid) countActive() int {
 	count := 0
 	for z := range g {
 		for y := range g[z] {
@@ -250,7 +247,7 @@ func (g grid) countActive() int {
 	return count
 }
 
-func (g grid) print() {
+func (g d17Grid) print() {
 	fmt.Println()
 	for z := range g {
 		fmt.Printf("\nZ: %d\n", z)
@@ -268,25 +265,32 @@ func (g grid) print() {
 	fmt.Println()
 }
 
-const expandPlane = 64
-const expandPlanes = 24
+const d17ExpandPlane = 20
+const d17ExpandPlanes = 10
 
-func main() {
-	wd, _ := os.Getwd()
-	originalP := retrieveGridPlane(filepath.Join(wd, "17/input.txt"))
+func (d *Day17) SolveI(input string) int64 {
+	d.init()
 
-	p := originalP.expand(expandPlane)
+	originalP := d.retrieveGridPlane(input)
+	p := originalP.expand(d17ExpandPlane)
 
-	grid := makeGrid(expandPlanes, p)
+	grid := d.makeGrid(d17ExpandPlanes, p)
 	for i := 0; i < 6; i++ {
-		grid = grid.simulate()
+		grid = d.simulateGrid(grid)
 	}
 
-	fmt.Printf("Active cubes: %d\n\n", grid.countActive())
+	return int64(grid.countActive())
+}
 
-	hgrid := makeHGrid(expandPlanes, p)
+func (d *Day17) SolveII(input string) int64 {
+	d.init()
+
+	originalP := d.retrieveGridPlane(input)
+	p := originalP.expand(d17ExpandPlane)
+
+	hgrid := d.makeHGrid(d17ExpandPlanes, p)
 	for i := 0; i < 6; i++ {
-		hgrid = hgrid.simulate()
+		hgrid = d.simulateHGrid(hgrid)
 	}
-	fmt.Printf("Active hypercubes: %d\n\n", hgrid.countActive())
+	return int64(hgrid.countActive())
 }

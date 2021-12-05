@@ -24,9 +24,7 @@ func (d *Day12) retrieveInstructions(in string) []d12Instruction {
 			continue
 		}
 		value, err := strconv.ParseInt(line[1:], 10, 32)
-		if err != nil {
-			panic(err)
-		}
+		CheckErr(err)
 		input = append(input, d12Instruction{
 			action: line[:1],
 			value:  int(value),

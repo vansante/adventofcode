@@ -23,9 +23,7 @@ func (d *Day07) retrieveRules(lines []string) map[string][]contain {
 		}
 		for wordPos := 4; wordPos < len(words); wordPos += 4 {
 			amount, err := strconv.ParseInt(words[wordPos], 10, 32)
-			if err != nil {
-				panic(err)
-			}
+			CheckErr(err)
 			contained := words[wordPos+1] + words[wordPos+2]
 			rules[subject] = append(rules[subject], contain{
 				bagType: contained,

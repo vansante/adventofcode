@@ -32,24 +32,18 @@ func (d *Day14) getPrograms(lines []string) []d14Program {
 			maskStr := strings.ReplaceAll(strings.TrimPrefix(lines[i], "mask = "), "1", "0")
 			maskStr = strings.ReplaceAll(maskStr, "X", "1")
 			xMask, err := strconv.ParseInt(maskStr, 2, 64)
-			if err != nil {
-				panic(err)
-			}
+			CheckErr(err)
 
 			maskStr = strings.ReplaceAll(strings.TrimPrefix(lines[i], "mask = "), "0", "Z")
 			maskStr = strings.ReplaceAll(maskStr, "X", "0")
 			maskStr = strings.ReplaceAll(maskStr, "1", "0")
 			maskStr = strings.ReplaceAll(maskStr, "Z", "1")
 			zeroMask, err := strconv.ParseInt(maskStr, 2, 64)
-			if err != nil {
-				panic(err)
-			}
+			CheckErr(err)
 
 			maskStr = strings.ReplaceAll(strings.TrimPrefix(lines[i], "mask = "), "X", "0")
 			oneMask, err := strconv.ParseInt(maskStr, 2, 64)
-			if err != nil {
-				panic(err)
-			}
+			CheckErr(err)
 
 			pros = append(pros, pro)
 			pro = d14Program{
@@ -64,13 +58,9 @@ func (d *Day14) getPrograms(lines []string) []d14Program {
 			panic(fmt.Sprintf("[%s]: %d", lines[i], len(matches)))
 		}
 		idx, err := strconv.ParseInt(matches[1], 10, 64)
-		if err != nil {
-			panic(err)
-		}
+		CheckErr(err)
 		val, err := strconv.ParseInt(matches[2], 10, 64)
-		if err != nil {
-			panic(err)
-		}
+		CheckErr(err)
 		pro.values = append(pro.values, d14Value{idx, val})
 	}
 	pros = append(pros, pro)

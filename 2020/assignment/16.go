@@ -62,9 +62,7 @@ func (d *Day16) readTickets(lines []string) (mine d16Ticket, nearby []d16Ticket)
 		ticketNums := strings.Split(lines[i], ",")
 		for j := range ticketNums {
 			num, err := strconv.ParseInt(ticketNums[j], 10, 32)
-			if err != nil {
-				panic(err)
-			}
+			CheckErr(err)
 			t = append(t, int(num))
 		}
 

@@ -17,9 +17,7 @@ func (d *Day13) getBuses(line string) []int64 {
 		}
 
 		num, err := strconv.ParseInt(buses[i], 10, 64)
-		if err != nil {
-			panic(err)
-		}
+		CheckErr(err)
 		nums = append(nums, num)
 	}
 	return nums
@@ -58,9 +56,7 @@ func (d *Day13) SolveI(input string) int64 {
 	lines := SplitLines(input)
 
 	targetTime, err := strconv.ParseInt(lines[0], 10, 64)
-	if err != nil {
-		panic(err)
-	}
+	CheckErr(err)
 
 	buses := d.getBuses(lines[1])
 	time, bus := d.findNearestTime(targetTime, buses)

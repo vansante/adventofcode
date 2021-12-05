@@ -42,3 +42,9 @@ func MakeInts(input []string) []int {
 	}
 	return ints
 }
+
+func CheckErr(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
