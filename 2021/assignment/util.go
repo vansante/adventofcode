@@ -31,8 +31,42 @@ func MakeIntegers(input []string) []int64 {
 	return ints
 }
 
+func MakeInts(input []string) []int {
+	ints := make([]int, 0, len(input))
+	for i := range input {
+		num, err := strconv.ParseInt(input[i], 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		ints = append(ints, int(num))
+	}
+	return ints
+}
+
 func CheckErr(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func UniqueStrings(sl []string) []string {
+	m := make(map[string]struct{}, len(sl))
+	for i := range sl {
+		m[sl[i]] = struct{}{}
+	}
+
+	nw := make([]string, 0, len(m))
+	for s := range m {
+		nw = append(nw, s)
+	}
+	return nw
+}
+
+func StringsContains(sl []string, s string) bool {
+	for i := range sl {
+		if sl[i] == s {
+			return true
+		}
+	}
+	return false
 }
