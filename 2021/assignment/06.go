@@ -14,7 +14,7 @@ func (d *Day06) readFish(input string) []*d06Fish {
 	in := strings.Split(strings.TrimSpace(input), ",")
 	nums := MakeInts(in)
 
-	fish := make([]*d06Fish, 0, 20_000_000)
+	fish := make([]*d06Fish, 0, len(nums))
 	for _, n := range nums {
 		fish = append(fish, &d06Fish{
 			timer: n,
