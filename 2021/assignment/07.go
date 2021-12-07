@@ -28,41 +28,28 @@ func (d *Day07) cost(a, b int64) int64 {
 	return dist * (dist + 1) / 2
 }
 
-func (d *Day07) SolveI(input string) int64 {
+func (d *Day07) calculate(input string, fuelCalc func(a, b int64) int64) int64 {
 	positions := d.getPositions(input)
 
 	max := IntegersMax(positions)
-
 	least := int64(math.MaxInt64)
 	for i := int64(0); i < max; i++ {
 		fuel := int64(0)
 		for _, p := range positions {
-			fuel += d.distance(p, i)
+			fuel += fuelCalc(p, i)
 		}
 
 		if least > fuel {
 			least = fuel
 		}
 	}
-
 	return least
 }
 
+func (d *Day07) SolveI(input string) int64 {
+	return d.calculate(input, d.distance)
+}
+
 func (d *Day07) SolveII(input string) int64 {
-	positions := d.getPositions(input)
-
-	max := IntegersMax(positions)
-
-	least := int64(math.MaxInt64)
-	for i := int64(0); i < max; i++ {
-		fuel := int64(0)
-		for _, p := range positions {
-			fuel += d.cost(p, i)
-		}
-
-		if least > fuel {
-			least = fuel
-		}
-	}
-	return least
+	return d.calculate(input, d.cost)
 }
