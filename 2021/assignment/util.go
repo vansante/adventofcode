@@ -1,6 +1,7 @@
 package assignment
 
 import (
+	"math"
 	"strconv"
 	"strings"
 )
@@ -69,4 +70,44 @@ func StringsContains(sl []string, s string) bool {
 		}
 	}
 	return false
+}
+
+func IntsMin(sl []int) int {
+	min := math.MaxInt
+	for i := range sl {
+		if sl[i] < min {
+			min = sl[i]
+		}
+	}
+	return min
+}
+
+func IntsMax(sl []int) int {
+	max := math.MinInt
+	for i := range sl {
+		if sl[i] > max {
+			max = sl[i]
+		}
+	}
+	return max
+}
+
+func IntegersMin(sl []int64) int64 {
+	min := int64(math.MaxInt64)
+	for i := range sl {
+		if sl[i] < min {
+			min = sl[i]
+		}
+	}
+	return min
+}
+
+func IntegersMax(sl []int64) int64 {
+	max := int64(math.MinInt64)
+	for i := range sl {
+		if sl[i] > max {
+			max = sl[i]
+		}
+	}
+	return max
 }
