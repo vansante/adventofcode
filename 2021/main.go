@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"time"
@@ -48,24 +49,45 @@ func main() {
 
 	inputs := findInputs(int(dayNum), inputArg)
 
+	profile := assignment.StringsContains(os.Args, "<profile>")
 	for name, input := range inputs {
+		var cpuFile *os.File
+		if profile {
+			var err error
+			cpuFile, err = os.CreateTemp(os.TempDir(), fmt.Sprintf("day_%02d_%s_cpu.pprof", dayNum, name))
+			if err != nil {
+				panic(err)
+			}
+
+			err = pprof.StartCPUProfile(cpuFile)
+			if err != nil {
+				_ = cpuFile.Close()
+				panic(err)
+			}
+		}
+
 		if !strings.HasPrefix(name, "2_") {
-			fmt.Printf("Solving 2020 day %d first assignment with '%s'\n", dayNum, name)
+			fmt.Printf("Solving 2021 day %d first assignment with '%s'\n", dayNum, name)
 			start := time.Now()
 			resultI := day.SolveI(input)
 			fmt.Printf("Solved first assignment: %d\n", resultI)
 			fmt.Printf("Time taken: %v\n", time.Since(start))
-			fmt.Println()
 		}
 
 		if !strings.HasPrefix(name, "1_") {
-			fmt.Printf("Solving 2020 day %d second assignment with '%s'\n", dayNum, name)
+			fmt.Printf("Solving 2021 day %d second assignment with '%s'\n", dayNum, name)
 			start := time.Now()
 			resultII := day.SolveII(input)
 			fmt.Printf("Solved second assignment: %d\n", resultII)
 			fmt.Printf("Time taken: %v\n", time.Since(start))
-			fmt.Println()
 		}
+
+		if profile {
+			pprof.StopCPUProfile()
+			fmt.Printf("Wrote cpu profile to %s\n", cpuFile.Name())
+			_ = cpuFile.Close()
+		}
+		fmt.Println()
 	}
 }
 
@@ -75,7 +97,7 @@ func findInputs(dayNum int, inputArg string) map[string]string {
 		panic(err)
 	}
 	dir := fmt.Sprintf("%s/%02d", wd, dayNum)
-	if inputArg != "" {
+	if inputArg != "" && inputArg[:1] != "<" {
 		contents, err := os.ReadFile(path.Join(dir, inputArg+".txt"))
 		if err != nil {
 			panic(err)

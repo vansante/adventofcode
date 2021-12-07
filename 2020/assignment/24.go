@@ -10,7 +10,7 @@ type d24Vector struct {
 
 var (
 	// https://stackoverflow.com/questions/2049196/generating-triangular-hexagonal-coordinates-xyz
-	d24Vectors = map[string]d24Vector{
+	d24VectorMap = map[string]d24Vector{
 		"e":  {1, -1, 0},
 		"se": {1, 0, -1},
 		"sw": {0, 1, -1},
@@ -18,7 +18,17 @@ var (
 		"nw": {-1, 0, 1},
 		"ne": {0, -1, 1},
 	}
+	d24Vectors []d24Vector
 )
+
+func init() {
+	d24Vectors = make([]d24Vector, len(d24VectorMap))
+	i := 0
+	for k := range d24VectorMap {
+		d24Vectors[i] = d24VectorMap[k]
+		i++
+	}
+}
 
 func (v *d24Vector) add(v2 d24Vector) {
 	v.x += v2.x
@@ -127,13 +137,13 @@ func (d *Day24) readVectors(input string) [][]d24Vector {
 
 	for i, line := range lines {
 		for len(line) > 0 {
-			v, ok := d24Vectors[line[:1]]
+			v, ok := d24VectorMap[line[:1]]
 			if ok {
 				line = line[1:]
 				vs[i] = append(vs[i], v)
 				continue
 			}
-			v, ok = d24Vectors[line[:2]]
+			v, ok = d24VectorMap[line[:2]]
 			if !ok {
 				panic(fmt.Sprintf("vector %s not found", line[:2]))
 			}
