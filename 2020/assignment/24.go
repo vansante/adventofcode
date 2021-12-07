@@ -83,44 +83,32 @@ func (g *d24Grid) countBlack() int64 {
 }
 
 func (g *d24Grid) passDay() {
-	cp := g.clone()
+	flip := make([]d24Vector, 0, 128)
 
 	for x := range g.tiles {
 		for y := range g.tiles[x] {
 			for z := range g.tiles[x][y] {
 				neighbours := g.countBlackNeighbours(x, y, z)
 				if g.tiles[x][y][z] && (neighbours == 0 || neighbours > 2) {
-					cp.tiles[x][y][z] = false
+					flip = append(flip, d24Vector{x, y, z})
 				}
 
 				if !g.tiles[x][y][z] && neighbours == 2 {
-					cp.tiles[x][y][z] = true
+					flip = append(flip, d24Vector{x, y, z})
 				}
 			}
 		}
 	}
-	g.tiles = cp.tiles
+
+	for _, f := range flip {
+		g.tiles[f.x][f.y][f.z] = !g.tiles[f.x][f.y][f.z]
+	}
 }
 
 func (g *d24Grid) passDays(n int) {
 	for i := 0; i < n; i++ {
 		g.passDay()
 	}
-}
-
-func (g *d24Grid) clone() d24Grid {
-	cp := d24Grid{}
-	cp.init(len(g.tiles))
-	for x := range g.tiles {
-		for y := range g.tiles[x] {
-			for z := range g.tiles[x][y] {
-				if g.tiles[x][y][z] {
-					cp.tiles[x][y][z] = true
-				}
-			}
-		}
-	}
-	return cp
 }
 
 func (g *d24Grid) init(size int) {
