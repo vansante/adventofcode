@@ -1,7 +1,8 @@
 package assignment
 
 import (
-	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -44,6 +45,7 @@ type d08Line struct {
 	input   []d08Digit
 	output  []d08Digit
 	dispMap map[string][]string
+	revMap  map[string]string
 }
 
 func (l *d08Line) getCandidate(n int) *d08Digit {
@@ -54,6 +56,17 @@ func (l *d08Line) getCandidate(n int) *d08Digit {
 		}
 	}
 	return nil
+}
+
+func (l *d08Line) getCandidates(chars int) []d08Digit {
+	cands := make([]d08Digit, 0)
+	for i := range l.input {
+		c := l.input[i].chars
+		if len(c) == chars {
+			cands = append(cands, l.input[i])
+		}
+	}
+	return cands
 }
 
 func (l *d08Line) fillMap() {
@@ -88,6 +101,11 @@ func (l *d08Line) fillMap() {
 
 	l.processMap()
 	l.filterDuplicates()
+
+	l.revMap = make(map[string]string, 7)
+	for k := range l.dispMap {
+		l.revMap[l.dispMap[k][0]] = k
+	}
 }
 
 func (l *d08Line) processMap() {
@@ -218,6 +236,53 @@ func (l *d08Line) processMap() {
 		l.dispMap["e"] = StringsIntersect(chars, l.dispMap["e"])
 		l.dispMap["g"] = StringsIntersect(chars, l.dispMap["g"])
 	}
+
+	fivSegmCands := l.getCandidates(5)
+	sixSegmCands := l.getCandidates(6)
+	var fivChars, sixChars []string
+	for _, cand := range fivSegmCands {
+		fivChars = append(fivChars, strings.Split(cand.chars, "")...)
+	}
+	for _, cand := range sixSegmCands {
+		sixChars = append(sixChars, strings.Split(cand.chars, "")...)
+	}
+
+	least5 := l.leastCommonStrings(fivChars)
+	least6 := l.leastCommonStrings(sixChars)
+
+	l.dispMap["b"] = StringsIntersect(least5, l.dispMap["b"])
+	l.dispMap["c"] = StringsIntersect(least5, l.dispMap["c"])
+	l.dispMap["e"] = StringsIntersect(least5, l.dispMap["e"])
+
+	l.dispMap["c"] = StringsIntersect(least6, l.dispMap["c"])
+	l.dispMap["d"] = StringsIntersect(least6, l.dispMap["d"])
+	l.dispMap["e"] = StringsIntersect(least6, l.dispMap["e"])
+
+	bDiff := StringsDiff(least5, least6)
+	dDiff := StringsDiff(least6, least5)
+
+	l.dispMap["b"] = StringsIntersect(bDiff, l.dispMap["b"])
+	l.dispMap["d"] = StringsIntersect(dDiff, l.dispMap["d"])
+}
+
+func (l *d08Line) leastCommonStrings(in []string) []string {
+	mp := make(map[string]int)
+	for i := range in {
+		mp[in[i]]++
+	}
+	most := 0
+	for k := range mp {
+		if mp[k] > most {
+			most = mp[k]
+		}
+	}
+	var strs []string
+	for k := range mp {
+		if mp[k] < most {
+			strs = append(strs, k)
+		}
+	}
+	return strs
 }
 
 func (l *d08Line) addMap(char string, chars []string) {
@@ -227,7 +292,7 @@ func (l *d08Line) addMap(char string, chars []string) {
 func (l *d08Line) filterDuplicates() {
 	remove := func(char string) bool {
 		for c := range l.dispMap {
-			if char == l.dispMap[c][0] {
+			if len(l.dispMap[c]) <= 1 {
 				continue
 			}
 			leng := len(l.dispMap[c])
@@ -254,6 +319,51 @@ func (l *d08Line) filterDuplicates() {
 			}
 		}
 	}
+}
+
+func (l *d08Line) outputNumber() int64 {
+	out := ""
+	for i := range l.output {
+		out += l.digit(l.output[i])
+	}
+
+	num, err := strconv.ParseInt(out, 10, 32)
+	CheckErr(err)
+	return num
+}
+
+func (l *d08Line) digit(d d08Digit) string {
+	var digitSlice []string
+	for _, char := range strings.Split(d.chars, "") {
+		digitSlice = append(digitSlice, l.revMap[char])
+	}
+
+	sort.Strings(digitSlice)
+
+	digit := strings.Join(digitSlice, "")
+	switch digit {
+	case "abcefg":
+		return "0"
+	case "cf":
+		return "1"
+	case "acdeg":
+		return "2"
+	case "acdfg":
+		return "3"
+	case "bcdf":
+		return "4"
+	case "abdfg":
+		return "5"
+	case "abdefg":
+		return "6"
+	case "acf":
+		return "7"
+	case "abcdefg":
+		return "8"
+	case "abcdfg":
+		return "9"
+	}
+	panic(digit)
 }
 
 func (d *Day08) GetInput(input string) []d08Line {
@@ -300,11 +410,13 @@ func (d *Day08) SolveI(input string) int64 {
 func (d *Day08) SolveII(input string) int64 {
 	lines := d.GetInput(input)
 
+	var sum int64
 	for i := range lines {
 		l := lines[i]
 		l.fillMap()
-		fmt.Println(l.dispMap)
+
+		sum += l.outputNumber()
 	}
 
-	return 0
+	return sum
 }
