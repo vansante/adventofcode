@@ -63,6 +63,44 @@ func UniqueStrings(sl []string) []string {
 	return nw
 }
 
+// StringsIntersect returns strings contained in both slices
+func StringsIntersect(s1, s2 []string) []string {
+	if len(s2) == 0 {
+		return s1
+	}
+	nw := make([]string, 0, len(s1))
+	for i := range s1 {
+		if !StringsContains(s2, s1[i]) {
+			continue
+		}
+		nw = append(nw, s1[i])
+	}
+	return nw
+}
+
+// StringsDiff returns strings from s1 not contained in s2
+func StringsDiff(s1, s2 []string) []string {
+	nw := make([]string, 0, len(s1))
+	for i := range s1 {
+		if StringsContains(s2, s1[i]) {
+			continue
+		}
+		nw = append(nw, s1[i])
+	}
+	return nw
+}
+
+func StringsRemove(sl, remove []string) []string {
+	nw := make([]string, 0, len(sl))
+	for i := range sl {
+		if StringsContains(remove, sl[i]) {
+			continue
+		}
+		nw = append(nw, sl[i])
+	}
+	return nw
+}
+
 func StringsContains(sl []string, s string) bool {
 	for i := range sl {
 		if sl[i] == s {
