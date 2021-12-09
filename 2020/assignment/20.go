@@ -8,9 +8,18 @@ import (
 
 type Day20 struct{}
 
+const (
+	d09Size = 10
+	d09Last = d09Size - 1
+)
+
 type d20Tile struct {
-	id  int
+	id  int64
 	pix [][]bool
+}
+
+func (t *d20Tile) String() string {
+	return fmt.Sprintf("T-%d", t.id)
 }
 
 func (t *d20Tile) print() {
@@ -30,12 +39,12 @@ func (t *d20Tile) print() {
 func (t *d20Tile) rotate() *d20Tile {
 	nw := &d20Tile{
 		id:  t.id,
-		pix: make([][]bool, len(t.pix)),
+		pix: make([][]bool, d09Size),
 	}
-	for i := 0; i < len(t.pix); i++ {
-		nw.pix[i] = make([]bool, len(t.pix))
-		for j := 0; j < len(t.pix); j++ {
-			nw.pix[i][j] = t.pix[len(t.pix)-1-j][i]
+	for i := 0; i < d09Size; i++ {
+		nw.pix[i] = make([]bool, d09Size)
+		for j := 0; j < d09Size; j++ {
+			nw.pix[i][j] = t.pix[d09Last-j][i]
 		}
 	}
 	return nw
@@ -44,13 +53,13 @@ func (t *d20Tile) rotate() *d20Tile {
 func (t *d20Tile) flipHorizontal() *d20Tile {
 	nw := &d20Tile{
 		id:  t.id,
-		pix: make([][]bool, len(t.pix)),
+		pix: make([][]bool, d09Size),
 	}
 
 	for y := range t.pix {
-		nw.pix[y] = make([]bool, len(t.pix))
+		nw.pix[y] = make([]bool, d09Size)
 		for x := range t.pix[y] {
-			nw.pix[y][x] = t.pix[y][len(t.pix)-x-1]
+			nw.pix[y][x] = t.pix[y][d09Last-x]
 		}
 	}
 	return nw
@@ -59,25 +68,94 @@ func (t *d20Tile) flipHorizontal() *d20Tile {
 func (t *d20Tile) flipVertical() *d20Tile {
 	nw := &d20Tile{
 		id:  t.id,
-		pix: make([][]bool, len(t.pix)),
+		pix: make([][]bool, d09Size),
 	}
 
 	for y := range t.pix {
-		nw.pix[y] = make([]bool, len(t.pix))
+		nw.pix[y] = make([]bool, d09Size)
 		for x := range t.pix[y] {
-			nw.pix[y][x] = t.pix[len(t.pix)-y-1][x]
+			nw.pix[y][x] = t.pix[d09Last-y][x]
 		}
 	}
 	return nw
 }
 
-func (d *Day20) getTiles(input string) []d20Tile {
+func (t *d20Tile) rowMatch(other *d20Tile, y int) bool {
+	for x := range t.pix[y] {
+		if t.pix[y][x] != other.pix[d09Last-y][x] {
+			return false
+		}
+	}
+	return true
+}
+
+func (t *d20Tile) colMatch(other *d20Tile, x int) bool {
+	for y := range t.pix {
+		if t.pix[y][x] != other.pix[y][d09Last-x] {
+			return false
+		}
+	}
+	return true
+}
+
+func (t *d20Tile) findNeighbours(others []*d20Tile) (top, right, bottom, left *d20Tile) {
+	bla := 0
+	for i := range others {
+		oth := others[i]
+
+		if t.id == oth.id {
+			continue // dont match ourselves :x
+		}
+
+		for rotOth := 0; rotOth < 4; rotOth++ {
+			curOth := oth
+			for flipOth := 0; flipOth < 4; flipOth++ {
+				if t.rowMatch(curOth, 0) {
+					if top != nil && top.id != curOth.id {
+						panic("more than 1 top")
+					}
+					top = curOth
+				}
+				if t.rowMatch(curOth, d09Last) {
+					if bottom != nil && bottom.id != curOth.id {
+						panic("more than 1 bottom")
+					}
+					bottom = curOth
+				}
+				if t.colMatch(curOth, 0) {
+					if left != nil && left.id != curOth.id {
+						panic("more than 1 left")
+					}
+					left = curOth
+				}
+				if t.colMatch(curOth, d09Last) {
+					if right != nil && right.id != curOth.id {
+						panic("more than 1 right")
+					}
+					right = curOth
+				}
+
+				if flipOth%2 == 0 {
+					curOth = curOth.flipHorizontal()
+				} else {
+					curOth = curOth.flipVertical()
+				}
+				bla++
+			}
+			curOth = curOth.rotate()
+		}
+	}
+
+	return top, right, bottom, left
+}
+
+func (d *Day20) getTiles(input string) []*d20Tile {
 	split := strings.Split(input, "\n\n")
 
-	tiles := make([]d20Tile, 0, len(split))
+	tiles := make([]*d20Tile, 0, len(split))
 	for i := range split {
 		tileStr := SplitLines(split[i])
-		tile := d20Tile{}
+		tile := &d20Tile{}
 
 		n, err := fmt.Sscanf(tileStr[0], "Tile %d:", &tile.id)
 		if err != nil || n != 1 {
@@ -105,9 +183,16 @@ func (d *Day20) getTiles(input string) []d20Tile {
 func (d *Day20) SolveI(input string) int64 {
 	tiles := d.getTiles(input)
 
-	//fmt.Println(tiles)
-	tiles[0].print()
-	tiles[0].rotate().print()
+	for _, t := range tiles {
+		top, right, bottom, left := t.findNeighbours(tiles)
+
+		fmt.Println(t, "Top: ", top)
+		fmt.Println(t, "Right: ", right)
+		fmt.Println(t, "Bottom: ", bottom)
+		fmt.Println(t, "Left: ", left)
+		//break
+	}
+
 	return 0
 }
 
