@@ -2,7 +2,7 @@ package assignment
 
 import (
 	"fmt"
-	"math"
+	"sort"
 	"strings"
 )
 
@@ -109,27 +109,6 @@ func (d *Day09) getMap(input string) d09map {
 	return m
 }
 
-func (D *Day09) findLargestMultiplied(sizes []int64, n int) int64 {
-	mult := int64(0)
-	for i := 0; i < n; i++ {
-		max := int64(math.MinInt64)
-		idx := -1
-		for j := range sizes {
-			if sizes[j] > max {
-				max = sizes[j]
-				idx = j
-			}
-		}
-		sizes = append(sizes[:idx], sizes[idx+1:]...)
-		if i == 0 {
-			mult = max
-		} else {
-			mult *= max
-		}
-	}
-	return mult
-}
-
 func (d *Day09) SolveI(input string) int64 {
 	m := d.getMap(input)
 	return m.findRisk()
@@ -139,5 +118,9 @@ func (d *Day09) SolveII(input string) int64 {
 	m := d.getMap(input)
 	basins := m.findBasins()
 
-	return d.findLargestMultiplied(basins, 3)
+	sort.Slice(basins, func(i, j int) bool {
+		return basins[i] > basins[j]
+	})
+
+	return basins[0] * basins[1] * basins[2]
 }
