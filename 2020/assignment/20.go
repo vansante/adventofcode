@@ -13,9 +13,19 @@ const (
 	d20Last = d20Size - 1
 )
 
+const (
+	d20Top = iota
+	d20Right
+	d20Bottom
+	d20Left
+)
+
 type d20Tile struct {
-	id  int64
-	pix [][]bool
+	id   int64
+	pix  [][]bool
+	lock bool
+
+	neighbours [4]*d20Tile
 }
 
 func (t *d20Tile) String() string {
@@ -36,48 +46,39 @@ func (t *d20Tile) print() {
 	}
 }
 
-func (t *d20Tile) rotate() *d20Tile {
-	nw := &d20Tile{
-		id:  t.id,
-		pix: make([][]bool, d20Size),
-	}
+func (t *d20Tile) rotate() {
+	nw := make([][]bool, d20Size)
 	for i := 0; i < d20Size; i++ {
-		nw.pix[i] = make([]bool, d20Size)
+		nw[i] = make([]bool, d20Size)
 		for j := 0; j < d20Size; j++ {
-			nw.pix[i][j] = t.pix[d20Last-j][i]
+			nw[i][j] = t.pix[d20Last-j][i]
 		}
 	}
-	return nw
+	t.pix = nw
 }
 
-func (t *d20Tile) flipHorizontal() *d20Tile {
-	nw := &d20Tile{
-		id:  t.id,
-		pix: make([][]bool, d20Size),
-	}
+func (t *d20Tile) flipHorizontal() {
+	nw := make([][]bool, d20Size)
 
 	for y := range t.pix {
-		nw.pix[y] = make([]bool, d20Size)
+		nw[y] = make([]bool, d20Size)
 		for x := range t.pix[y] {
-			nw.pix[y][x] = t.pix[y][d20Last-x]
+			nw[y][x] = t.pix[y][d20Last-x]
 		}
 	}
-	return nw
+	t.pix = nw
 }
 
-func (t *d20Tile) flipVertical() *d20Tile {
-	nw := &d20Tile{
-		id:  t.id,
-		pix: make([][]bool, d20Size),
-	}
+func (t *d20Tile) flipVertical() {
+	nw := make([][]bool, d20Size)
 
 	for y := range t.pix {
-		nw.pix[y] = make([]bool, d20Size)
+		nw[y] = make([]bool, d20Size)
 		for x := range t.pix[y] {
-			nw.pix[y][x] = t.pix[d20Last-y][x]
+			nw[y][x] = t.pix[d20Last-y][x]
 		}
 	}
-	return nw
+	t.pix = nw
 }
 
 func (t *d20Tile) rowMatch(other *d20Tile, y int) bool {
@@ -161,7 +162,7 @@ func (d *Day20) getTiles(input string) []*d20Tile {
 	return tiles
 }
 
-func (d *Day20) StitchImage(tiles []d20Tile) {
+func (d *Day20) StitchImage(tiles []*d20Tile) {
 	for _, t := range tiles {
 		tileBorders := t.getBorders()
 
@@ -169,13 +170,34 @@ func (d *Day20) StitchImage(tiles []d20Tile) {
 			if t.id == t2.id {
 				continue
 			}
+
 			tile2Borders := t2.getBorders()
-			for _, tb := range tileBorders {
-				for _, tb2 := range tile2Borders {
-					if !tb.equals(tb2) && !tb.flip().equals(tb2) {
-						continue
+			for i, tb := range tileBorders {
+				for j, tb2 := range tile2Borders {
+					flipped := false
+					if !tb.equals(tb2) {
+						if !tb.flip().equals(tb2) {
+							continue
+						}
+						flipped = true
+					}
+					fmt.Println(flipped)
+					if (i+2)%4 != j { // Match 0 and 2 and 1 and 3 together
+						// We need rotation
+
 					}
 
+					// TODO FIXME: Rotate and flip accordingly
+
+					switch i {
+					case d20Top: // FIXME: Why do we have to flip Top and Bottom?
+						t.neighbours[d20Bottom] = t2
+					case d20Bottom:
+						t.neighbours[d20Top] = t2
+					default:
+						// Set tile positions
+						t.neighbours[i] = t2
+					}
 				}
 			}
 		}
@@ -185,29 +207,17 @@ func (d *Day20) StitchImage(tiles []d20Tile) {
 func (d *Day20) SolveI(input string) int64 {
 	tiles := d.getTiles(input)
 
+	d.StitchImage(tiles)
+
 	multi := int64(1)
 	for _, t := range tiles {
-		tileBorders := t.getBorders()
-
-		neighbourSum := 0
-		for _, t2 := range tiles {
-			if t.id == t2.id {
-				continue
-			}
-			tile2Borders := t2.getBorders()
-			for _, tb := range tileBorders {
-				for _, tb2 := range tile2Borders {
-					if tb.equals(tb2) || tb.flip().equals(tb2) {
-						neighbourSum++
-					}
-				}
+		sum := 0
+		for _, neighbour := range t.neighbours {
+			if neighbour != nil {
+				sum++
 			}
 		}
-
-		switch neighbourSum {
-		case 0, 1:
-			panic("invalid amount of neighbours")
-		case 2:
+		if sum == 2 {
 			multi *= t.id
 		}
 	}
@@ -215,5 +225,8 @@ func (d *Day20) SolveI(input string) int64 {
 }
 
 func (d *Day20) SolveII(input string) int64 {
+	tiles := d.getTiles(input)
+	d.StitchImage(tiles)
+
 	return 0
 }

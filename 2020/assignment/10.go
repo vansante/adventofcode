@@ -6,7 +6,7 @@ import (
 
 type Day10 struct{}
 
-func findDifferences(current int64, numbers []int64) (diff1, diff2, diff3 int) {
+func (d *Day10) findDifferences(current int64, numbers []int64) (diff1, diff2, diff3 int) {
 	for i := range numbers {
 		var diff int64
 		switch numbers[i] {
@@ -22,7 +22,7 @@ func findDifferences(current int64, numbers []int64) (diff1, diff2, diff3 int) {
 		default:
 			continue
 		}
-		sub1, sub2, sub3 := findDifferences(current+diff, numbers)
+		sub1, sub2, sub3 := d.findDifferences(current+diff, numbers)
 		diff1 += sub1
 		diff2 += sub2
 		diff3 += sub3
@@ -31,7 +31,7 @@ func findDifferences(current int64, numbers []int64) (diff1, diff2, diff3 int) {
 	return diff1, diff2, diff3
 }
 
-func findCombinations(current int64, numbers []int64, values map[int64]int64) int64 {
+func (d *Day10) findCombinations(current int64, numbers []int64, values map[int64]int64) int64 {
 	if len(numbers) == 0 {
 		return 1
 	}
@@ -44,7 +44,7 @@ func findCombinations(current int64, numbers []int64, values map[int64]int64) in
 		if numbers[i] <= current || numbers[i] > current+3 {
 			continue
 		}
-		val += findCombinations(numbers[i], numbers[i+1:], values)
+		val += d.findCombinations(numbers[i], numbers[i+1:], values)
 	}
 	values[current] = val
 	return val
@@ -57,7 +57,7 @@ func (d *Day10) SolveI(input string) int64 {
 		return numbers[i] < numbers[j]
 	})
 
-	diff1, _, diff3 := findDifferences(0, numbers)
+	diff1, _, diff3 := d.findDifferences(0, numbers)
 	diff3++ // For the device adapter
 
 	return int64(diff1) * int64(diff3)
@@ -71,7 +71,7 @@ func (d *Day10) SolveII(input string) int64 {
 	})
 
 	adapters := make(map[int64]int64)
-	combinations := findCombinations(0, numbers, adapters)
+	combinations := d.findCombinations(0, numbers, adapters)
 
 	return combinations
 }

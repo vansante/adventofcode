@@ -7,13 +7,13 @@ import (
 
 type Day07 struct{}
 
-type contain struct {
+type d07contain struct {
 	bagType string
 	amount  int
 }
 
-func (d *Day07) retrieveRules(lines []string) map[string][]contain {
-	rules := make(map[string][]contain)
+func (d *Day07) retrieveRules(lines []string) map[string][]d07contain {
+	rules := make(map[string][]d07contain)
 	for i := range lines {
 		words := strings.Split(lines[i], " ")
 		subject := words[0] + words[1]
@@ -25,7 +25,7 @@ func (d *Day07) retrieveRules(lines []string) map[string][]contain {
 			amount, err := strconv.ParseInt(words[wordPos], 10, 32)
 			CheckErr(err)
 			contained := words[wordPos+1] + words[wordPos+2]
-			rules[subject] = append(rules[subject], contain{
+			rules[subject] = append(rules[subject], d07contain{
 				bagType: contained,
 				amount:  int(amount),
 			})
@@ -37,7 +37,7 @@ func (d *Day07) retrieveRules(lines []string) map[string][]contain {
 	return rules
 }
 
-func (d *Day07) inverse(rules map[string][]contain) map[string][]string {
+func (d *Day07) inverse(rules map[string][]d07contain) map[string][]string {
 	out := make(map[string][]string)
 	for key := range rules {
 		for i := range rules[key] {
@@ -61,7 +61,7 @@ func (d *Day07) findParents(bagType string, invert map[string][]string, results 
 	}
 }
 
-func (d *Day07) findChildrenCount(bagType string, rules map[string][]contain) int {
+func (d *Day07) findChildrenCount(bagType string, rules map[string][]d07contain) int {
 	sum := 0
 	bagRules := rules[bagType]
 	for i := range bagRules {
