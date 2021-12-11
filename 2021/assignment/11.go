@@ -16,7 +16,7 @@ type d11Vector struct {
 }
 
 var (
-	d11Vectors = []d09Vector{
+	d11Vectors = []d11Vector{
 		{0, -1},  // top
 		{1, -1},  // top right
 		{1, 0},   // right
