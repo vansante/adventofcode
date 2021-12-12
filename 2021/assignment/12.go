@@ -1,7 +1,6 @@
 package assignment
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -87,13 +86,10 @@ func (g *d12Graph) findPathsIterative(start, end string) int64 {
 	}
 	stack := make([]*item, 0, 1024)
 	visited := make(map[string]int, 128)
-	//visitedTwice := false
-	path := make([]string, 1, 32)
-	path[0] = start
+	visitedTwice := ""
 
 	stack = append(stack, &item{start, 0})
 	visited[start] = 10
-	visited[end] = 1
 
 	sum := int64(0)
 	for len(stack) > 0 {
@@ -106,15 +102,13 @@ func (g *d12Graph) findPathsIterative(start, end string) int64 {
 
 		if curNd.name == end || cur.edgeIdx == len(curNd.edges) {
 			if curNd.name == end {
-				for _, nd := range path {
-					fmt.Printf("%s,", nd)
-				}
-				println()
 				sum++
 			}
 			visited[curNd.name]--
-			path = path[:len(path)-1]
 			stack = stack[:len(stack)-1] // pop
+			if visitedTwice == curNd.name {
+				visitedTwice = ""
+			}
 			continue
 		}
 
@@ -122,21 +116,17 @@ func (g *d12Graph) findPathsIterative(start, end string) int64 {
 		cur.edgeIdx++
 
 		visits := visited[edge.name]
-		//if visits > 0 {
-		//	if visitedTwice {
-		//		continue
-		//	}
-		//	visitedTwice = true
-		//}
-		if visits > 1 {
-			continue
+		if !edge.big && (visits > 0 || edge.name == visitedTwice && visits > 1) {
+			if visitedTwice != "" || edge.name == start {
+				continue
+			}
+			visitedTwice = edge.name
 		}
 
 		stack = append(stack, &item{edge.name, 0})
 		if !edge.big {
 			visited[edge.name]++
 		}
-		path = append(path, edge.name)
 	}
 	return sum
 }
