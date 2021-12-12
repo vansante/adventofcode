@@ -25,6 +25,7 @@ var (
 		9:  &assignment.Day09{},
 		10: &assignment.Day10{},
 		11: &assignment.Day11{},
+		12: &assignment.Day12{},
 		// <generator:add:days>
 	}
 )
@@ -54,11 +55,11 @@ func main() {
 	inputs := findInputs(int(dayNum), inputArg)
 
 	profile := assignment.StringsContains(os.Args, "<profile>")
-	for name, input := range inputs {
+	for _, in := range inputs {
 		var cpuFile *os.File
 		if profile {
 			var err error
-			cpuFile, err = os.CreateTemp(os.TempDir(), fmt.Sprintf("day_%02d_%s_cpu.pprof", dayNum, name))
+			cpuFile, err = os.CreateTemp(os.TempDir(), fmt.Sprintf("day_%02d_%s_cpu.pprof", dayNum, in.name))
 			if err != nil {
 				panic(err)
 			}
@@ -70,18 +71,18 @@ func main() {
 			}
 		}
 
-		if !strings.HasPrefix(name, "2_") {
-			fmt.Printf("Solving 2021 day %d first assignment with '%s'\n", dayNum, name)
+		if !strings.HasPrefix(in.name, "2_") {
+			fmt.Printf("Solving 2021 day %d first assignment with '%s'\n", dayNum, in.name)
 			start := time.Now()
-			resultI := day.SolveI(input)
+			resultI := day.SolveI(in.content)
 			fmt.Printf("Solved first assignment: %d\n", resultI)
 			fmt.Printf("Time taken: %v\n", time.Since(start))
 		}
 
-		if !strings.HasPrefix(name, "1_") {
-			fmt.Printf("Solving 2021 day %d second assignment with '%s'\n", dayNum, name)
+		if !strings.HasPrefix(in.name, "1_") {
+			fmt.Printf("Solving 2021 day %d second assignment with '%s'\n", dayNum, in.name)
 			start := time.Now()
-			resultII := day.SolveII(input)
+			resultII := day.SolveII(in.content)
 			fmt.Printf("Solved second assignment: %d\n", resultII)
 			fmt.Printf("Time taken: %v\n", time.Since(start))
 		}
@@ -95,7 +96,12 @@ func main() {
 	}
 }
 
-func findInputs(dayNum int, inputArg string) map[string]string {
+type input struct {
+	name    string
+	content string
+}
+
+func findInputs(dayNum int, inputArg string) []input {
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -106,7 +112,10 @@ func findInputs(dayNum int, inputArg string) map[string]string {
 		if err != nil {
 			panic(err)
 		}
-		return map[string]string{inputArg: string(contents)}
+		return []input{{
+			name:    inputArg,
+			content: string(contents),
+		}}
 	}
 
 	entries, err := os.ReadDir(dir)
@@ -114,7 +123,7 @@ func findInputs(dayNum int, inputArg string) map[string]string {
 		panic(err)
 	}
 
-	results := make(map[string]string)
+	results := make([]input, 0, 8)
 	for _, entry := range entries {
 		if !strings.HasSuffix(entry.Name(), ".txt") {
 			continue
@@ -123,7 +132,10 @@ func findInputs(dayNum int, inputArg string) map[string]string {
 		if err != nil {
 			panic(err)
 		}
-		results[strings.TrimSuffix(entry.Name(), ".txt")] = string(contents)
+		results = append(results, input{
+			name:    strings.TrimSuffix(entry.Name(), ".txt"),
+			content: string(contents),
+		})
 	}
 	return results
 }
