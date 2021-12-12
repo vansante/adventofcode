@@ -29,7 +29,7 @@ type d20Tile struct {
 }
 
 func (t *d20Tile) String() string {
-	return fmt.Sprintf("T-%d", t.id)
+	return fmt.Sprintf("T-%d %v", t.id, t.lock)
 }
 
 func (t *d20Tile) print() {
@@ -162,7 +162,7 @@ func (d *Day20) getTiles(input string) []*d20Tile {
 	return tiles
 }
 
-func (d *Day20) StitchImage(tiles []*d20Tile) {
+func (d *Day20) setNeighbours(tiles []*d20Tile) {
 	for _, t := range tiles {
 		tileBorders := t.getBorders()
 
@@ -173,41 +173,49 @@ func (d *Day20) StitchImage(tiles []*d20Tile) {
 
 			tile2Borders := t2.getBorders()
 			for i, tb := range tileBorders {
-				for j, tb2 := range tile2Borders {
-					flipped := false
-					if !tb.equals(tb2) {
-						if !tb.flip().equals(tb2) {
-							continue
-						}
-						flipped = true
+				for _, tb2 := range tile2Borders {
+					if !tb.equals(tb2) && !tb.flip().equals(tb2) {
+						continue
 					}
-					fmt.Println(flipped)
-					if (i+2)%4 != j { // Match 0 and 2 and 1 and 3 together
-						// We need rotation
-
-					}
-
-					// TODO FIXME: Rotate and flip accordingly
-
-					switch i {
-					case d20Top: // FIXME: Why do we have to flip Top and Bottom?
-						t.neighbours[d20Bottom] = t2
-					case d20Bottom:
-						t.neighbours[d20Top] = t2
-					default:
-						// Set tile positions
-						t.neighbours[i] = t2
-					}
+					t.neighbours[i] = t2
 				}
 			}
 		}
 	}
 }
 
+func (d *Day20) findCorner(tiles []*d20Tile) *d20Tile {
+	for _, t := range tiles {
+		sum := 0
+		for i := range t.neighbours {
+			if t.neighbours[i] == nil {
+				sum++
+			}
+		}
+		if sum == 2 {
+			return t
+		}
+	}
+	panic("no corner found")
+}
+
+func (d *Day20) orientTiles(tiles []*d20Tile) {
+	cur := d.findCorner(tiles)
+
+	for cur != nil {
+
+		line := cur
+		for line != nil {
+			line = line.neighbours[d20Right]
+		}
+		cur = cur.neighbours[d20Bottom]
+	}
+}
+
 func (d *Day20) SolveI(input string) int64 {
 	tiles := d.getTiles(input)
 
-	d.StitchImage(tiles)
+	d.setNeighbours(tiles)
 
 	multi := int64(1)
 	for _, t := range tiles {
@@ -226,7 +234,26 @@ func (d *Day20) SolveI(input string) int64 {
 
 func (d *Day20) SolveII(input string) int64 {
 	tiles := d.getTiles(input)
-	d.StitchImage(tiles)
+	d.setNeighbours(tiles)
+
+	//
+	//var leftTop *d20Tile
+	//for _, t := range tiles {
+	//	if t.neighbours[d20Left] == nil && t.neighbours[d20Top] == nil {
+	//		leftTop = t
+	//	}
+	//}
+	//
+	//cur := leftTop
+	//for cur != nil {
+	//	line := cur
+	//	for line != nil {
+	//		print(line.id, " ")
+	//		line = line.neighbours[d20Right]
+	//	}
+	//	print(cur.id)
+	//	cur = cur.neighbours[d20Bottom]
+	//}
 
 	return 0
 }
