@@ -7,10 +7,9 @@ import (
 type Day12 struct{}
 
 type d12Node struct {
-	name   string
-	edges  []*d12Node
-	big    bool
-	visits int
+	name  string
+	edges []*d12Node
+	big   bool
 }
 
 func (n *d12Node) String() string {
@@ -50,24 +49,17 @@ func (d *Day12) getGraph(input string) *d12Graph {
 	return g
 }
 
-func (d *Day12) findAllPaths(g *d12Graph, start, end string, rulesII bool) int64 {
+func (d *Day12) findAllPaths(g *d12Graph, start, end string) int64 {
 	visited := make(map[string]struct{}, 128)
 
-	return g.findPath(start, end, rulesII, visited)
+	return g.findPath(start, end, visited)
 }
 
-func (g *d12Graph) findPath(start, end string, rulesII bool, visited map[string]struct{}) int64 {
+func (g *d12Graph) findPath(start, end string, visited map[string]struct{}) int64 {
 	cur := g.nodes[start]
 
-	if rulesII {
-		cur.visits++
-		if !cur.big && cur.visits == 2 {
-			visited[cur.name] = struct{}{}
-		}
-	} else {
-		if !cur.big {
-			visited[cur.name] = struct{}{}
-		}
+	if !cur.big {
+		visited[cur.name] = struct{}{}
 	}
 
 	sum := int64(0)
@@ -78,7 +70,7 @@ func (g *d12Graph) findPath(start, end string, rulesII bool, visited map[string]
 			if _, ok := visited[edge.name]; ok {
 				continue
 			}
-			sum += g.findPath(edge.name, end, rulesII, visited)
+			sum += g.findPath(edge.name, end, visited)
 		}
 	}
 
@@ -86,14 +78,58 @@ func (g *d12Graph) findPath(start, end string, rulesII bool, visited map[string]
 	return sum
 }
 
+func (g *d12Graph) findPathsIterative(start, end string) int64 {
+	// https://stackoverflow.com/a/35187404
+	type item struct {
+		start   string
+		edgeIdx int
+	}
+	stack := make([]*item, 0, 1024)
+	visited := make(map[string]int, 128)
+
+	stack = append(stack, &item{start, 0})
+	visited[start] = 10
+
+	sum := int64(0)
+	for len(stack) > 0 {
+		if len(stack) > 10_000 {
+			panic("stack too long")
+		}
+		var cur *item
+		cur = stack[len(stack)-1] // peek
+		curNd := g.nodes[cur.start]
+
+		if curNd.name == end || cur.edgeIdx == len(curNd.edges) {
+			if curNd.name == end {
+				sum++
+			}
+			delete(visited, curNd.name)
+			stack = stack[:len(stack)-1] // pop
+			continue
+		}
+
+		edge := curNd.edges[cur.edgeIdx]
+		cur.edgeIdx++
+
+		if _, ok := visited[edge.name]; ok {
+			continue
+		}
+		stack = append(stack, &item{edge.name, 0})
+		if !edge.big {
+			visited[edge.name] = 1
+		}
+	}
+	return sum
+}
+
 func (d *Day12) SolveI(input string) int64 {
 	g := d.getGraph(input)
 
-	return d.findAllPaths(g, "start", "end", false)
+	return d.findAllPaths(g, "start", "end")
 }
 
 func (d *Day12) SolveII(input string) int64 {
 	g := d.getGraph(input)
 
-	return d.findAllPaths(g, "start", "end", true)
+	return g.findPathsIterative("start", "end")
 }
