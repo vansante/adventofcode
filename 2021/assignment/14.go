@@ -9,35 +9,53 @@ import (
 type Day14 struct{}
 
 type d14Polymer struct {
-	el []string
-}
-
-func (p *d14Polymer) insert(idx int, el string) {
-	p.el = append(p.el[:idx], append([]string{el}, p.el[idx:]...)...)
-}
-
-func (p *d14Polymer) count() map[string]int64 {
-	sums := make(map[string]int64)
-	for _, el := range p.el {
-		sums[el]++
-	}
-	return sums
+	pairs  map[string]int64
+	counts map[string]int64
 }
 
 func (p *d14Polymer) applyRules(rules []d14Rule) {
-	for i := 0; i < len(p.el)-1; i++ {
-		cur := p.el[i]
-		nxt := p.el[i+1]
+	nw := make(map[string]int64, len(p.pairs))
+
+	for pair, freq := range p.pairs {
+		if freq <= 0 {
+			continue
+		}
+		nw[pair] = freq
+	}
+	for pair, freq := range p.pairs {
+		if freq <= 0 {
+			continue
+		}
 		for _, r := range rules {
-			if r.a != cur || r.b != nxt {
+			if pair != r.a+r.b {
 				continue
 			}
 			// match, insert
-			p.insert(i+1, r.ins)
-			i++ // Increment i so we wont work on the inserted char
+			p.counts[r.ins] += freq
+			nw[r.a+r.ins] += freq
+			nw[r.ins+r.b] += freq
+			nw[pair] -= freq
 			break
 		}
 	}
+	p.pairs = nw
+}
+
+func (p *d14Polymer) minMax() (int64, int64) {
+	min := int64(math.MaxInt)
+	max := int64(math.MinInt)
+	for _, sum := range p.counts {
+		if sum <= 0 {
+			continue
+		}
+		if sum > max {
+			max = sum
+		}
+		if sum < min {
+			min = sum
+		}
+	}
+	return min, max
 }
 
 type d14Rule struct {
@@ -48,8 +66,15 @@ func (d *Day14) getInput(input string) (*d14Polymer, []d14Rule) {
 	lines := SplitLines(input)
 
 	p := &d14Polymer{
-		el: strings.Split(lines[0], ""),
+		pairs:  make(map[string]int64),
+		counts: make(map[string]int64),
 	}
+	line := lines[0]
+	for i := 0; i < len(line)-1; i++ {
+		p.pairs[line[i:i+2]] = 1
+		p.counts[line[i:i+1]]++
+	}
+	p.counts[line[len(line)-1:]]++
 
 	rules := make([]d14Rule, 0, len(lines))
 	for _, line := range lines[1:] {
@@ -73,21 +98,16 @@ func (d *Day14) SolveI(input string) int64 {
 	p, rules := d.getInput(input)
 	d.steps(p, 10, rules)
 
-	sums := p.count()
-	min := int64(math.MaxInt)
-	max := int64(math.MinInt)
-	for _, sum := range sums {
-		if sum > max {
-			max = sum
-		}
-		if sum < min {
-			min = sum
-		}
-	}
+	min, max := p.minMax()
 	fmt.Println(min, max)
 	return max - min
 }
 
 func (d *Day14) SolveII(input string) int64 {
-	return 0
+	p, rules := d.getInput(input)
+	d.steps(p, 40, rules)
+
+	min, max := p.minMax()
+	fmt.Println(min, max)
+	return max - min
 }
