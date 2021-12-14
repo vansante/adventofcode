@@ -1,7 +1,6 @@
 package assignment
 
 import (
-	"fmt"
 	"math"
 	"strings"
 )
@@ -35,7 +34,6 @@ func (p *d14Polymer) applyRules(rules []d14Rule) {
 			nw[r.a+r.ins] += freq
 			nw[r.ins+r.b] += freq
 			nw[pair] -= freq
-			break
 		}
 	}
 	p.pairs = nw
@@ -71,7 +69,7 @@ func (d *Day14) getInput(input string) (*d14Polymer, []d14Rule) {
 	}
 	line := lines[0]
 	for i := 0; i < len(line)-1; i++ {
-		p.pairs[line[i:i+2]] = 1
+		p.pairs[line[i:i+2]]++
 		p.counts[line[i:i+1]]++
 	}
 	p.counts[line[len(line)-1:]]++
@@ -99,7 +97,6 @@ func (d *Day14) SolveI(input string) int64 {
 	d.steps(p, 10, rules)
 
 	min, max := p.minMax()
-	fmt.Println(min, max)
 	return max - min
 }
 
@@ -108,6 +105,5 @@ func (d *Day14) SolveII(input string) int64 {
 	d.steps(p, 40, rules)
 
 	min, max := p.minMax()
-	fmt.Println(min, max)
 	return max - min
 }
