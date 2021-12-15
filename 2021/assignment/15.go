@@ -60,7 +60,6 @@ func (g *d15Grid) get(x, y, wrapCount int, defaultVal int) int {
 	}
 
 	penalty := 0
-
 	nwY := y
 	if y >= lenY {
 		penalty += y / lenY
@@ -72,8 +71,11 @@ func (g *d15Grid) get(x, y, wrapCount int, defaultVal int) int {
 		nwX = x % lenX
 	}
 
-	val := g.y[nwY].x[nwX]
-	return val + penalty%9
+	val := (g.y[nwY].x[nwX] + penalty) % 9
+	if val == 0 {
+		return 9
+	}
+	return val
 }
 
 func (g *d15Grid) print() {
