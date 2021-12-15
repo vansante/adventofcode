@@ -3,7 +3,6 @@ package assignment
 import (
 	"fmt"
 	"math"
-	"sort"
 	"strings"
 )
 
@@ -115,7 +114,7 @@ func (g *d15Grid) dijkstra(start, end d15Coord, wrapCount int) int64 {
 	visited := make(map[int64]struct{})
 	dist := make(map[int64]int64)
 	prev := make(map[int64]d15Coord)
-	queue := make([]d15Coord, 1)
+	queue := make([]d15Coord, 1, 1_000)
 
 	const MaxDist = 100_000_000_000
 
@@ -129,11 +128,20 @@ func (g *d15Grid) dijkstra(start, end d15Coord, wrapCount int) int64 {
 	queue[0] = start
 
 	for len(queue) > 0 {
-		sort.Slice(queue, func(i, j int) bool {
-			return dist[queue[i].id()] > dist[queue[j].id()]
-		})
-		var cur d15Coord
-		cur, queue = queue[len(queue)-1], queue[:len(queue)-1]
+		min := int64(math.MaxInt)
+		idx := -1
+		for i, coord := range queue {
+			distance := dist[coord.id()]
+			if distance < min {
+				min = distance
+				idx = i
+			}
+		}
+		cur := queue[idx]
+
+		copy(queue[idx:], queue[idx+1:])
+		queue = queue[:len(queue)-1]
+
 		if cur.equals(end) {
 			break
 		}
