@@ -41,7 +41,7 @@ func (a *d17TargetArea) hit(c *d17Vector) bool {
 }
 
 func (a *d17TargetArea) simulate(vec d17Vector) (maxY int64, reached bool) {
-	const steps = 1_000
+	const steps = 500
 
 	c := &d17Vector{0, 0}
 	v := &d17Vector{vec.x, vec.y}
@@ -59,11 +59,10 @@ func (a *d17TargetArea) simulate(vec d17Vector) (maxY int64, reached bool) {
 			return maxY, true
 		}
 		if c.x > a.xMax || c.y < a.yMin {
-			return 0, false
+			return maxY, false
 		}
-
 	}
-	return 0, false
+	return maxY, false
 }
 
 func (d *Day17) getTargetArea(input string) d17TargetArea {
@@ -80,7 +79,7 @@ func (d *Day17) getTargetArea(input string) d17TargetArea {
 func (d *Day17) SolveI(input string) int64 {
 	ta := d.getTargetArea(input)
 
-	const simulateSize = 1_000
+	const simulateSize = 500
 	maxY := int64(math.MinInt)
 	for x := -simulateSize; x < simulateSize; x++ {
 		for y := -simulateSize; y < simulateSize; y++ {
@@ -99,8 +98,7 @@ func (d *Day17) SolveI(input string) int64 {
 func (d *Day17) SolveII(input string) int64 {
 	ta := d.getTargetArea(input)
 
-	const simulateSize = 1_000
-
+	const simulateSize = 500
 	hits := int64(0)
 	for x := -simulateSize; x < simulateSize; x++ {
 		for y := -simulateSize; y < simulateSize; y++ {
