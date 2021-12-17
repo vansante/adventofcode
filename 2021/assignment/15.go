@@ -3,6 +3,7 @@ package assignment
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 )
 
@@ -128,20 +129,8 @@ func (g *d15Grid) dijkstra(start, end d15Coord, wrapCount int) int64 {
 	queue[0] = start
 
 	for len(queue) > 0 {
-		min := int64(math.MaxInt)
-		idx := -1
-		for i, coord := range queue {
-			distance := dist[coord.id()]
-			if distance < min {
-				min = distance
-				idx = i
-			}
-		}
-		cur := queue[idx]
-
-		copy(queue[idx:], queue[idx+1:])
-		queue = queue[:len(queue)-1]
-
+		var cur d15Coord
+		cur, queue = queue[len(queue)-1], queue[:len(queue)-1]
 		if cur.equals(end) {
 			break
 		}
@@ -159,11 +148,18 @@ func (g *d15Grid) dijkstra(start, end d15Coord, wrapCount int) int64 {
 			}
 			shortestDist := dist[cur.id()] + cost
 			currentDist := dist[ngb.id()]
-			if shortestDist < currentDist {
-				queue = append(queue, ngb)
-				dist[ngb.id()] = shortestDist
-				prev[ngb.id()] = cur
+			if shortestDist >= currentDist {
+				continue
 			}
+
+			// Insert neighbour into priority queue, lowest distance last
+			idx := sort.Search(len(queue), func(i int) bool {
+				return dist[queue[i].id()] <= shortestDist
+			})
+			queue = append(queue[:idx], append([]d15Coord{ngb}, queue[idx:]...)...)
+
+			dist[ngb.id()] = shortestDist
+			prev[ngb.id()] = cur
 		}
 	}
 
