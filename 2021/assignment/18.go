@@ -338,6 +338,7 @@ func (d *Day18) SolveI(input string) int64 {
 		sum = sum.add(p)
 	}
 	sum.print()
+	println()
 	return sum.magnitude()
 }
 
