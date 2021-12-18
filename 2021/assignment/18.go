@@ -143,19 +143,16 @@ func (p *d18Pair) add(pair *d18Pair) *d18Pair {
 	}
 	pair.parent = nw
 	p.parent = nw
+	nw.reduce()
 	return nw
 }
 
 func (p *d18Pair) reduce() {
 	for {
-		p.print()
-		println()
 		if p.explode() {
-			println("explode")
 			continue
 		}
 		if p.split() {
-			println("split")
 			continue
 		}
 		break
@@ -339,15 +336,28 @@ func (d *Day18) SolveI(input string) int64 {
 		}
 
 		sum = sum.add(p)
-		sum.reduce()
 	}
-
 	sum.print()
-
 	return sum.magnitude()
 }
 
 func (d *Day18) SolveII(input string) int64 {
-	//panic("asas")
-	return 0
+	lines := SplitLines(input)
+	max := int64(math.MinInt)
+	for i := range lines {
+		for j := range lines {
+			if i == j {
+				continue
+			}
+			p1 := d.parseLine(lines[i])
+			p2 := d.parseLine(lines[j])
+
+			sum := p1.add(p2)
+			mag := sum.magnitude()
+			if mag > max {
+				max = mag
+			}
+		}
+	}
+	return max
 }
