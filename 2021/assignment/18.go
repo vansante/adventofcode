@@ -118,10 +118,10 @@ func (p *d18Pair) print() {
 	print(d18Close)
 }
 
-func (p *d18Pair) add(pair d18Pair) *d18Pair {
+func (p *d18Pair) add(pair *d18Pair) *d18Pair {
 	nw := &d18Pair{
-		lft:    &pair,
-		rgt:    p,
+		lft:    p,
+		rgt:    pair,
 		lftVal: d18NotSet,
 		rgtVal: d18NotSet,
 	}
@@ -131,7 +131,19 @@ func (p *d18Pair) add(pair d18Pair) *d18Pair {
 }
 
 func (p *d18Pair) reduce() {
-
+	for {
+		p.print()
+		println()
+		if p.explode() {
+			println("explode")
+			continue
+		}
+		if p.split() {
+			println("split")
+			continue
+		}
+		break
+	}
 }
 
 func (p *d18Pair) walkInOrder(depth int, walker func(p *d18Pair, depth int)) {
@@ -202,6 +214,10 @@ func (p *d18Pair) addRight(val int) {
 	cur := p.parent
 	child := p
 	for cur != nil {
+		if cur.rgt == nil {
+			cur.rgtVal += val
+			return
+		}
 		if cur.rgt == child {
 			child = cur
 			cur = cur.parent
@@ -248,19 +264,53 @@ func (p *d18Pair) detach() {
 	panic("no left or right set")
 }
 
+func (p *d18Pair) split() bool {
+	split := false
+	p.walkInOrder(0, func(cur *d18Pair, depth int) {
+		if split {
+			return
+		}
+		if cur.lftVal >= 10 {
+			roundedDown := cur.lftVal / 2
+			cur.lft = &d18Pair{
+				lftVal: roundedDown,
+				rgtVal: cur.lftVal - roundedDown,
+				parent: cur,
+			}
+			cur.lftVal = d18NotSet
+			split = true
+			return
+		}
+		if cur.rgtVal >= 10 {
+			roundedDown := cur.rgtVal / 2
+			cur.rgt = &d18Pair{
+				lftVal: roundedDown,
+				rgtVal: cur.rgtVal - roundedDown,
+				parent: cur,
+			}
+			cur.rgtVal = d18NotSet
+			split = true
+			return
+		}
+	})
+	return split
+}
+
 func (d *Day18) SolveI(input string) int64 {
 	pairs := d.getPairs(input)
 
-	for _, p := range pairs {
+	sum := pairs[0]
+	for i, p := range pairs {
+		if i == 0 {
+			continue
+		}
+
+		sum = sum.add(p)
+		sum.reduce()
 		println("--------------")
-		p.print()
-		println()
-
-		p.explode()
-
-		p.print()
-		println()
 	}
+
+	sum.print()
 
 	return 0
 }
