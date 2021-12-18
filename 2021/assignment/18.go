@@ -102,6 +102,22 @@ func (d *Day18) getPairs(input string) []*d18Pair {
 	return pairs
 }
 
+func (p *d18Pair) magnitude() int64 {
+	mag := int64(0)
+	if p.lft != nil {
+		mag += 3 * p.lft.magnitude()
+	} else {
+		mag += int64(3 * p.lftVal)
+	}
+
+	if p.rgt != nil {
+		mag += 2 * p.rgt.magnitude()
+	} else {
+		mag += int64(2 * p.rgtVal)
+	}
+	return mag
+}
+
 func (p *d18Pair) print() {
 	print(d18Open)
 	if p.lft != nil {
@@ -156,6 +172,16 @@ func (p *d18Pair) walkInOrder(depth int, walker func(p *d18Pair, depth int)) {
 	}
 }
 
+func (p *d18Pair) walkRight(depth int, walker func(p *d18Pair, depth int)) {
+	if p.rgt != nil {
+		p.rgt.walkRight(depth+1, walker)
+	}
+	walker(p, depth)
+	if p.lft != nil {
+		p.lft.walkRight(depth+1, walker)
+	}
+}
+
 func (p *d18Pair) explode() bool {
 	exploded := false
 	p.walkInOrder(0, func(cur *d18Pair, depth int) {
@@ -190,17 +216,24 @@ func (p *d18Pair) addLeft(val int) {
 			continue
 		}
 
-		set := false
-		cur.walkInOrder(0, func(p *d18Pair, _ int) {
-			if !set && p.lftVal != d18NotSet {
-				p.lftVal += val
-				set = true
+		if cur.lft != nil {
+			set := false
+			cur.lft.walkRight(0, func(p *d18Pair, _ int) {
+				if !set && p.rgt == nil {
+					p.rgtVal += val
+					set = true
+				}
+				if !set && p.lft == nil {
+					p.lftVal += val
+					set = true
+				}
+			})
+			if set {
+				return
 			}
-		})
-		if set {
-			return
 		}
-		if cur.lftVal != d18NotSet {
+
+		if cur.lft == nil {
 			cur.lftVal += val
 			return
 		}
@@ -227,7 +260,7 @@ func (p *d18Pair) addRight(val int) {
 		if cur.rgt != nil {
 			set := false
 			cur.rgt.walkInOrder(0, func(p *d18Pair, _ int) {
-				if !set && p.lftVal != d18NotSet {
+				if !set && p.lft == nil {
 					p.lftVal += val
 					set = true
 				}
@@ -237,7 +270,7 @@ func (p *d18Pair) addRight(val int) {
 			}
 		}
 
-		if cur.lftVal != d18NotSet {
+		if cur.lft == nil {
 			cur.lftVal += val
 			return
 		}
@@ -307,15 +340,14 @@ func (d *Day18) SolveI(input string) int64 {
 
 		sum = sum.add(p)
 		sum.reduce()
-		println("--------------")
 	}
 
 	sum.print()
 
-	return 0
+	return sum.magnitude()
 }
 
 func (d *Day18) SolveII(input string) int64 {
-	// TODO: FIXME: Implement me!
-	panic("no result")
+	//panic("asas")
+	return 0
 }
