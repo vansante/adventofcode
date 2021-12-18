@@ -118,17 +118,6 @@ func (p *d18Pair) print() {
 	print(d18Close)
 }
 
-func (p *d18Pair) hasParent(other *d18Pair) bool {
-	cur := p.parent
-	for cur != nil {
-		if cur == other {
-			return true
-		}
-		cur = cur.parent
-	}
-	return false
-}
-
 func (p *d18Pair) add(pair d18Pair) *d18Pair {
 	nw := &d18Pair{
 		lft:    &pair,
@@ -152,38 +141,6 @@ func (p *d18Pair) walkInOrder(depth int, walker func(p *d18Pair, depth int)) {
 	walker(p, depth)
 	if p.rgt != nil {
 		p.rgt.walkInOrder(depth+1, walker)
-	}
-}
-
-func (p *d18Pair) rightDepthFirst(depth int, walker func(p *d18Pair, depth int)) {
-	if p.lft != nil {
-		p.lft.walkInOrder(depth+1, walker)
-	}
-	walker(p, depth)
-	if p.rgt != nil {
-		p.rgt.walkInOrder(depth+1, walker)
-	}
-}
-
-func (p *d18Pair) walkLeft(valueFunc func(p *d18Pair) bool) {
-	cur := p.lft
-	for cur != nil {
-		res := valueFunc(cur)
-		if !res {
-			return
-		}
-		cur = cur.lft
-	}
-}
-
-func (p *d18Pair) walkRight(valueFunc func(p *d18Pair) bool) {
-	cur := p.rgt
-	for cur != nil {
-		res := valueFunc(cur)
-		if !res {
-			return
-		}
-		cur = cur.rgt
 	}
 }
 
