@@ -1,7 +1,6 @@
 package assignment
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -146,29 +145,23 @@ func (p *d18Pair) reduce() {
 
 }
 
-func (p *d18Pair) leftDepthFirst(depth int, walker func(p *d18Pair, depth int) bool) {
-	res := walker(p, depth)
-	if !res {
-		return
-	}
-
+func (p *d18Pair) walkInOrder(depth int, walker func(p *d18Pair, depth int)) {
 	if p.lft != nil {
-		p.lft.leftDepthFirst(depth+1, walker)
-	} else if p.rgt != nil {
-		p.rgt.leftDepthFirst(depth+1, walker)
+		p.lft.walkInOrder(depth+1, walker)
+	}
+	walker(p, depth)
+	if p.rgt != nil {
+		p.rgt.walkInOrder(depth+1, walker)
 	}
 }
 
-func (p *d18Pair) rightDepthFirst(depth int, walker func(p *d18Pair, depth int) bool) {
-	res := walker(p, depth)
-	if !res {
-		return
+func (p *d18Pair) rightDepthFirst(depth int, walker func(p *d18Pair, depth int)) {
+	if p.lft != nil {
+		p.lft.walkInOrder(depth+1, walker)
 	}
-
+	walker(p, depth)
 	if p.rgt != nil {
-		p.rgt.rightDepthFirst(depth+1, walker)
-	} else if p.lft != nil {
-		p.lft.rightDepthFirst(depth+1, walker)
+		p.rgt.walkInOrder(depth+1, walker)
 	}
 }
 
@@ -196,40 +189,23 @@ func (p *d18Pair) walkRight(valueFunc func(p *d18Pair) bool) {
 
 func (p *d18Pair) explode() bool {
 	exploded := false
-	p.leftDepthFirst(0, func(cur *d18Pair, depth int) bool {
+	p.walkInOrder(0, func(cur *d18Pair, depth int) {
+		if exploded {
+			return
+		}
 		if cur.lft != nil || cur.rgt != nil {
-			return true
+			return
 		}
 		if depth < 4 {
-			return true
+			return
 		}
 
-		parent := cur.parent
+		cur.addLeft(cur.lftVal)
+		cur.addRight(cur.rgtVal)
 		cur.detach()
 
-		found := false
-		var last *d18Pair
-		p.leftDepthFirst(0, func(cur2 *d18Pair, depth int) bool {
-			if cur2 == parent {
-				found = true
-				return true
-			}
-
-			if !found && cur2.lft == nil {
-				last = cur2
-			}
-			if found && cur2.lft == nil {
-				cur2.lftVal += cur.rgtVal
-				return false
-			}
-			return true
-		})
-		last.lftVal += cur.lftVal
-
-		//parent.addLeft(cur.lftVal)
-		//parent.addRight(cur.rgtVal)
 		exploded = true
-		return false
+		return
 	})
 	return exploded
 }
@@ -237,15 +213,20 @@ func (p *d18Pair) explode() bool {
 func (p *d18Pair) addLeft(val int) {
 	// the pair's left value is added to the first regular number to the left of the exploding pair (if any)
 	cur := p.parent
+	child := p
 	for cur != nil {
+		if cur.lft == child {
+			child = cur
+			cur = cur.parent
+			continue
+		}
+
 		set := false
-		cur.rightDepthFirst(0, func(curChild *d18Pair, _ int) bool {
-			if curChild.hasParent(p) || curChild.lft != nil {
-				return true
+		cur.walkInOrder(0, func(p *d18Pair, _ int) {
+			if !set && p.lftVal != d18NotSet {
+				p.lftVal += val
+				set = true
 			}
-			curChild.lftVal += val
-			set = true
-			return false
 		})
 		if set {
 			return
@@ -254,6 +235,7 @@ func (p *d18Pair) addLeft(val int) {
 			cur.lftVal += val
 			return
 		}
+		child = cur
 		cur = cur.parent
 	}
 }
@@ -261,23 +243,32 @@ func (p *d18Pair) addLeft(val int) {
 func (p *d18Pair) addRight(val int) {
 	// the pair's left value is added to the first regular number to the left of the exploding pair (if any)
 	cur := p.parent
+	child := p
 	for cur != nil {
-		set := false
-		cur.rightDepthFirst(0, func(curChild *d18Pair, _ int) bool {
-			if curChild.hasParent(p) || curChild.lft != nil {
-				return true
-			}
-			curChild.lftVal += val
-			set = true
-			return false
-		})
-		if set {
-			return
+		if cur.rgt == child {
+			child = cur
+			cur = cur.parent
+			continue
 		}
+
+		if cur.rgt != nil {
+			set := false
+			cur.rgt.walkInOrder(0, func(p *d18Pair, _ int) {
+				if !set && p.lftVal != d18NotSet {
+					p.lftVal += val
+					set = true
+				}
+			})
+			if set {
+				return
+			}
+		}
+
 		if cur.lftVal != d18NotSet {
 			cur.lftVal += val
 			return
 		}
+		child = cur
 		cur = cur.parent
 	}
 }
@@ -303,8 +294,8 @@ func (p *d18Pair) detach() {
 func (d *Day18) SolveI(input string) int64 {
 	pairs := d.getPairs(input)
 
-	fmt.Println(pairs)
 	for _, p := range pairs {
+		println("--------------")
 		p.print()
 		println()
 
