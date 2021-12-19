@@ -154,6 +154,19 @@ func (d *Day19) getScanners(input string) []d19Scanner {
 	return scanners
 }
 
+func (d *Day19) distIntersect(s1, s2 []int) int {
+	matches := 0
+	for _, search := range s1 {
+		idx := sort.Search(len(s2), func(i int) bool {
+			return s2[i] >= search
+		})
+		if idx < len(s2) && s2[idx] == search {
+			matches++
+		}
+	}
+	return matches
+}
+
 func (d *Day19) matchOrientations(sc1, sc2 *d19Scanner, minMatches int) bool {
 	var maxHits int
 
@@ -163,7 +176,7 @@ func (d *Day19) matchOrientations(sc1, sc2 *d19Scanner, minMatches int) bool {
 	var pairs []pair
 	for b1, list1 := range sc1.distances {
 		for b2, list2 := range sc2.distances {
-			hits := len(IntsIntersect(list1, list2)) // TODO FIXME: Improve with binsearch
+			hits := d.distIntersect(list1, list2)
 			if hits > maxHits {
 				maxHits = hits
 				pairs = append(pairs, pair{sc1.relCoords[b1], sc2.relCoords[b2]})
@@ -219,7 +232,7 @@ func (d *Day19) matchScannerOrientations(scanners []d19Scanner) {
 				continue
 			}
 			for j := range scanners {
-				if i == j {
+				if i == j || scanners[j].oriented {
 					continue
 				}
 
