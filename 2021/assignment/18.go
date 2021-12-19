@@ -220,10 +220,6 @@ func (p *d18Pair) addLeft(val int) {
 					p.rgtVal += val
 					set = true
 				}
-				if !set && p.lft == nil {
-					p.lftVal += val
-					set = true
-				}
 			})
 			if set {
 				return
@@ -265,11 +261,6 @@ func (p *d18Pair) addRight(val int) {
 			if set {
 				return
 			}
-		}
-
-		if cur.lft == nil {
-			cur.lftVal += val
-			return
 		}
 		child = cur
 		cur = cur.parent
