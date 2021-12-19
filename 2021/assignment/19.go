@@ -168,8 +168,6 @@ func (d *Day19) distIntersect(s1, s2 []int) int {
 }
 
 func (d *Day19) matchOrientations(sc1, sc2 *d19Scanner, minMatches int) bool {
-	var maxHits int
-
 	type pair struct {
 		b1, b2 d19Coord
 	}
@@ -177,14 +175,10 @@ func (d *Day19) matchOrientations(sc1, sc2 *d19Scanner, minMatches int) bool {
 	for b1, list1 := range sc1.distances {
 		for b2, list2 := range sc2.distances {
 			hits := d.distIntersect(list1, list2)
-			if hits > maxHits {
-				maxHits = hits
+			if hits >= minMatches {
 				pairs = append(pairs, pair{sc1.relCoords[b1], sc2.relCoords[b2]})
 			}
 		}
-	}
-	if maxHits < minMatches {
-		return false
 	}
 
 	for _, pair := range pairs {
@@ -219,7 +213,7 @@ func (d *Day19) matchScannerOrientations(scanners []d19Scanner) {
 
 	scanners[0].oriented = true
 	for i := 1; i < len(scanners); i++ {
-		if !d.matchOrientations(&scanners[0], &scanners[i], d19MinMatch/2) {
+		if !d.matchOrientations(&scanners[0], &scanners[i], d19MinMatch-1) {
 			continue
 		}
 	}
@@ -236,7 +230,7 @@ func (d *Day19) matchScannerOrientations(scanners []d19Scanner) {
 					continue
 				}
 
-				oriented = oriented || d.matchOrientations(&scanners[i], &scanners[j], d19MinMatch/2)
+				oriented = oriented || d.matchOrientations(&scanners[i], &scanners[j], d19MinMatch-1)
 			}
 		}
 	}
