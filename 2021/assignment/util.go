@@ -150,6 +150,29 @@ func IntegersMax(sl []int64) int64 {
 	return max
 }
 
+func IntsContains(sl []int, s int) bool {
+	for i := range sl {
+		if sl[i] == s {
+			return true
+		}
+	}
+	return false
+}
+
+func IntsIntersect(s1, s2 []int) []int {
+	if len(s2) == 0 {
+		return s1
+	}
+	nw := make([]int, 0, len(s1))
+	for i := range s1 {
+		if !IntsContains(s2, s1[i]) {
+			continue
+		}
+		nw = append(nw, s1[i])
+	}
+	return nw
+}
+
 func AbsInt(n int) int {
 	if n < 0 {
 		return -n

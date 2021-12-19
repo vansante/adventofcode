@@ -17,8 +17,20 @@ type d19Coord struct {
 	x, y, z int
 }
 
+func (c d19Coord) String() string {
+	return fmt.Sprintf("[%d,%d,%d]", c.x, c.y, c.z)
+}
+
 func (c d19Coord) distance(other d19Coord) int {
 	return AbsInt(other.x-c.x) + AbsInt(other.y-c.y) + AbsInt(other.z-c.z)
+}
+
+func (c d19Coord) add(other d19Coord) d19Coord {
+	return d19Coord{c.x + other.x, c.y + other.y, c.z + other.z}
+}
+
+func (c d19Coord) subtract(other d19Coord) d19Coord {
+	return d19Coord{c.x - other.x, c.y - other.y, c.z - other.z}
 }
 
 func (c d19Coord) equals(other d19Coord) bool {
@@ -26,34 +38,50 @@ func (c d19Coord) equals(other d19Coord) bool {
 }
 
 func (c d19Coord) orientations() []d19Coord {
-	coords := make([]d19Coord, 24)
-	// Y up
-	coords[0] = d19Coord{c.x, c.y, c.z}
-	coords[1] = d19Coord{-c.z, c.y, c.x}
-	coords[2] = d19Coord{-c.x, c.y, -c.z}
-	coords[3] = d19Coord{c.z, c.y, -c.x}
-	// X up
-	coords[4] = d19Coord{c.z, c.x, c.y}
-	coords[5] = d19Coord{-c.y, c.x, c.z}
-	coords[6] = d19Coord{-c.z, c.x, -c.y}
-	coords[7] = d19Coord{c.y, c.x, -c.z}
-	// Z up
-	coords[8] = d19Coord{c.y, c.z, c.x}
-	coords[9] = d19Coord{-c.x, c.z, c.y}
-	coords[10] = d19Coord{-c.y, c.z, -c.x}
-	coords[11] = d19Coord{c.x, c.z, -c.y}
+	x, y, z := c.x, c.y, c.z
+	return []d19Coord{
+		{x, y, z},
+		{-y, x, z},
+		{-x, -y, z},
+		{y, -x, z},
 
-	for i := 0; i < 12; i++ {
-		mirror := coords[i]
-		coords[i+12] = d19Coord{-mirror.x, mirror.y, mirror.z}
+		{-x, y, -z},
+		{y, x, -z},
+		{x, -y, -z},
+		{-y, -x, -z},
+
+		{-z, y, x},
+		{-z, x, -y},
+		{-z, -y, -x},
+		{-z, -x, y},
+
+		{z, y, -x},
+		{z, x, y},
+		{z, -y, x},
+		{z, -x, -y},
+
+		{x, -z, y},
+		{-y, -z, x},
+		{-x, -z, -y},
+		{y, -z, -x},
+
+		{x, z, -y},
+		{-y, z, -x},
+		{-x, z, y},
+		{y, z, x},
 	}
-	return coords
 }
 
 type d19Scanner struct {
-	id        int
-	relCoords []d19Coord
-	distances [][]int
+	id          int
+	relCoords   []d19Coord
+	distances   [][]int
+	translation d19Coord
+	oriented    bool
+}
+
+func (s d19Scanner) String() string {
+	return fmt.Sprintf("Scanner{%02d}", s.id)
 }
 
 func (s *d19Scanner) calcDistances() {
@@ -69,6 +97,29 @@ func (s *d19Scanner) calcDistances() {
 			s.distances[i] = append(s.distances[i], c1.distance(c2))
 		}
 		sort.Ints(s.distances[i])
+	}
+}
+
+func (s *d19Scanner) setOrientation(translation d19Coord, rotation int) bool {
+	if translation.equals(d19Coord{}) && rotation == 0 {
+		return false
+	}
+
+	fmt.Printf("%s | Set translation %s + rotation: %d\n", s, translation, rotation)
+	if s.oriented {
+		panic("already oriented")
+	}
+	s.translation = translation
+	s.oriented = true
+	for i := range s.relCoords {
+		s.relCoords[i] = s.relCoords[i].orientations()[rotation].subtract(translation)
+	}
+	return true
+}
+
+func (s *d19Scanner) markBeacons(mp map[string]int) {
+	for _, c := range s.relCoords {
+		mp[c.String()]++
 	}
 }
 
@@ -103,39 +154,76 @@ func (d *Day19) getScanners(input string) []d19Scanner {
 	return scanners
 }
 
-func (d *Day19) compare(sc1, sc2 d19Scanner) (X, Y, Z, rot int) {
-	maxHits := math.MinInt
-	d.exploreCoordinates(func(x, y, z int) {
-		var hits int
-		for i := 0; i < 24; i++ {
-			for _, coord1 := range sc1.relCoords {
-				for _, coord2 := range sc2.relCoords {
-					coord2 = coord2.orientations()[i]
-					if coord2.equals(coord1) {
-						hits++
-						break
-					}
-				}
-			}
-			if hits > maxHits && hits > d19MinMatch {
+func (d *Day19) matchOrientations(sc1, sc2 *d19Scanner, minMatches int) bool {
+	var maxHits int
+
+	type pair struct {
+		b1, b2 d19Coord
+	}
+	var pairs []pair
+	for b1, list1 := range sc1.distances {
+		for b2, list2 := range sc2.distances {
+			hits := len(IntsIntersect(list1, list2)) // TODO FIXME: Improve with binsearch
+			if hits > maxHits {
 				maxHits = hits
-				X, Y, Z = x, y, z
-				rot = i
+				pairs = append(pairs, pair{sc1.relCoords[b1], sc2.relCoords[b2]})
 			}
 		}
-	})
-	return X, Y, Z, rot
+	}
+	if maxHits < minMatches {
+		return false
+	}
+
+	for _, pair := range pairs {
+		var rotation int
+		var b2Coord d19Coord
+		for rotation, b2Coord = range pair.b2.orientations() {
+			translation := b2Coord.subtract(pair.b1)
+
+			var matches int
+			for _, coord2 := range sc2.relCoords {
+				transCoord := coord2.orientations()[rotation].subtract(translation)
+
+				for _, coord1 := range sc1.relCoords {
+					if coord1.equals(transCoord) {
+						matches++
+					}
+				}
+
+				if matches >= minMatches {
+					return sc2.setOrientation(translation, rotation)
+				}
+			}
+		}
+	}
+	return false
 }
 
-func (d *Day19) exploreCoordinates(explore func(x, y, z int)) {
-	const (
-		minCoord = -1000
-		maxCoord = 1000
-	)
-	for x := minCoord; x < maxCoord; x++ {
-		for y := minCoord; y < maxCoord; y++ {
-			for z := minCoord; z < maxCoord; z++ {
-				explore(x, y, z)
+func (d *Day19) matchScannerOrientations(scanners []d19Scanner) {
+	for i := range scanners {
+		scanners[i].calcDistances()
+	}
+
+	scanners[0].oriented = true
+	for i := 1; i < len(scanners); i++ {
+		if !d.matchOrientations(&scanners[0], &scanners[i], d19MinMatch/2) {
+			continue
+		}
+	}
+
+	oriented := true
+	for oriented {
+		oriented = false
+		for i := range scanners {
+			if !scanners[i].oriented {
+				continue
+			}
+			for j := range scanners {
+				if i == j {
+					continue
+				}
+
+				oriented = oriented || d.matchOrientations(&scanners[i], &scanners[j], d19MinMatch/2)
 			}
 		}
 	}
@@ -143,27 +231,32 @@ func (d *Day19) exploreCoordinates(explore func(x, y, z int)) {
 
 func (d *Day19) SolveI(input string) int64 {
 	scanners := d.getScanners(input)
+	d.matchScannerOrientations(scanners)
 
-	for i := range scanners {
-		scanners[i].calcDistances()
-	}
-
-	for _, scan1 := range scanners {
-		for _, scan2 := range scanners {
-			if scan1.id == scan2.id {
-				continue
-			}
-			d.compare(scan1, scan2)
+	mp := make(map[string]int)
+	for _, s := range scanners {
+		if !s.oriented {
+			panic(fmt.Sprintf("%s is not oriented", s))
 		}
+		s.markBeacons(mp)
 	}
 
-	o := scanners[0].relCoords[3].orientations()
-	fmt.Println(o)
-
-	return 0
+	return int64(len(mp))
 }
 
 func (d *Day19) SolveII(input string) int64 {
-	// TODO: FIXME: Implement me!
-	panic("no result")
+	scanners := d.getScanners(input)
+	d.matchScannerOrientations(scanners)
+
+	max := math.MinInt
+	for _, scan1 := range scanners {
+		for _, scan2 := range scanners {
+			dist := scan1.translation.distance(scan2.translation)
+			if dist > max {
+				max = dist
+			}
+		}
+	}
+
+	return int64(max)
 }
