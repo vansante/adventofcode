@@ -20,12 +20,65 @@ const (
 	d20Left
 )
 
+type d20Image struct {
+	pix [][]bool
+}
+
+func (img *d20Image) rotate() {
+	nw := make([][]bool, len(img.pix))
+	for i := 0; i < len(img.pix); i++ {
+		nw[i] = make([]bool, len(img.pix[i]))
+		for j := 0; j < len(img.pix[i]); j++ {
+			nw[i][j] = img.pix[len(img.pix[i])-1-j][i]
+		}
+	}
+	img.pix = nw
+}
+
+func (img *d20Image) flipHorizontal() {
+	nw := make([][]bool, len(img.pix))
+	for y := range img.pix {
+		nw[y] = make([]bool, len(img.pix[y]))
+		for x := range img.pix[y] {
+			nw[y][x] = img.pix[y][len(img.pix[y])-1-x]
+		}
+	}
+	img.pix = nw
+}
+
+func (img *d20Image) flipVertical() {
+	nw := make([][]bool, len(img.pix))
+
+	for y := range img.pix {
+		nw[y] = make([]bool, len(img.pix[y]))
+		for x := range img.pix[y] {
+			nw[y][x] = img.pix[len(img.pix[y])-1-y][x]
+		}
+	}
+	img.pix = nw
+}
+
 type d20Tile struct {
+	d20Image
+
 	id   int64
-	pix  [][]bool
 	lock bool
 
 	neighbours [4]*d20Tile
+}
+
+func (d *Day20) opposite(which int) int {
+	switch which {
+	case d20Top:
+		return d20Bottom
+	case d20Right:
+		return d20Left
+	case d20Bottom:
+		return d20Top
+	case d20Left:
+		return d20Right
+	}
+	panic("which border?")
 }
 
 func (t *d20Tile) String() string {
@@ -46,81 +99,38 @@ func (t *d20Tile) print() {
 	}
 }
 
-func (t *d20Tile) rotate() {
-	nw := make([][]bool, d20Size)
-	for i := 0; i < d20Size; i++ {
-		nw[i] = make([]bool, d20Size)
-		for j := 0; j < d20Size; j++ {
-			nw[i][j] = t.pix[d20Last-j][i]
+func (t *d20Tile) getBorder(which int) d20Border {
+	switch which {
+	case d20Top:
+		return t.pix[0]
+	case d20Right:
+		b := make(d20Border, d20Size)
+		for y := 0; y < d20Size; y++ {
+			b[y] = t.pix[y][d20Last]
 		}
-	}
-	t.pix = nw
-}
-
-func (t *d20Tile) flipHorizontal() {
-	nw := make([][]bool, d20Size)
-
-	for y := range t.pix {
-		nw[y] = make([]bool, d20Size)
-		for x := range t.pix[y] {
-			nw[y][x] = t.pix[y][d20Last-x]
+		return b
+	case d20Bottom:
+		return t.pix[d20Last]
+	case d20Left:
+		b := make(d20Border, d20Size)
+		for y := 0; y < d20Size; y++ {
+			b[y] = t.pix[y][0]
 		}
+		return b
 	}
-	t.pix = nw
-}
-
-func (t *d20Tile) flipVertical() {
-	nw := make([][]bool, d20Size)
-
-	for y := range t.pix {
-		nw[y] = make([]bool, d20Size)
-		for x := range t.pix[y] {
-			nw[y][x] = t.pix[d20Last-y][x]
-		}
-	}
-	t.pix = nw
-}
-
-func (t *d20Tile) rowMatch(other *d20Tile, y int) bool {
-	for x := range t.pix[y] {
-		if t.pix[y][x] != other.pix[d20Last-y][x] {
-			return false
-		}
-	}
-	return true
-}
-
-func (t *d20Tile) colMatch(other *d20Tile, x int) bool {
-	for y := range t.pix {
-		if t.pix[y][x] != other.pix[y][d20Last-x] {
-			return false
-		}
-	}
-	return true
+	panic("which border?")
 }
 
 func (t *d20Tile) getBorders() []d20Border {
-	b := make([]d20Border, 4)
-	b[1] = make(d20Border, d20Size)
-	b[3] = make(d20Border, d20Size)
-	for y := 0; y < d20Size; y++ {
-		b[1][y] = t.pix[y][d20Last]
-		b[3][y] = t.pix[y][0]
+	return []d20Border{
+		t.getBorder(d20Top),
+		t.getBorder(d20Right),
+		t.getBorder(d20Bottom),
+		t.getBorder(d20Left),
 	}
-	b[0] = t.pix[0]
-	b[2] = t.pix[d20Last]
-	return b
 }
 
 type d20Border []bool
-
-func (b d20Border) flip() d20Border {
-	nw := make(d20Border, len(b))
-	for i := range b {
-		nw[len(b)-i-1] = b[i]
-	}
-	return nw
-}
 
 func (b d20Border) equals(b2 d20Border) bool {
 	for i := range b {
@@ -162,60 +172,75 @@ func (d *Day20) getTiles(input string) []*d20Tile {
 	return tiles
 }
 
-func (d *Day20) setNeighbours(tiles []*d20Tile) {
+func (d *Day20) findTopLeft(tiles []*d20Tile) *d20Tile {
 	for _, t := range tiles {
-		tileBorders := t.getBorders()
+		if t.neighbours[d20Top] == nil && t.neighbours[d20Left] == nil {
+			return t
+		}
+	}
+	panic("no left top corner found")
+}
 
-		for _, t2 := range tiles {
-			if t.id == t2.id {
+func (d *Day20) matchBorder(tile *d20Tile, side int, tiles []*d20Tile) *d20Tile {
+	b1 := tile.getBorder(side)
+
+	for _, t := range tiles {
+	tileRotateLoop:
+		for rot := 0; rot < 4; rot++ {
+			for flip := 0; flip < 4; flip++ {
+				if t.getBorder(d.opposite(side)).equals(b1) {
+					return t
+				}
+
+				if t.lock {
+					break tileRotateLoop
+				}
+				if flip%2 == 0 {
+					t.flipHorizontal()
+				} else {
+					t.flipVertical()
+				}
+			}
+			t.rotate()
+		}
+	}
+	return nil
+}
+
+func (d *Day20) orientTiles(tiles []*d20Tile) *d20Tile {
+	tiles[0].lock = true
+
+	oriented := true
+	for oriented {
+		oriented = false
+
+		for _, t1 := range tiles {
+			if !t1.lock {
 				continue
 			}
 
-			tile2Borders := t2.getBorders()
-			for i, tb := range tileBorders {
-				for _, tb2 := range tile2Borders {
-					if !tb.equals(tb2) && !tb.flip().equals(tb2) {
-						continue
-					}
-					t.neighbours[i] = t2
+			for side := 0; side < 4; side++ {
+				if t1.neighbours[side] != nil {
+					continue
+				}
+
+				match := d.matchBorder(t1, side, tiles)
+				if match != nil {
+					match.lock = true
+					t1.neighbours[side] = match
+					match.neighbours[d.opposite(side)] = t1
+					oriented = true
 				}
 			}
 		}
 	}
-}
-
-func (d *Day20) findCorner(tiles []*d20Tile) *d20Tile {
-	for _, t := range tiles {
-		sum := 0
-		for i := range t.neighbours {
-			if t.neighbours[i] == nil {
-				sum++
-			}
-		}
-		if sum == 2 {
-			return t
-		}
-	}
-	panic("no corner found")
-}
-
-func (d *Day20) orientTiles(tiles []*d20Tile) {
-	cur := d.findCorner(tiles)
-
-	for cur != nil {
-
-		line := cur
-		for line != nil {
-			line = line.neighbours[d20Right]
-		}
-		cur = cur.neighbours[d20Bottom]
-	}
+	return nil
 }
 
 func (d *Day20) SolveI(input string) int64 {
 	tiles := d.getTiles(input)
 
-	d.setNeighbours(tiles)
+	d.orientTiles(tiles)
 
 	multi := int64(1)
 	for _, t := range tiles {
@@ -234,26 +259,11 @@ func (d *Day20) SolveI(input string) int64 {
 
 func (d *Day20) SolveII(input string) int64 {
 	tiles := d.getTiles(input)
-	d.setNeighbours(tiles)
 
-	//
-	//var leftTop *d20Tile
-	//for _, t := range tiles {
-	//	if t.neighbours[d20Left] == nil && t.neighbours[d20Top] == nil {
-	//		leftTop = t
-	//	}
-	//}
-	//
-	//cur := leftTop
-	//for cur != nil {
-	//	line := cur
-	//	for line != nil {
-	//		print(line.id, " ")
-	//		line = line.neighbours[d20Right]
-	//	}
-	//	print(cur.id)
-	//	cur = cur.neighbours[d20Bottom]
-	//}
+	d.orientTiles(tiles)
+	tl := d.findTopLeft(tiles)
+
+	fmt.Println(tl)
 
 	return 0
 }
