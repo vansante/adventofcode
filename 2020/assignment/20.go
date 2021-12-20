@@ -48,6 +48,58 @@ func (img *d20Image) print() {
 	}
 }
 
+func (img *d20Image) get(x, y int, defaultVal bool) bool {
+	if y < 0 || y >= len(img.pix) {
+		return defaultVal
+	}
+	if x < 0 || x >= len(img.pix[0]) {
+		return defaultVal
+	}
+	return img.pix[y][x]
+}
+
+type d20Vector struct {
+	x, y int
+}
+
+func (img *d20Image) getMonsterVectors() []d20Vector {
+	monster := `                  # 
+#    ##    ##    ###
+ #  #  #  #  #  #   `
+
+	lines := strings.Split(monster, "\n")
+	var vectors []d20Vector
+	for y := range lines {
+		for x, char := range strings.Split(lines[y], "") {
+			if char == "#" {
+				vectors = append(vectors, d20Vector{x, y})
+			}
+		}
+	}
+	return vectors
+}
+
+func (img *d20Image) findMonsters() (monsters, blips int) {
+	vs := img.getMonsterVectors()
+
+	for y := 0; y < len(img.pix); y++ {
+		for x := 0; x < len(img.pix[y]); x++ {
+			if img.pix[y][x] {
+				blips++
+			}
+
+			found := true
+			for _, v := range vs {
+				found = found && img.get(x+v.x, y+v.y, false)
+			}
+			if found {
+				monsters++
+			}
+		}
+	}
+	return monsters, blips - (monsters * len(vs))
+}
+
 func (img *d20Image) rotate() {
 	nw := make([][]bool, len(img.pix))
 	for i := 0; i < len(img.pix); i++ {
@@ -72,7 +124,6 @@ func (img *d20Image) flipHorizontal() {
 
 func (img *d20Image) flipVertical() {
 	nw := make([][]bool, len(img.pix))
-
 	for y := range img.pix {
 		nw[y] = make([]bool, len(img.pix[y]))
 		for x := range img.pix[y] {
@@ -313,7 +364,21 @@ func (d *Day20) SolveII(input string) int64 {
 
 	img.print()
 
-	//fmt.Println(img)
+	for rot := 0; rot < 4; rot++ {
+		for flip := 0; flip < 4; flip++ {
+			monsters, blips := img.findMonsters()
+			if monsters > 0 {
+				return int64(blips)
+			}
 
-	return 0
+			if flip%2 == 0 {
+				img.flipHorizontal()
+			} else {
+				img.flipVertical()
+			}
+		}
+		img.rotate()
+	}
+
+	panic("no monsters found")
 }
