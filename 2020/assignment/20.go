@@ -3,6 +3,7 @@ package assignment
 import (
 	"fmt"
 	"log"
+	"math"
 	"strings"
 )
 
@@ -22,6 +23,29 @@ const (
 
 type d20Image struct {
 	pix [][]bool
+}
+
+func (d *Day20) makeImage(size int) *d20Image {
+	img := &d20Image{
+		pix: make([][]bool, size),
+	}
+	for i := 0; i < size; i++ {
+		img.pix[i] = make([]bool, size)
+	}
+	return img
+}
+
+func (img *d20Image) print() {
+	for y := range img.pix {
+		for x := range img.pix[y] {
+			if img.pix[y][x] {
+				print("#")
+			} else {
+				print(".")
+			}
+		}
+		fmt.Println()
+	}
 }
 
 func (img *d20Image) rotate() {
@@ -87,16 +111,7 @@ func (t *d20Tile) String() string {
 
 func (t *d20Tile) print() {
 	fmt.Printf("--- Tile %d: ---\n", t.id)
-	for y := range t.pix {
-		for x := range t.pix[y] {
-			if t.pix[y][x] {
-				print("#")
-			} else {
-				print(".")
-			}
-		}
-		fmt.Println()
-	}
+	t.d20Image.print()
 }
 
 func (t *d20Tile) getBorder(which int) d20Border {
@@ -257,13 +272,48 @@ func (d *Day20) SolveI(input string) int64 {
 	return multi
 }
 
+func (d *Day20) tileImage(tiles []*d20Tile) *d20Image {
+	tileWidth := int(math.Sqrt(float64(len(tiles))))
+	pixPerTile := len(tiles[0].pix) - 2
+
+	img := d.makeImage(tileWidth * pixPerTile)
+
+	y := 0
+	cur := d.findTopLeft(tiles)
+	for cur != nil {
+		x := 0
+		line := cur
+		for line != nil {
+			tileY := y
+			for ty := 1; ty < len(line.pix)-1; ty++ {
+				tileX := x
+				for tx := 1; tx < len(line.pix)-1; tx++ {
+					img.pix[tileY][tileX] = line.pix[ty][tx]
+					tileX++
+				}
+				tileY++
+			}
+
+			x += len(line.pix) - 2
+			line = line.neighbours[d20Right]
+		}
+
+		y += len(cur.pix) - 2
+		cur = cur.neighbours[d20Bottom]
+	}
+	return img
+}
+
 func (d *Day20) SolveII(input string) int64 {
 	tiles := d.getTiles(input)
 
 	d.orientTiles(tiles)
-	tl := d.findTopLeft(tiles)
 
-	fmt.Println(tl)
+	img := d.tileImage(tiles)
+
+	img.print()
+
+	//fmt.Println(img)
 
 	return 0
 }
