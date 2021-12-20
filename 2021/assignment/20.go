@@ -46,14 +46,18 @@ func (i *d20Image) setPixel(x, y int, val bool) {
 	i.pixels[i.coordToIdx(x, y)] = val
 }
 
-func (i *d20Image) pixel(x, y int) bool {
-	return i.pixels[i.coordToIdx(x, y)]
+func (i *d20Image) pixel(x, y int, infOn bool) bool {
+	pix, ok := i.pixels[i.coordToIdx(x, y)]
+	if !ok {
+		return infOn
+	}
+	return pix
 }
 
 func (i *d20Image) print() {
 	for y := i.minY; y <= i.maxY; y++ {
 		for x := i.minX; x <= i.maxX; x++ {
-			if i.pixel(x, y) {
+			if i.pixel(x, y, false) {
 				print("#")
 			} else {
 				print(".")
@@ -82,7 +86,7 @@ var (
 	}
 )
 
-func (i *d20Image) enhance(alg d20EnhanceAlg) d20Image {
+func (i *d20Image) enhance(alg d20EnhanceAlg, infOn bool) d20Image {
 	nw := d20Image{
 		pixels: make(map[uint64]bool, len(i.pixels)*2),
 		minX:   math.MaxInt,
@@ -94,7 +98,7 @@ func (i *d20Image) enhance(alg d20EnhanceAlg) d20Image {
 			var num int
 			for n, v := range d20Vectors {
 				bit := 0
-				if i.pixel(x+v.x, y+v.y) {
+				if i.pixel(x+v.x, y+v.y, infOn) {
 					bit = 1
 				}
 				num += bit << (8 - n)
@@ -158,21 +162,17 @@ func (d *Day20) readInput(input string) (d20EnhanceAlg, d20Image) {
 func (d *Day20) SolveI(input string) int64 {
 	alg, img := d.readInput(input)
 
-	img.print()
-	img = img.enhance(alg)
-	img.print()
-	img = img.enhance(alg)
-	img.print()
-	//for idx, bool := range img.pixels {
-	//if !bool {
-	//	continue
-	//}
-	//x, y := img.idxToCoord(idx)
-	//fmt.Println(x, y, bool)
-	//}
+	img = img.enhance(alg, false)
+	img = img.enhance(alg, alg.bits[0])
+
 	return img.countLit()
 }
 
 func (d *Day20) SolveII(input string) int64 {
-	return 0
+	alg, img := d.readInput(input)
+
+	for i := 1; i <= 50; i++ {
+		img = img.enhance(alg, alg.bits[0] && i%2 == 0)
+	}
+	return img.countLit()
 }
