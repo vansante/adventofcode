@@ -171,35 +171,38 @@ func (d *Day19) matchOrientations(sc1, sc2 *d19Scanner, minMatches int) bool {
 	type pair struct {
 		b1, b2 d19Coord
 	}
-	var pairs []pair
+	var beaconPair *pair
 	for b1, list1 := range sc1.distances {
 		for b2, list2 := range sc2.distances {
 			hits := d.distIntersect(list1, list2)
 			if hits >= minMatches {
-				pairs = append(pairs, pair{sc1.relCoords[b1], sc2.relCoords[b2]})
+				beaconPair = &pair{sc1.relCoords[b1], sc2.relCoords[b2]}
+				break
 			}
 		}
 	}
 
-	for _, pair := range pairs {
-		var rotation int
-		var b2Coord d19Coord
-		for rotation, b2Coord = range pair.b2.orientations() {
-			translation := b2Coord.subtract(pair.b1)
+	if beaconPair == nil {
+		return false
+	}
 
-			var matches int
-			for _, coord2 := range sc2.relCoords {
-				transCoord := coord2.orientations()[rotation].subtract(translation)
+	var rotation int
+	var b2Coord d19Coord
+	for rotation, b2Coord = range beaconPair.b2.orientations() {
+		translation := b2Coord.subtract(beaconPair.b1)
 
-				for _, coord1 := range sc1.relCoords {
-					if coord1.equals(transCoord) {
-						matches++
-					}
+		var matches int
+		for _, coord2 := range sc2.relCoords {
+			transCoord := coord2.orientations()[rotation].subtract(translation)
+
+			for _, coord1 := range sc1.relCoords {
+				if coord1.equals(transCoord) {
+					matches++
 				}
+			}
 
-				if matches >= minMatches {
-					return sc2.setOrientation(translation, rotation)
-				}
+			if matches >= minMatches {
+				return sc2.setOrientation(translation, rotation)
 			}
 		}
 	}
