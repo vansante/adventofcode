@@ -5,22 +5,23 @@ import "fmt"
 type Day21 struct{}
 
 const (
+	d21BoardSize    = 10
+	d21DiceRolls    = 3
 	d21Pt1DiceSides = 100
+	d21Pt2DiceSides = 3
 	d21Pt1WinScore  = 1_000
 	d21Pt2WinScore  = 21
 )
 
 type d21Die struct {
-	rolls      int
-	rolledOver int
-	lastRoll   int
+	rolls    int
+	lastRoll int
 }
 
 func (d *d21Die) roll() int {
 	d.rolls++
 	d.lastRoll++
 	if d.lastRoll > d21Pt1DiceSides {
-		d.rolledOver++
 		d.lastRoll = 1
 	}
 	return d.lastRoll
@@ -40,11 +41,14 @@ func (d *Day21) play(players []*d21Player) int64 {
 
 	for players[0].score < d21Pt1WinScore && players[1].score < d21Pt1WinScore {
 		for _, p := range players {
-			roll := die.roll() + die.roll() + die.roll()
+			roll := 0
+			for i := 0; i < d21DiceRolls; i++ {
+				roll += die.roll()
+			}
 
-			p.boardPos = (p.boardPos + roll) % 10
+			p.boardPos = (p.boardPos + roll) % d21BoardSize
 			if p.boardPos == 0 {
-				p.boardPos = 10
+				p.boardPos = d21BoardSize
 			}
 			p.score += int64(p.boardPos)
 			if p.score >= d21Pt1WinScore {
@@ -98,10 +102,9 @@ func (d *Day21) SolveI(input string) int64 {
 func (d *Day21) SolveII(input string) int64 {
 	p1, p2 := d.getPlayers(input)
 
-	states := make(d21ResultMap, 1024)
+	states := make(d21ResultMap, 1024*1024)
 	result := d.playDirac(states, d21GameState{
-		position:  [2]int8{int8(p1.startPos), int8(p2.startPos)},
-		diceRolls: -1,
+		position: [2]int8{int8(p1.startPos), int8(p2.startPos)},
 	}, d21Pt2WinScore)
 
 	if result[0] > result[1] {
@@ -119,12 +122,12 @@ func (d *Day21) playDirac(states d21ResultMap, state d21GameState, winScore int)
 	st := state
 
 	player := st.playerTurn
-	st.position[player] = (st.position[player] + st.nextRoll) % 10
+	st.position[player] = (st.position[player] + st.nextRoll) % d21BoardSize
 	if st.position[player] == 0 {
-		st.position[player] = 10
+		st.position[player] = d21BoardSize
 	}
 
-	if st.diceRolls == 2 {
+	if st.diceRolls == d21DiceRolls {
 		st.score[player] += int(st.position[player])
 
 		if st.score[player] >= winScore {
@@ -136,17 +139,17 @@ func (d *Day21) playDirac(states d21ResultMap, state d21GameState, winScore int)
 	}
 
 	// No one won yet, play all games
-	if st.diceRolls == 2 {
+	if st.diceRolls == d21DiceRolls {
 		// Other players turn
 		st.playerTurn += 1
 		st.playerTurn %= 2
 
-		st.diceRolls = 0
+		st.diceRolls = 1
 	} else {
 		st.diceRolls++
 	}
 
-	for i := int8(0); i < 3; i++ {
+	for i := int8(0); i < d21Pt2DiceSides; i++ {
 		st.nextRoll = i + 1
 		res := d.playDirac(states, st, winScore)
 		result[0] += res[0]
