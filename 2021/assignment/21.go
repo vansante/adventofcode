@@ -136,33 +136,22 @@ func (d *Day21) playDirac(states d21ResultMap, state d21GameState, winScore int)
 	}
 
 	// No one won yet, play all games
-	var results [3]d21Result
 	if st.diceRolls == 2 {
 		// Other players turn
 		st.playerTurn += 1
 		st.playerTurn %= 2
 
 		st.diceRolls = 0
-		st.nextRoll = 1
-		results[0] = d.playDirac(states, st, winScore)
-		st.nextRoll = 2
-		results[1] = d.playDirac(states, st, winScore)
-		st.nextRoll = 3
-		results[2] = d.playDirac(states, st, winScore)
 	} else {
-		st.nextRoll = 1
 		st.diceRolls++
-		results[0] = d.playDirac(states, st, winScore)
-		st.nextRoll = 2
-		results[1] = d.playDirac(states, st, winScore)
-		st.nextRoll = 3
-		results[2] = d.playDirac(states, st, winScore)
 	}
 
-	res := d21Result{}
-	res[0] = results[0][0] + results[1][0] + results[2][0]
-	res[1] = results[0][1] + results[1][1] + results[2][1]
-	states[state] = res
-
-	return res
+	for i := int8(0); i < 3; i++ {
+		st.nextRoll = i + 1
+		res := d.playDirac(states, st, winScore)
+		result[0] += res[0]
+		result[1] += res[1]
+	}
+	states[state] = result
+	return result
 }
