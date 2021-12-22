@@ -16,12 +16,6 @@ type d22Cuboid struct {
 	x1, x2, y1, y2, z1, z2 int
 }
 
-func (c d22Cuboid) equals(other d22Cuboid) bool {
-	return c.x1 == other.x1 && c.x2 == other.x2 &&
-		c.y1 == other.y1 && c.y2 == other.y2 &&
-		c.z1 == other.z1 && c.z2 == other.z2
-}
-
 func (c d22Cuboid) contains(other d22Cuboid) bool {
 	return c.x1 <= other.x1 && c.x2 >= other.x2 &&
 		c.y1 <= other.y1 && c.y2 >= other.y2 &&
@@ -33,19 +27,9 @@ func (c d22Cuboid) intersects(other d22Cuboid) bool {
 		c.y1 <= other.y2 && c.y2 >= other.y1 &&
 		c.z1 <= other.z2 && c.z2 >= other.z1
 }
+
 func (c d22Cuboid) volume() int64 {
 	return int64(c.x2-c.x1) * int64(c.y2-c.y1) * int64(c.z2-c.z1)
-}
-
-func (c d22Cuboid) intersection(other d22Cuboid) d22Cuboid {
-	return d22Cuboid{
-		x1: MaxInt(c.x1, other.x1),
-		x2: MinInt(c.x2, other.x2),
-		y1: MaxInt(c.y1, other.y1),
-		y2: MinInt(c.y2, other.y2),
-		z1: MaxInt(c.x1, other.x1),
-		z2: MinInt(c.x2, other.x2),
-	}
 }
 
 func (c d22Cuboid) subtract(other d22Cuboid) []d22Cuboid {
