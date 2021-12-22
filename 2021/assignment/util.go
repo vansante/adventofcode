@@ -159,6 +159,19 @@ func IntsContains(sl []int, s int) bool {
 	return false
 }
 
+func UniqueInts(sl []int) []int {
+	m := make(map[int]struct{}, len(sl))
+	for i := range sl {
+		m[sl[i]] = struct{}{}
+	}
+
+	nw := make([]int, 0, len(m))
+	for s := range m {
+		nw = append(nw, s)
+	}
+	return nw
+}
+
 func IntsIntersect(s1, s2 []int) []int {
 	if len(s2) == 0 {
 		return s1
@@ -178,4 +191,18 @@ func AbsInt(n int) int {
 		return -n
 	}
 	return n
+}
+
+func MaxInt(n1, n2 int) int {
+	if n1 < n2 {
+		return n2
+	}
+	return n1
+}
+
+func MinInt(n1, n2 int) int {
+	if n1 > n2 {
+		return n2
+	}
+	return n1
 }
