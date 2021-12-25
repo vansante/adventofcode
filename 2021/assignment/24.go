@@ -3,56 +3,29 @@ package assignment
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strconv"
-	"strings"
 )
 
 type Day24 struct{}
 
 type d24Memory [4]int64
 
-type d24State struct {
-	instr int
-	input int64
-	zVal  int64
-}
-
-type d24StateResult struct {
-	zVal int64
-	line int
-}
-
 type d24Program struct {
-	mem    d24Memory
-	instr  []d24Instruction
-	states map[d24State]d24StateResult
+	mem   d24Memory
+	instr []d24Instruction
 }
 
-func (d *d24Program) execute(from int, input int64) (zVal int64, line int) {
+func (d *d24Program) execute(from int, input int64) int {
 	d.mem[0] = input
-	state := d24State{
-		instr: from,
-		input: input,
-		zVal:  d.mem[3],
-	}
-
-	res, ok := d.states[state]
-	if ok {
-		d.mem[3] = res.zVal
-		return res.zVal, res.line
-	}
-
+	line := 0
 	for line = from; line < len(d.instr); line++ {
 		if d.instr[line].operation == d24Inp {
 			break
 		}
 		d.instr[line].execute(&d.mem)
 	}
-	d.states[state] = d24StateResult{
-		zVal: d.mem[3],
-		line: line,
-	}
-	return d.mem[3], line
+	return line
 }
 
 type d24Operation int8
@@ -164,8 +137,10 @@ func (d *Day24) getInstructions(input string) []d24Instruction {
 		op.operation = d.strToOp(opStr)
 		op.a = d.varToIdx(aStr)
 
-		op.bVal, err = strconv.ParseInt(bStr, 10, 32)
-		if err != nil {
+		bVal, err := strconv.ParseInt(bStr, 10, 32)
+		if err == nil {
+			op.bVal = bVal
+		} else {
 			op.bVal = d24BNotSet
 			op.b = d.varToIdx(bStr)
 		}
@@ -175,69 +150,99 @@ func (d *Day24) getInstructions(input string) []d24Instruction {
 	return instr
 }
 
-var d24Pow10s = [d24Digits + 1]int64{}
+type d24State struct {
+	prevNums int64
+	zVal     int64
+}
 
-func init() {
-	for i := range d24Pow10s {
-		d24Pow10s[i] = d24Pow10(i)
+func (d *Day24) highestNumber(sl []d24State) []d24State {
+	m := make(map[int64]int64, len(sl))
+	for i := range sl {
+		cur, ok := m[sl[i].zVal]
+		if ok && cur > sl[i].prevNums {
+			continue
+		}
+		m[sl[i].zVal] = sl[i].prevNums
 	}
-}
 
-func d24Pow10(n int) int64 {
-	res := int64(1)
-	for i := 0; i < n; i++ {
-		res *= 10
+	nw := make([]d24State, 0, len(m))
+	for zVal, prev := range m {
+		nw = append(nw, d24State{prevNums: prev, zVal: zVal})
 	}
-	return res
+	return nw
 }
 
-func (d *Day24) numAt(num int64, pos int) int8 {
-	// https://stackoverflow.com/questions/46753736/extract-digits-at-a-certain-position-in-a-number/46755013
-	n := num % d24Pow10s[pos]
-	res := n / d24Pow10s[pos-1]
-	return int8(res)
+func (d *Day24) lowestNumber(sl []d24State) []d24State {
+	m := make(map[int64]int64, len(sl))
+	for i := range sl {
+		cur, ok := m[sl[i].zVal]
+		if ok && cur < sl[i].prevNums {
+			continue
+		}
+		m[sl[i].zVal] = sl[i].prevNums
+	}
+
+	nw := make([]d24State, 0, len(m))
+	for zVal, prev := range m {
+		nw = append(nw, d24State{prevNums: prev, zVal: zVal})
+	}
+	return nw
 }
 
-type d24Input [d24Digits]int8
-
-func (d *Day24) SolveI(input string) int64 {
+func (d *Day24) simulateStates(input string, stateFilter func(sl []d24State) []d24State) []int64 {
 	instr := d.getInstructions(input)
 
-	min, err := strconv.ParseInt(strings.Repeat("1", d24Digits), 10, 64)
-	CheckErr(err)
-	max, err := strconv.ParseInt(strings.Repeat("9", d24Digits), 10, 64)
-	CheckErr(err)
-
 	p := d24Program{
-		instr:  instr,
-		states: make(map[d24State]d24StateResult, 1024*1024),
+		instr: instr,
 	}
 
-	in := d24Input{}
+	mems := make([]d24State, 1, 9)
+	mems[0] = d24State{prevNums: 0, zVal: 0}
+	line := 1
+	for line < len(p.instr) {
+		var nwLine int
+		nwMems := make([]d24State, 0, len(mems))
+		for i := range mems {
+			for n := 1; n <= 9; n++ {
+				p.mem = d24Memory{0, 0, 0, mems[i].zVal}
+				nwLine = p.execute(line, int64(n))
 
-	for num := max; num >= min; num-- {
-		p.mem = d24Memory{}
-		pos := d24Digits - 1
-		for i := d24Digits - 1; i >= 0; i-- {
-			in[i] = d.numAt(num, i+1)
+				nwMems = append(nwMems, d24State{
+					prevNums: mems[i].prevNums*10 + int64(n),
+					zVal:     p.mem[3],
+				})
+			}
 		}
+		line = nwLine + 1
+		mems = stateFilter(nwMems)
+		fmt.Printf("Simulating %d states\n", len(mems))
+	}
 
-		line := 1 // skip first input
-		var zVal int64
-		for line < len(instr) {
-			zVal, line = p.execute(line, int64(in[pos]))
-			line++ // skip input instruction
-			pos--
-		}
-
-		if zVal == 0 {
-			return num
+	zeroVals := make([]int64, 0)
+	for i := range mems {
+		if mems[i].zVal == 0 {
+			zeroVals = append(zeroVals, mems[i].prevNums)
 		}
 	}
-	panic("no result")
+	return zeroVals
+}
+
+func (d *Day24) SolveI(input string) int64 {
+	zeroVals := d.simulateStates(input, d.highestNumber)
+
+	sort.Slice(zeroVals, func(i, j int) bool {
+		return zeroVals[i] > zeroVals[j]
+	})
+
+	return zeroVals[0]
 }
 
 func (d *Day24) SolveII(input string) int64 {
-	// TODO: FIXME: Implement me!
-	panic("no result")
+	zeroVals := d.simulateStates(input, d.lowestNumber)
+
+	sort.Slice(zeroVals, func(i, j int) bool {
+		return zeroVals[i] < zeroVals[j]
+	})
+
+	return zeroVals[0]
 }
