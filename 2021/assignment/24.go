@@ -104,7 +104,6 @@ func (d *Day24) strToOp(str string) d24Operation {
 
 const (
 	d24BNotSet = math.MinInt64
-	d24Digits  = 14
 )
 
 func (d *Day24) getInstructions(input string) []d24Instruction {
@@ -155,14 +154,14 @@ type d24State struct {
 	zVal     int64
 }
 
-func (d *Day24) highestNumber(sl []d24State) []d24State {
-	m := make(map[int64]int64, len(sl))
-	for i := range sl {
-		cur, ok := m[sl[i].zVal]
-		if ok && cur > sl[i].prevNums {
+func (d *Day24) compareStates(states []d24State, addNew func(prevNumsNew, prevNumsOld int64) bool) []d24State {
+	m := make(map[int64]int64, len(states))
+	for i := range states {
+		oldNums, ok := m[states[i].zVal]
+		if ok && addNew(states[i].prevNums, oldNums) {
 			continue
 		}
-		m[sl[i].zVal] = sl[i].prevNums
+		m[states[i].zVal] = states[i].prevNums
 	}
 
 	nw := make([]d24State, 0, len(m))
@@ -172,32 +171,17 @@ func (d *Day24) highestNumber(sl []d24State) []d24State {
 	return nw
 }
 
-func (d *Day24) lowestNumber(sl []d24State) []d24State {
-	m := make(map[int64]int64, len(sl))
-	for i := range sl {
-		cur, ok := m[sl[i].zVal]
-		if ok && cur < sl[i].prevNums {
-			continue
-		}
-		m[sl[i].zVal] = sl[i].prevNums
-	}
-
-	nw := make([]d24State, 0, len(m))
-	for zVal, prev := range m {
-		nw = append(nw, d24State{prevNums: prev, zVal: zVal})
-	}
-	return nw
-}
-
-func (d *Day24) simulateStates(input string, stateFilter func(sl []d24State) []d24State) []int64 {
+func (d *Day24) simulateStates(input string, stateAddNewFilter func(prevNumsNew, prevNumsOld int64) bool) []int64 {
 	instr := d.getInstructions(input)
 
 	p := d24Program{
 		instr: instr,
 	}
 
-	mems := make([]d24State, 1, 9)
+	mems := make([]d24State, 1)
 	mems[0] = d24State{prevNums: 0, zVal: 0}
+
+	zValIdx := d.varToIdx("z")
 	line := 1
 	for line < len(p.instr) {
 		var nwLine int
@@ -209,12 +193,12 @@ func (d *Day24) simulateStates(input string, stateFilter func(sl []d24State) []d
 
 				nwMems = append(nwMems, d24State{
 					prevNums: mems[i].prevNums*10 + int64(n),
-					zVal:     p.mem[3],
+					zVal:     p.mem[zValIdx],
 				})
 			}
 		}
 		line = nwLine + 1
-		mems = stateFilter(nwMems)
+		mems = d.compareStates(nwMems, stateAddNewFilter)
 		fmt.Printf("Simulating %d states\n", len(mems))
 	}
 
@@ -228,7 +212,9 @@ func (d *Day24) simulateStates(input string, stateFilter func(sl []d24State) []d
 }
 
 func (d *Day24) SolveI(input string) int64 {
-	zeroVals := d.simulateStates(input, d.highestNumber)
+	zeroVals := d.simulateStates(input, func(prevNumsNew, prevNumsOld int64) bool {
+		return prevNumsNew > prevNumsOld
+	})
 
 	sort.Slice(zeroVals, func(i, j int) bool {
 		return zeroVals[i] > zeroVals[j]
@@ -238,7 +224,9 @@ func (d *Day24) SolveI(input string) int64 {
 }
 
 func (d *Day24) SolveII(input string) int64 {
-	zeroVals := d.simulateStates(input, d.lowestNumber)
+	zeroVals := d.simulateStates(input, func(prevNumsNew, prevNumsOld int64) bool {
+		return prevNumsNew < prevNumsOld
+	})
 
 	sort.Slice(zeroVals, func(i, j int) bool {
 		return zeroVals[i] < zeroVals[j]
