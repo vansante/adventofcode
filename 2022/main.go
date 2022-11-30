@@ -63,7 +63,7 @@ func main() {
 		}
 
 		if !strings.HasPrefix(in.name, "2_") {
-			fmt.Printf("Solving 2021 day %d first assignment with '%s'\n", dayNum, in.name)
+			fmt.Printf("Solving 2022 day %d first assignment with '%s'\n", dayNum, in.name)
 			start := time.Now()
 			resultI := day.SolveI(in.content)
 			fmt.Printf("Solved first assignment: %d\n", resultI)
@@ -71,7 +71,7 @@ func main() {
 		}
 
 		if !strings.HasPrefix(in.name, "1_") {
-			fmt.Printf("Solving 2021 day %d second assignment with '%s'\n", dayNum, in.name)
+			fmt.Printf("Solving 2022 day %d second assignment with '%s'\n", dayNum, in.name)
 			start := time.Now()
 			resultII := day.SolveII(in.content)
 			fmt.Printf("Solved second assignment: %d\n", resultII)

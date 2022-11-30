@@ -36,7 +36,7 @@ func ParseInt64s(input []string) []int64 {
 func ParseInts(input []string) []int {
 	ints := make([]int, 0, len(input))
 	for i := range input {
-		num, err := strconv.ParseInt(input[i], 10, 64)
+		num, err := strconv.ParseInt(input[i], 10, 32)
 		if err != nil {
 			panic(err)
 		}
