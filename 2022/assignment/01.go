@@ -32,9 +32,9 @@ func (d *Day01) SolveI(input string) int64 {
 
 func (d *Day01) SolveII(input string) int64 {
 	elves := d.getElveCalories(input)
-	calories := make([]int64, 0, len(elves))
-	for _, elve := range elves {
-		calories = append(calories, util.Sum(elve))
+	calories := make([]int64, len(elves))
+	for i, elve := range elves {
+		calories[i] = util.Sum(elve)
 	}
 	util.SliceSort(calories, false)
 	return calories[0] + calories[1] + calories[2]
