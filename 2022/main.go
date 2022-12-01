@@ -17,6 +17,7 @@ import (
 var (
 	days = map[int]assignment.Assignment{
 		1: &assignment.Day01{},
+		2: &assignment.Day02{},
 		// <generator:add:days>
 	}
 )
