@@ -1,6 +1,7 @@
 package util
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 
@@ -114,6 +115,15 @@ func SliceIntersect[T comparable](s1, s2 []T) []T {
 	return nw
 }
 
+func SliceSort[T constraints.Ordered](s []T, ascending bool) {
+	sort.Slice(s, func(i, j int) bool {
+		if ascending {
+			return s[i] < s[j]
+		}
+		return s[i] > s[j]
+	})
+}
+
 func Abs[T constraints.Signed](s T) T {
 	if s < 0 {
 		return -s
@@ -147,4 +157,12 @@ func Min[T constraints.Ordered](s []T) T {
 		}
 	}
 	return m
+}
+
+func Sum[T constraints.Signed](s []T) T {
+	var sum T
+	for _, v := range s {
+		sum += v
+	}
+	return sum
 }
