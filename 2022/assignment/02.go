@@ -11,9 +11,9 @@ type Day02 struct{}
 type d02Weapon uint8
 
 const (
-	D02Rock     d02Weapon = 1
-	D02Paper    d02Weapon = 2
-	D02Scissors d02Weapon = 3
+	d02Rock     d02Weapon = 1
+	d02Paper    d02Weapon = 2
+	d02Scissors d02Weapon = 3
 )
 
 func (w d02Weapon) points() int64 {
@@ -22,32 +22,32 @@ func (w d02Weapon) points() int64 {
 
 func (w d02Weapon) needsWeapon(result d02Weapon) d02Weapon {
 	switch result {
-	case D02Rock: // We need to lose
+	case d02Rock: // We need to lose
 		switch w {
-		case D02Rock:
-			return D02Scissors
-		case D02Paper:
-			return D02Rock
-		case D02Scissors:
-			return D02Paper
+		case d02Rock:
+			return d02Scissors
+		case d02Paper:
+			return d02Rock
+		case d02Scissors:
+			return d02Paper
 		}
-	case D02Paper: // We need to draw
+	case d02Paper: // We need to draw
 		switch w {
-		case D02Rock:
-			return D02Rock
-		case D02Paper:
-			return D02Paper
-		case D02Scissors:
-			return D02Scissors
+		case d02Rock:
+			return d02Rock
+		case d02Paper:
+			return d02Paper
+		case d02Scissors:
+			return d02Scissors
 		}
-	case D02Scissors: // We need to win
+	case d02Scissors: // We need to win
 		switch w {
-		case D02Rock:
-			return D02Paper
-		case D02Paper:
-			return D02Scissors
-		case D02Scissors:
-			return D02Rock
+		case d02Rock:
+			return d02Paper
+		case d02Paper:
+			return d02Scissors
+		case d02Scissors:
+			return d02Rock
 		}
 	}
 	panic("invalid values")
@@ -56,11 +56,11 @@ func (w d02Weapon) needsWeapon(result d02Weapon) d02Weapon {
 func (d *Day02) getWeapon(weapon string) d02Weapon {
 	switch weapon {
 	case "A", "X":
-		return D02Rock
+		return d02Rock
 	case "B", "Y":
-		return D02Paper
+		return d02Paper
 	case "C", "Z":
-		return D02Scissors
+		return d02Scissors
 	}
 	panic("invalid value")
 }
@@ -71,9 +71,9 @@ func (d *Day02) gamePoints(them, you d02Weapon) int64 {
 	}
 
 	switch {
-	case you == D02Rock && them == D02Scissors,
-		you == D02Paper && them == D02Rock,
-		you == D02Scissors && them == D02Paper:
+	case you == d02Rock && them == d02Scissors,
+		you == d02Paper && them == d02Rock,
+		you == d02Scissors && them == d02Paper:
 		return 6 // win
 	}
 
