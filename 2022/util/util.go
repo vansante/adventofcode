@@ -131,7 +131,21 @@ func Abs[T constraints.Signed](s T) T {
 	return s
 }
 
-func Max[T constraints.Ordered](s []T) T {
+func Max[T constraints.Ordered](s1, s2 T) T {
+	if s1 > s2 {
+		return s1
+	}
+	return s2
+}
+
+func Min[T constraints.Ordered](s1, s2 T) T {
+	if s1 < s2 {
+		return s1
+	}
+	return s2
+}
+
+func MaxSlice[T constraints.Ordered](s []T) T {
 	if len(s) == 0 {
 		var zero T
 		return zero
@@ -145,7 +159,7 @@ func Max[T constraints.Ordered](s []T) T {
 	return m
 }
 
-func Min[T constraints.Ordered](s []T) T {
+func MinSlice[T constraints.Ordered](s []T) T {
 	if len(s) == 0 {
 		var zero T
 		return zero
@@ -159,7 +173,7 @@ func Min[T constraints.Ordered](s []T) T {
 	return m
 }
 
-func Sum[T constraints.Signed](s []T) T {
+func SumSlice[T constraints.Signed](s []T) T {
 	var sum T
 	for _, v := range s {
 		sum += v

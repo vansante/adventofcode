@@ -22,7 +22,7 @@ func (d *Day01) SolveI(input string) int64 {
 	elves := d.getElveCalories(input)
 	max := int64(math.MinInt64)
 	for _, elve := range elves {
-		elveCals := util.Sum(elve)
+		elveCals := util.SumSlice(elve)
 		if elveCals > max {
 			max = elveCals
 		}
@@ -34,7 +34,7 @@ func (d *Day01) SolveII(input string) int64 {
 	elves := d.getElveCalories(input)
 	calories := make([]int64, len(elves))
 	for i, elve := range elves {
-		calories[i] = util.Sum(elve)
+		calories[i] = util.SumSlice(elve)
 	}
 	util.SliceSort(calories, false)
 	return calories[0] + calories[1] + calories[2]

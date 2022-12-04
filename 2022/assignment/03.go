@@ -30,7 +30,7 @@ func (r *d03Rucksack) findDuplicates() int64 {
 	if len(dupes) != 1 {
 		panic(fmt.Sprintf("%d duplicates", len(dupes)))
 	}
-	return int64(util.Sum(dupes))
+	return int64(util.SumSlice(dupes))
 }
 
 func (d *Day03) getRucksacks(input string) []d03Rucksack {
