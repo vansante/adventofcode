@@ -60,7 +60,7 @@ func (d *Day04) getElves(input string) []d04Elve {
 	return elves
 }
 
-func (d *Day04) SolveI(input string) int64 {
+func (d *Day04) SolveI(input string) any {
 	elves := d.getElves(input)
 
 	var contained int64
@@ -72,7 +72,7 @@ func (d *Day04) SolveI(input string) int64 {
 	return contained
 }
 
-func (d *Day04) SolveII(input string) int64 {
+func (d *Day04) SolveII(input string) any {
 	elves := d.getElves(input)
 
 	var overlap int64

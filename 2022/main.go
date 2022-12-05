@@ -21,6 +21,7 @@ var (
 		3: &assignment.Day03{},
 		4: &assignment.Day04{},
 		5: &assignment.Day05{},
+		6: &assignment.Day06{},
 		// <generator:add:days>
 	}
 )
@@ -70,7 +71,7 @@ func main() {
 			fmt.Printf("Solving 2022 day %d first assignment with '%s'\n", dayNum, in.name)
 			start := time.Now()
 			resultI := day.SolveI(in.content)
-			fmt.Printf("Solved first assignment: %d\n", resultI)
+			fmt.Printf("Solved first assignment: %v\n", resultI)
 			fmt.Printf("Time taken: %v\n", time.Since(start))
 		}
 
@@ -78,7 +79,7 @@ func main() {
 			fmt.Printf("Solving 2022 day %d second assignment with '%s'\n", dayNum, in.name)
 			start := time.Now()
 			resultII := day.SolveII(in.content)
-			fmt.Printf("Solved second assignment: %d\n", resultII)
+			fmt.Printf("Solved second assignment: %v\n", resultII)
 			fmt.Printf("Time taken: %v\n", time.Since(start))
 		}
 

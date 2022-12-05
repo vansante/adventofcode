@@ -51,7 +51,7 @@ func (d *Day03) getRucksacks(input string) []d03Rucksack {
 	return items
 }
 
-func (d *Day03) SolveI(input string) int64 {
+func (d *Day03) SolveI(input string) any {
 	sacks := d.getRucksacks(input)
 
 	var sum int64
@@ -61,7 +61,7 @@ func (d *Day03) SolveI(input string) int64 {
 	return sum
 }
 
-func (d *Day03) SolveII(input string) int64 {
+func (d *Day03) SolveII(input string) any {
 	sacks := d.getRucksacks(input)
 
 	var sum int64

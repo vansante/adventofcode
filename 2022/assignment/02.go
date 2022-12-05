@@ -89,7 +89,7 @@ func (d *Day02) getGames(input string) [][]string {
 	return games
 }
 
-func (d *Day02) SolveI(input string) int64 {
+func (d *Day02) SolveI(input string) any {
 	games := d.getGames(input)
 	score := int64(0)
 	for i := range games {
@@ -100,7 +100,7 @@ func (d *Day02) SolveI(input string) int64 {
 	return score
 }
 
-func (d *Day02) SolveII(input string) int64 {
+func (d *Day02) SolveII(input string) any {
 	games := d.getGames(input)
 	score := int64(0)
 	for i := range games {

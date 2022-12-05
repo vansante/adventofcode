@@ -18,7 +18,7 @@ func (d *Day01) getElveCalories(input string) [][]int64 {
 	return elvesCalories
 }
 
-func (d *Day01) SolveI(input string) int64 {
+func (d *Day01) SolveI(input string) any {
 	elves := d.getElveCalories(input)
 	max := int64(math.MinInt64)
 	for _, elve := range elves {
@@ -30,7 +30,7 @@ func (d *Day01) SolveI(input string) int64 {
 	return max
 }
 
-func (d *Day01) SolveII(input string) int64 {
+func (d *Day01) SolveII(input string) any {
 	elves := d.getElveCalories(input)
 	calories := make([]int64, len(elves))
 	for i, elve := range elves {

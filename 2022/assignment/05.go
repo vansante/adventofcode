@@ -18,6 +18,10 @@ func (s d05Stack) reverse() d05Stack {
 	return s
 }
 
+func (s d05Stack) read() string {
+	return s[len(s)-1]
+}
+
 func (d *Day05) getStacks(input string) ([]d05Stack, []string) {
 	lines := strings.Split(input, "\n")
 
@@ -84,28 +88,24 @@ func (d *Day05) doMoves(stacks []d05Stack, instructions []string, withReverse bo
 	}
 }
 
-func (d *Day05) SolveI(input string) int64 {
+func (d *Day05) SolveI(input string) any {
 	stacks, lines := d.getStacks(input)
 	d.doMoves(stacks, lines, true)
 
-	fmt.Println()
-	for i := range stacks {
-		fmt.Print(stacks[i][len(stacks[i])-1])
+	var s string
+	for _, stack := range stacks {
+		s += stack.read()
 	}
-	fmt.Println()
-
-	return 0
+	return s
 }
 
-func (d *Day05) SolveII(input string) int64 {
+func (d *Day05) SolveII(input string) any {
 	stacks, lines := d.getStacks(input)
 	d.doMoves(stacks, lines, false)
 
-	fmt.Println()
-	for i := range stacks {
-		fmt.Print(stacks[i][len(stacks[i])-1])
+	var s string
+	for _, stack := range stacks {
+		s += stack.read()
 	}
-	fmt.Println()
-
-	return 0
+	return s
 }

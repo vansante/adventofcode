@@ -76,14 +76,11 @@ var dayTemplate = template.Must(template.New("").Parse(
 
 type Day{{ .Num }} struct{}
 
-func (d *Day{{ .Num }}) SolveI(input string) int64 {
-	// TODO: FIXME: Implement me!
-	panic("no result")
+func (d *Day{{ .Num }}) SolveI(input string) any {
+	return "Not Implemented Yet"
 }
 
-func (d *Day{{ .Num }}) SolveII(input string) int64 {
-	// TODO: FIXME: Implement me!
-	panic("no result")
+func (d *Day{{ .Num }}) SolveII(input string) any {
+	return "Not Implemented Yet"
 }
-
 `))
