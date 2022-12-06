@@ -11,13 +11,6 @@ type Day05 struct{}
 
 type d05Stack []string
 
-func (s d05Stack) reverse() d05Stack {
-	for i := 0; i < len(s)/2; i++ {
-		s[i], s[len(s)-1-i] = s[len(s)-1-i], s[i]
-	}
-	return s
-}
-
 func (s d05Stack) read() string {
 	return s[len(s)-1]
 }
@@ -32,7 +25,7 @@ func (d *Day05) getStacks(input string) ([]d05Stack, []string) {
 		if line == "" {
 			s := stacks[:highest+1]
 			for i := range s {
-				s[i] = s[i].reverse()
+				s[i] = util.SliceReverse(s[i])
 			}
 			return s, lines[i+1:]
 		}
@@ -79,9 +72,7 @@ func (d *Day05) doMoves(stacks []d05Stack, instructions []string, withReverse bo
 
 		if withReverse {
 			// reverse the crates
-			for i := 0; i < len(crates)/2; i++ {
-				crates[i], crates[len(crates)-1-i] = crates[len(crates)-1-i], crates[i]
-			}
+			crates = util.SliceReverse(crates)
 		}
 
 		stacks[to-1] = append(stacks[to-1], crates...)

@@ -115,6 +115,13 @@ func SliceIntersect[T comparable](s1, s2 []T) []T {
 	return nw
 }
 
+func SliceReverse[T any](s []T) []T {
+	for i := 0; i < len(s)/2; i++ {
+		s[i], s[len(s)-1-i] = s[len(s)-1-i], s[i]
+	}
+	return s
+}
+
 func SliceSort[T constraints.Ordered](s []T, ascending bool) {
 	sort.Slice(s, func(i, j int) bool {
 		if ascending {
