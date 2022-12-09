@@ -31,16 +31,6 @@ func (g *d08Grid) get(x, y, defaultVal int) int {
 	return g.y[y].x[x]
 }
 
-func (g *d08Grid) increase(x, y, delta int) {
-	if y < 0 || y >= len(g.y) {
-		return
-	}
-	if x < 0 || x >= len(g.y[y].x) {
-		return
-	}
-	g.y[y].x[x] += delta
-}
-
 func (d *Day08) getGrid(input string) d08Grid {
 	split := util.SplitLines(input)
 
