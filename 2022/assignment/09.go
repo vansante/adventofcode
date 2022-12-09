@@ -83,9 +83,6 @@ func (d *Day09) walkDirections(dirs []d09Direction, start d09Coord, ropeSize int
 					t.y -= yDiff / 2
 				}
 
-				if j == len(rope)-1 {
-					break
-				}
 				h = &rope[j]
 			}
 			walker(rope)
