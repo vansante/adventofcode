@@ -1,7 +1,6 @@
 package assignment
 
 import (
-	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -197,10 +196,6 @@ func (d *Day11) SolveII(input string) any {
 	for i := 0; i < 10_000; i++ {
 		monkeys.round(modulus)
 	}
-	fmt.Println()
-	monkeys.loop(func(m *d11Monkey) {
-		fmt.Println(m.inspectionCount)
-	})
 
 	monkeys.sortByInspections()
 	return monkeys.get(monkeys.ids[0]).inspectionCount * monkeys.get(monkeys.ids[1]).inspectionCount
