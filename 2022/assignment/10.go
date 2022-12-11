@@ -92,10 +92,10 @@ func (s *d10Screen) print() {
 	for y := 0; y < d10Height; y++ {
 		for x := 0; x < d10Width; x++ {
 			if s.get(x, y) {
-				print("#")
+				print("▓")
 				continue
 			}
-			print(".")
+			print("░")
 		}
 		fmt.Println()
 	}
