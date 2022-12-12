@@ -24,42 +24,22 @@ type d11Monkey struct {
 
 // Hardcode operations, for ease
 func (m *d11Monkey) setOp() {
-	switch m.operation {
-	case "new = old * 17":
-		m.op = func(i int64) int64 {
-			return i * 17
-		}
-	case "new = old + 8":
-		m.op = func(i int64) int64 {
-			return i + 8
-		}
-	case "new = old + 6":
-		m.op = func(i int64) int64 {
-			return i + 6
-		}
-	case "new = old * 19":
-		m.op = func(i int64) int64 {
-			return i * 19
-		}
-	case "new = old + 7":
-		m.op = func(i int64) int64 {
-			return i + 7
-		}
-	case "new = old * old":
+	switch {
+	case m.operation == "new = old * old":
 		m.op = func(i int64) int64 {
 			return i * i
 		}
-	case "new = old + 1":
+	case strings.HasPrefix(m.operation, "new = old * "):
+		factor, err := strconv.ParseInt(m.operation[12:], 10, 32)
+		util.CheckErr(err)
 		m.op = func(i int64) int64 {
-			return i + 1
+			return i * factor
 		}
-	case "new = old + 2":
+	case strings.HasPrefix(m.operation, "new = old + "):
+		factor, err := strconv.ParseInt(m.operation[12:], 10, 32)
+		util.CheckErr(err)
 		m.op = func(i int64) int64 {
-			return i + 2
-		}
-	case "new = old + 3":
-		m.op = func(i int64) int64 {
-			return i + 3
+			return i + factor
 		}
 	default:
 		log.Panicf("unknown operation: %s", m.operation)
