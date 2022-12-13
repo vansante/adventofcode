@@ -48,8 +48,8 @@ func (p *d13Pair) print() {
 
 func (p *d13Pair) inOrder() bool {
 	score := p.left.inOrder(p.right)
-	fmt.Println("IN ORDER:", score > 0)
-	return score > 0
+	fmt.Println("IN ORDER:", score >= 0)
+	return score >= 0
 }
 
 func (d *Day13) parsePacket(line string) *d13Packet {
@@ -113,7 +113,7 @@ func (p *d13Packet) inOrder(rgt *d13Packet) int {
 		}
 	}
 	fmt.Println("left side ran out of items:", p.String(), rgt.String())
-	return 1
+	return 0
 }
 
 func (p *d13Packet) String() string {
@@ -131,11 +131,13 @@ type d13Value struct {
 }
 
 func (v *d13Value) inOrder(rgt *d13Value) int {
+	fmt.Println("compare ", v.String(), rgt.String())
 	if v.pkt != nil && rgt.pkt != nil {
 		return v.pkt.inOrder(rgt.pkt)
 	}
 
 	if v.pkt != nil && rgt.pkt == nil {
+		fmt.Println("convert right")
 		tmp := &d13Value{pkt: &d13Packet{values: []d13Value{
 			{num: rgt.num},
 		}}}
@@ -143,13 +145,14 @@ func (v *d13Value) inOrder(rgt *d13Value) int {
 	}
 
 	if v.pkt == nil && rgt.pkt != nil {
+		fmt.Println("convert left")
 		tmp := &d13Value{pkt: &d13Packet{values: []d13Value{
 			{num: v.num},
 		}}}
 		return tmp.inOrder(rgt)
 	}
 
-	fmt.Println("compare ", v.num, rgt.num)
+	fmt.Println("compare ", v.num, rgt.num, "=", v.num-rgt.num)
 	return rgt.num - v.num
 }
 
@@ -171,7 +174,7 @@ func (d *Day13) SolveI(input string) any {
 			sum += i + 1
 		}
 	}
-	// 3283 too low
+	// 3283, 3696 too low
 	// 5505 too high
 	return sum
 }
