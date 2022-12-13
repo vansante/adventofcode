@@ -49,7 +49,6 @@ func (p *d13Pair) print() {
 
 func (p *d13Pair) inOrder() bool {
 	score := p.left.inOrder(p.right)
-	fmt.Println("IN ORDER:", score >= 0)
 	return score >= 0
 }
 
@@ -99,21 +98,18 @@ type d13Packet struct {
 func (p *d13Packet) inOrder(rgt *d13Packet) int {
 	for i := range p.values {
 		if i >= len(rgt.values) {
-			fmt.Println(i, "right side out of items:", p.String(), rgt.String())
 			return -1
 		}
 
 		order := p.values[i].inOrder(&rgt.values[i])
 		if order < 0 {
-			fmt.Println("right side is smaller:", p.String(), rgt.String())
 			return order
 		}
 		if order > 0 {
-			fmt.Println("left side is smaller:", p.String(), rgt.String())
 			return order
 		}
 	}
-	fmt.Println("left side ran out of items:", p.String(), rgt.String())
+
 	return len(rgt.values) - len(p.values)
 }
 
@@ -132,13 +128,11 @@ type d13Value struct {
 }
 
 func (v *d13Value) inOrder(rgt *d13Value) int {
-	fmt.Println("compare ", v.String(), rgt.String())
 	if v.pkt != nil && rgt.pkt != nil {
 		return v.pkt.inOrder(rgt.pkt)
 	}
 
 	if v.pkt != nil && rgt.pkt == nil {
-		fmt.Println("convert right")
 		tmp := &d13Value{pkt: &d13Packet{values: []d13Value{
 			{num: rgt.num},
 		}}}
@@ -146,14 +140,12 @@ func (v *d13Value) inOrder(rgt *d13Value) int {
 	}
 
 	if v.pkt == nil && rgt.pkt != nil {
-		fmt.Println("convert left")
 		tmp := &d13Value{pkt: &d13Packet{values: []d13Value{
 			{num: v.num},
 		}}}
 		return tmp.inOrder(rgt)
 	}
 
-	fmt.Println("compare ", v.num, rgt.num, "=", v.num-rgt.num)
 	return rgt.num - v.num
 }
 
@@ -168,9 +160,6 @@ func (d *Day13) SolveI(input string) any {
 	pairs := d.getPairs(input)
 	sum := 0
 	for i := range pairs {
-		fmt.Println("\n### PAIR", i+1)
-		pairs[i].print()
-
 		if pairs[i].inOrder() {
 			sum += i + 1
 		}
@@ -207,8 +196,6 @@ func (d *Day13) SolveII(input string) any {
 		if pkts[i].String() == second {
 			pos2 = i + 1
 		}
-
-		fmt.Println(pkts[i].String())
 	}
 
 	return pos1 * pos2
