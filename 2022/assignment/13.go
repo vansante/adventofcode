@@ -116,14 +116,6 @@ func (p *d13Packet) inOrder(rgt *d13Packet) int {
 	return 1
 }
 
-func (p *d13Packet) Values() []int {
-	nums := make([]int, 0, 128)
-	for i := range p.values {
-		nums = append(nums, p.values[i].Values()...)
-	}
-	return nums
-}
-
 func (p *d13Packet) String() string {
 	str := make([]string, 0, 128)
 	for i := range p.values {
@@ -159,13 +151,6 @@ func (v *d13Value) inOrder(rgt *d13Value) int {
 
 	fmt.Println("compare ", v.num, rgt.num)
 	return rgt.num - v.num
-}
-
-func (v *d13Value) Values() []int {
-	if v.pkt != nil {
-		return v.pkt.Values()
-	}
-	return []int{v.num}
 }
 
 func (v *d13Value) String() string {
