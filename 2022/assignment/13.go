@@ -41,14 +41,14 @@ type d13Pair struct {
 }
 
 func (p *d13Pair) print() {
-	fmt.Println("L: ", p.left.String())
-	fmt.Println("R: ", p.right.String())
+	fmt.Println("L:", p.left.String())
+	fmt.Println("R:", p.right.String())
 	fmt.Println()
 }
 
 func (p *d13Pair) inOrder() bool {
 	score := p.left.inOrder(p.right)
-	fmt.Println("IN ORDER: ", score > 0)
+	fmt.Println("IN ORDER:", score > 0)
 	return score > 0
 }
 
@@ -107,7 +107,7 @@ func (p *d13Packet) inOrder(rgt *d13Packet) int {
 			fmt.Println("right side is smaller:", p.String(), rgt.String())
 			return order
 		}
-		if order > 1 {
+		if order > 0 {
 			fmt.Println("left side is smaller:", p.String(), rgt.String())
 			return order
 		}
@@ -172,6 +172,7 @@ func (d *Day13) SolveI(input string) any {
 		}
 	}
 	// 3283 too low
+	// 5505 too high
 	return sum
 }
 
