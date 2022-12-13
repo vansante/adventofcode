@@ -3,6 +3,7 @@ package assignment
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -113,7 +114,7 @@ func (p *d13Packet) inOrder(rgt *d13Packet) int {
 		}
 	}
 	fmt.Println("left side ran out of items:", p.String(), rgt.String())
-	return 0
+	return len(rgt.values) - len(p.values)
 }
 
 func (p *d13Packet) String() string {
@@ -174,11 +175,41 @@ func (d *Day13) SolveI(input string) any {
 			sum += i + 1
 		}
 	}
-	// 3283, 3696 too low
-	// 5505 too high
 	return sum
 }
 
+func (d *Day13) getPackets(pairs []d13Pair) []*d13Packet {
+	pkts := make([]*d13Packet, 2*len(pairs))
+	for i, pair := range pairs {
+		pkts[i*2] = pair.left
+		pkts[i*2+1] = pair.right
+	}
+	return pkts
+}
+
 func (d *Day13) SolveII(input string) any {
-	return "Not Implemented Yet"
+	pkts := d.getPackets(d.getPairs(input))
+
+	var first, second = "[[2]]", "[[6]]"
+
+	pkts = append(pkts, d.parsePacket(first))
+	pkts = append(pkts, d.parsePacket(second))
+
+	sort.Slice(pkts, func(i, j int) bool {
+		return pkts[i].inOrder(pkts[j]) > 0
+	})
+
+	var pos1, pos2 int
+	for i := range pkts {
+		if pkts[i].String() == first {
+			pos1 = i + 1
+		}
+		if pkts[i].String() == second {
+			pos2 = i + 1
+		}
+
+		fmt.Println(pkts[i].String())
+	}
+
+	return pos1 * pos2
 }
