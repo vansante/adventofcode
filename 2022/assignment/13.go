@@ -41,7 +41,8 @@ type d13Pair struct {
 }
 
 func (p *d13Pair) print() {
-	fmt.Printf("pkts: L %v, R: %v", p.left.String(), p.right.String())
+	fmt.Println("L: ", p.left.String())
+	fmt.Println("R: ", p.right.String())
 	fmt.Println()
 }
 
@@ -65,21 +66,20 @@ func (d *Day13) parsePacket(line string) *d13Packet {
 			p.values = append(p.values, d13Value{pkt: nw})
 			stack = append(stack, p)
 			p = nw
-			continue
 		case ']':
 			p, stack = stack[len(stack)-1], stack[:len(stack)-1]
-			continue
 		case ',':
 			// Next value
-			continue
 		default:
 			if !unicode.IsDigit(rune(char)) {
 				log.Panicf("unexpected non number %v", rune(char))
 			}
+
 			if unicode.IsDigit(rune(line[i+1])) {
-				num, err := strconv.ParseInt(line[i:i+1], 10, 32)
+				num, err := strconv.ParseInt(line[i:i+2], 10, 32)
 				util.CheckErr(err)
 				p.values = append(p.values, d13Value{num: int(num)})
+				i++
 				continue
 			}
 			num, err := strconv.ParseInt(string(line[i]), 10, 32)
@@ -156,6 +156,7 @@ func (v *d13Value) inOrder(rgt *d13Value) int {
 		}}}
 		return tmp.inOrder(rgt)
 	}
+
 	fmt.Println("compare ", v.num, rgt.num)
 	return rgt.num - v.num
 }
@@ -185,6 +186,7 @@ func (d *Day13) SolveI(input string) any {
 			sum += i + 1
 		}
 	}
+	// 3283 too low
 	return sum
 }
 
