@@ -91,10 +91,6 @@ func (g *d14Grid) drawRockLine(line []d14Coord) {
 	}
 }
 
-type d14Line struct {
-	x []int
-}
-
 func (g *d14Grid) set(x, y int, val uint8) {
 	g.settled[d14Coord{x, y}] = val
 	g.minX = util.Min(x, g.minX)
@@ -111,15 +107,12 @@ const (
 	d14DropYLimit = 1300
 )
 
-func (g *d14Grid) dropSand(x, y int, print bool) (lastX, lastY int) {
+func (g *d14Grid) dropSand(x, y int) (lastX, lastY int) {
 	if g.get(x, y) != 0 {
 		panic("sand blocked")
 	}
 
 	for {
-		if print {
-			fmt.Println("x", x, "y", y)
-		}
 		if y > d14DropYLimit {
 			return x, y
 		}
@@ -157,7 +150,7 @@ func (d *Day14) SolveI(input string) any {
 	g.drawRocks(input)
 	i := 0
 	for {
-		_, y := g.dropSand(500, 0, false)
+		_, y := g.dropSand(500, 0)
 		if y >= d14DropYLimit {
 			break
 		}
@@ -174,7 +167,7 @@ func (d *Day14) SolveII(input string) any {
 
 	i := 0
 	for {
-		x, y := g.dropSand(500, 0, false)
+		x, y := g.dropSand(500, 0)
 		i++
 		if x == 500 && y == 0 {
 			break
