@@ -2,6 +2,7 @@ package assignment
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/vansante/adventofcode/2022/util"
@@ -14,19 +15,21 @@ type d14Coord struct {
 }
 
 type d14Grid struct {
-	y []d14Line
+	minX, minY, maxX, maxY int
+	settled                map[d14Coord]uint8
 }
 
 const (
-	d14Rock = 10
-	d14Sand = 20
+	d14Nothing = 0
+	d14Rock    = 1
+	d14Sand    = 2
 )
 
 func (g *d14Grid) print() {
 	fmt.Println()
-	for y := range g.y {
-		for x := range g.y[y].x {
-			switch g.get(x, y, 0) {
+	for y := g.minY; y <= g.maxY; y++ {
+		for x := g.minX; x <= g.maxX; x++ {
+			switch g.settled[d14Coord{x, y}] {
 			case d14Rock:
 				print("#")
 			case d14Sand:
@@ -92,54 +95,44 @@ type d14Line struct {
 	x []int
 }
 
-const d14XTranslate = -450
-
-func (g *d14Grid) set(x, y, val int) {
-	// Translate
-	//x += d14XTranslate
-	if y < 0 || y >= len(g.y) {
-		panic("y out of bounds")
-	}
-	if x < 0 || x >= len(g.y[y].x) {
-		panic("x out of bounds")
-	}
-	g.y[y].x[x] = val
+func (g *d14Grid) set(x, y int, val uint8) {
+	g.settled[d14Coord{x, y}] = val
+	g.minX = util.Min(x, g.minX)
+	g.maxX = util.Max(x, g.maxX)
+	g.minY = util.Min(y, g.minY)
+	g.maxY = util.Max(y, g.maxY)
 }
 
-func (g *d14Grid) get(x, y, defaultVal int) int {
-	//x += d14XTranslate
-	if y < 0 || y >= len(g.y) {
-		return defaultVal
-	}
-	if x < 0 || x >= len(g.y[y].x) {
-		return defaultVal
-	}
-	return g.y[y].x[x]
+func (g *d14Grid) get(x, y int) uint8 {
+	return g.settled[d14Coord{x, y}]
 }
 
 const (
-	d14DropYLimit = 1000
+	d14DropYLimit = 1300
 )
 
-func (g *d14Grid) dropSand(x, y int) (lastX, lastY int) {
-	if g.get(x, y, 0) != 0 {
+func (g *d14Grid) dropSand(x, y int, print bool) (lastX, lastY int) {
+	if g.get(x, y) != 0 {
 		panic("sand blocked")
 	}
 
 	for {
+		if print {
+			fmt.Println("x", x, "y", y)
+		}
 		if y > d14DropYLimit {
 			return x, y
 		}
-		if g.get(x, y+1, 0) == 0 {
+		if g.get(x, y+1) == d14Nothing {
 			y++
 			continue
 		}
-		if g.get(x-1, y+1, 0) == 0 {
+		if g.get(x-1, y+1) == d14Nothing {
 			x--
 			y++
 			continue
 		}
-		if g.get(x+1, y+1, 0) == 0 {
+		if g.get(x+1, y+1) == d14Nothing {
 			x++
 			y++
 			continue
@@ -150,25 +143,24 @@ func (g *d14Grid) dropSand(x, y int) (lastX, lastY int) {
 	}
 }
 
-func (d *Day14) makeGrid(width, height int) *d14Grid {
+func (d *Day14) makeGrid() *d14Grid {
 	g := &d14Grid{
-		y: make([]d14Line, height),
-	}
-	for y := range g.y {
-		g.y[y].x = make([]int, width)
+		settled: make(map[d14Coord]uint8, 1024),
+		minX:    math.MaxInt,
+		minY:    math.MaxInt,
 	}
 	return g
 }
 
 func (d *Day14) SolveI(input string) any {
-	g := d.makeGrid(600, 600)
-
+	g := d.makeGrid()
 	g.drawRocks(input)
-
+	fmt.Println(len(g.settled))
 	i := 0
 	for {
-		_, y := g.dropSand(500, 0)
+		_, y := g.dropSand(500, 0, false)
 		if y >= d14DropYLimit {
+			g.dropSand(500, 0, false)
 			break
 		}
 		i++
@@ -176,7 +168,9 @@ func (d *Day14) SolveI(input string) any {
 
 	//g.print()
 
-	// > 462
+	// > 462, 463
+	// = 897'
+	fmt.Println(len(g.settled))
 	return i
 }
 
