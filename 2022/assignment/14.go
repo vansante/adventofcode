@@ -155,25 +155,30 @@ func (d *Day14) makeGrid() *d14Grid {
 func (d *Day14) SolveI(input string) any {
 	g := d.makeGrid()
 	g.drawRocks(input)
-	fmt.Println(len(g.settled))
 	i := 0
 	for {
 		_, y := g.dropSand(500, 0, false)
 		if y >= d14DropYLimit {
-			g.dropSand(500, 0, false)
 			break
 		}
 		i++
 	}
 
-	g.print()
-
-	// > 462, 463
-	// = 897'
-	fmt.Println(len(g.settled))
 	return i
 }
 
 func (d *Day14) SolveII(input string) any {
-	return "Not Implemented Yet"
+	g := d.makeGrid()
+	g.drawRocks(input)
+	g.drawRockLine([]d14Coord{{g.minX - 10_000, g.maxY + 2}, {g.maxX + 10_000, g.maxY + 2}})
+
+	i := 0
+	for {
+		x, y := g.dropSand(500, 0, false)
+		i++
+		if x == 500 && y == 0 {
+			break
+		}
+	}
+	return i
 }
