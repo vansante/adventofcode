@@ -108,10 +108,6 @@ const (
 )
 
 func (g *d14Grid) dropSand(x, y int) (lastX, lastY int) {
-	if g.get(x, y) != 0 {
-		panic("sand blocked")
-	}
-
 	for {
 		if y > d14DropYLimit {
 			return x, y
