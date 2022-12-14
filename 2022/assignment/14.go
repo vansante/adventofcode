@@ -134,7 +134,7 @@ func (g *d14Grid) dropSand(x, y int) (lastX, lastY int) {
 
 func (d *Day14) makeGrid() *d14Grid {
 	g := &d14Grid{
-		settled: make(map[d14Coord]uint8, 1024),
+		settled: make(map[d14Coord]uint8, 10_000),
 		minX:    math.MaxInt,
 		minY:    math.MaxInt,
 	}
