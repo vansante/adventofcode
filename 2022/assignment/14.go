@@ -82,7 +82,7 @@ func (g *d14Grid) drawRockLine(line []d14Coord) {
 				g.set(c.x, y, d14Rock)
 			}
 		case c.y > nxt.y && c.x == nxt.x:
-			for y := nxt.x; y <= c.x; y++ {
+			for y := nxt.y; y <= c.y; y++ {
 				g.set(c.x, y, d14Rock)
 			}
 		default:
@@ -166,7 +166,7 @@ func (d *Day14) SolveI(input string) any {
 		i++
 	}
 
-	//g.print()
+	g.print()
 
 	// > 462, 463
 	// = 897'
