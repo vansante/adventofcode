@@ -54,18 +54,41 @@ func main() {
 	})
 	_ = file.Close()
 
-	mainGo, err := os.ReadFile("main.go")
+	mainFile, err := os.ReadFile("main.go")
 	if err != nil {
 		panic(err)
 	}
 
-	mainGo = bytes.Replace(
-		mainGo,
+	mainFile = bytes.Replace(
+		mainFile,
 		[]byte("// <generator:add:days>"),
 		[]byte(fmt.Sprintf("%d: &assignment.Day%02d{},\n\t\t// <generator:add:days>", day, day)),
 		1,
 	)
-	err = os.WriteFile("main.go", mainGo, 0755)
+	err = os.WriteFile("main.go", mainFile, 0755)
+	if err != nil {
+		panic(err)
+	}
+
+	testFile, err := os.ReadFile("assignment/assignment_test.go")
+	if err != nil {
+		panic(err)
+	}
+
+	output := &bytes.Buffer{}
+	testTemplate.Execute(output, struct {
+		Num string
+	}{
+		Num: fmt.Sprintf("%02d", day),
+	})
+
+	testFile = bytes.Replace(
+		testFile,
+		[]byte("// <generator:add:days>"),
+		append(output.Bytes(), []byte("// <generator:add:days>")...),
+		1,
+	)
+	err = os.WriteFile("assignment/assignment_test.go", testFile, 0755)
 	if err != nil {
 		panic(err)
 	}
@@ -83,4 +106,27 @@ func (d *Day{{ .Num }}) SolveI(input string) any {
 func (d *Day{{ .Num }}) SolveII(input string) any {
 	return "Not Implemented Yet"
 }
+`))
+
+var testTemplate = template.Must(template.New("").Parse(
+	`func TestDay{{ .Num }}_SolveI(t *testing.T) {
+	d := Day{{ .Num }}{}
+	answer := fmt.Sprintf("%v", d.SolveI(getInput({{ .Num }}, "example")))
+	valid := "" // FIXME
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
+func TestDay{{ .Num }}_SolveII(t *testing.T) {
+	d := Day{{ .Num }}{}
+	answer := fmt.Sprintf("%v", d.SolveII(getInput({{ .Num }}, "example")))
+	valid := "" // FIXME
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
 `))
