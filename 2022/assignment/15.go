@@ -2,8 +2,10 @@ package assignment
 
 import (
 	"fmt"
-	"github.com/vansante/adventofcode/2022/util"
 	"math"
+	"sort"
+
+	"github.com/vansante/adventofcode/2022/util"
 )
 
 type Day15 struct{}
@@ -109,6 +111,16 @@ func (d *Day15) getSensors(input string) []d15Sensor {
 	return sensors
 }
 
+func (g *d15Grid) sumImpossible(yLine int) int {
+	sum := 0
+	for x := g.minX; x <= g.maxX; x++ {
+		if g.get(d15Coord{x, yLine}) == d15_NoBeacon {
+			sum++
+		}
+	}
+	return sum
+}
+
 func (d *Day15) findImpossible(input string, yLine int) *d15Grid {
 	sensors := d.getSensors(input)
 	grid := d.makeGrid()
@@ -133,16 +145,7 @@ func (d *Day15) findImpossible(input string, yLine int) *d15Grid {
 
 func (d *Day15) SolveI(input string) any {
 	const yLine = 200_000
-	grid := d.findImpossible(input, yLine)
-
-	sum := 0
-	for x := grid.minX; x <= grid.maxX; x++ {
-		if grid.get(d15Coord{x, yLine}) == d15_NoBeacon {
-			sum++
-		}
-	}
-
-	return sum
+	return d.findImpossible(input, yLine).sumImpossible(yLine)
 }
 
 type d15Range struct {
@@ -192,7 +195,9 @@ func (d *Day15) findPossible(input string, min, max int) *d15Coord {
 			ranges = append(nwRanges, rng)
 		}
 
-		util.SliceReverse(ranges)
+		sort.Slice(ranges, func(i, j int) bool {
+			return ranges[i].start < ranges[j].start
+		})
 
 		if ranges[0].start == min && ranges[0].end == max {
 			if len(ranges) != 1 {
@@ -204,7 +209,7 @@ func (d *Day15) findPossible(input string, min, max int) *d15Coord {
 		if result != nil {
 			panic("multiple result coordinates")
 		}
-		
+
 		result = &d15Coord{ranges[0].end + 1, y}
 	}
 

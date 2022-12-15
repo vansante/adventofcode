@@ -51,11 +51,11 @@ func TestDay14_SolveII(t *testing.T) {
 
 func TestDay15_SolveI(t *testing.T) {
 	d := Day15{}
-	answer := fmt.Sprintf("%v", d.findImpossible(getInput(15, "example"), 10))
-	valid := "26"
+	sum := d.findImpossible(getInput(15, "example"), 10).sumImpossible(10)
+	valid := 26
 
-	if answer != valid {
-		t.Errorf("%v is not equal to %v", answer, valid)
+	if sum != valid {
+		t.Errorf("%v is not equal to %v", sum, valid)
 	}
 }
 
