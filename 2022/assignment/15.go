@@ -2,9 +2,8 @@ package assignment
 
 import (
 	"fmt"
-	"math"
-
 	"github.com/vansante/adventofcode/2022/util"
+	"math"
 )
 
 type Day15 struct{}
@@ -51,11 +50,17 @@ func (g *d15Grid) get(c d15Coord) uint8 {
 	return g.coords[c]
 }
 
-func (g *d15Grid) area(middle d15Coord, distance int, walker func(coord d15Coord)) {
+func (g *d15Grid) area(middle d15Coord, distance int, yLine int, walker func(coord d15Coord)) {
+	if middle.y-distance > yLine || middle.y+distance < yLine {
+		return
+	}
+
 	offset := 0
 	for y := middle.y - distance; y <= middle.y+distance; y++ {
-		for x := middle.x - offset; x <= middle.x+offset; x++ {
-			walker(d15Coord{x, y})
+		if y == yLine {
+			for x := middle.x - offset; x <= middle.x+offset; x++ {
+				walker(d15Coord{x, y})
+			}
 		}
 		if y < middle.y {
 			offset++
@@ -104,12 +109,9 @@ func (d *Day15) getSensors(input string) []d15Sensor {
 	return sensors
 }
 
-func (d *Day15) SolveI(input string) any {
+func (d *Day15) findImpossible(input string, yLine int) *d15Grid {
 	sensors := d.getSensors(input)
 	grid := d.makeGrid()
-
-	//const yLine = 10
-	const yLine = 2_000_000
 
 	for i := range sensors {
 		s := &sensors[i]
@@ -118,21 +120,20 @@ func (d *Day15) SolveI(input string) any {
 
 		grid.area(s.location,
 			util.ManhattanDistance(s.location.x, s.location.y, s.closest.x, s.closest.y),
-			func(coord d15Coord) {
-				if coord.y != yLine {
-					return
-				}
+			yLine, func(coord d15Coord) {
 				if grid.get(coord) != d15_Empty {
 					return
 				}
 				grid.set(coord, d15_NoBeacon)
 			},
 		)
-
 	}
-	//grid.print()
-	fmt.Println(grid.minX, grid.maxX)
-	fmt.Println(grid.minY, grid.maxY)
+	return grid
+}
+
+func (d *Day15) SolveI(input string) any {
+	const yLine = 200_000
+	grid := d.findImpossible(input, yLine)
 
 	sum := 0
 	for x := grid.minX; x <= grid.maxX; x++ {
@@ -144,6 +145,74 @@ func (d *Day15) SolveI(input string) any {
 	return sum
 }
 
+type d15Range struct {
+	start, end int
+}
+
+func (d *Day15) findPossible(input string, min, max int) *d15Coord {
+	sensors := d.getSensors(input)
+
+	var result *d15Coord
+	for y := min; y <= max; y++ {
+		ranges := make([]d15Range, 0)
+		for i := range sensors {
+			s := sensors[i]
+
+			distance := util.ManhattanDistance(s.location.x, s.location.y, s.closest.x, s.closest.y)
+			yDistance := util.Abs(s.location.y - y)
+			if yDistance > distance {
+				continue // Sensor not in range
+			}
+
+			rng := d15Range{
+				start: util.Max(min, s.location.x-(distance-yDistance)),
+				end:   util.Min(max, s.location.x+(distance-yDistance)),
+			}
+
+			if len(ranges) == 0 {
+				ranges = append(ranges, rng)
+				continue
+			}
+			nwRanges := util.CopySlice(ranges)
+			removed := 0
+			for j := range ranges {
+				r := ranges[j]
+				if rng.start > r.end+1 || r.start > rng.end+1 {
+					continue
+				}
+
+				// Merge the range:
+				rng.start = util.Min(rng.start, r.start)
+				rng.end = util.Max(rng.end, r.end)
+
+				// Remove the old range:
+				nwRanges = append(nwRanges[:j-removed], nwRanges[j-removed+1:]...)
+				removed++
+			}
+			ranges = append(nwRanges, rng)
+		}
+
+		util.SliceReverse(ranges)
+
+		if ranges[0].start == min && ranges[0].end == max {
+			if len(ranges) != 1 {
+				panic("invalid nonmerged ranges")
+			}
+			continue
+		}
+
+		if result != nil {
+			panic("multiple result coordinates")
+		}
+		
+		result = &d15Coord{ranges[0].end + 1, y}
+	}
+
+	return result
+}
+
 func (d *Day15) SolveII(input string) any {
-	return "Not Implemented Yet"
+	coord := d.findPossible(input, 0, 4_000_000)
+
+	return coord.x*4_000_000 + coord.y
 }

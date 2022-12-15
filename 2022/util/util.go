@@ -131,6 +131,14 @@ func SliceSort[T constraints.Ordered](s []T, ascending bool) {
 	})
 }
 
+func CopySlice[T any](s []T) []T {
+	cp := make([]T, len(s))
+	for i := 0; i < len(s); i++ {
+		cp[i] = s[i]
+	}
+	return cp
+}
+
 func Abs[T constraints.Signed](s T) T {
 	if s < 0 {
 		return -s
@@ -186,4 +194,8 @@ func SumSlice[T constraints.Signed](s []T) T {
 		sum += v
 	}
 	return sum
+}
+
+func ManhattanDistance[T constraints.Signed](x1, y1, x2, y2 T) T {
+	return Abs(x1-x2) + Abs(y1-y2)
 }
