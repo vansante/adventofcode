@@ -10,12 +10,7 @@ import (
 	"text/template"
 )
 
-func main() {
-	day, err := strconv.ParseInt(os.Args[1], 10, 8)
-	if err != nil {
-		panic(err)
-	}
-
+func generateInput(day uint8) {
 	_ = os.Mkdir(fmt.Sprintf("%02d", day), 0755)
 
 	example := fmt.Sprintf("%02d/example.txt", day)
@@ -35,9 +30,11 @@ func main() {
 		}
 		_ = file.Close()
 	}
+}
 
+func generateCodeTemplate(day uint8) {
 	newAssignment := fmt.Sprintf("assignment/%02d.go", day)
-	_, err = os.Stat(newAssignment)
+	_, err := os.Stat(newAssignment)
 	if err == nil {
 		panic("assignment exists!")
 	}
@@ -53,7 +50,9 @@ func main() {
 		Num: fmt.Sprintf("%02d", day),
 	})
 	_ = file.Close()
+}
 
+func addToMain(day uint8) {
 	mainFile, err := os.ReadFile("main.go")
 	if err != nil {
 		panic(err)
@@ -69,7 +68,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
 
+func addTestFunctions(day uint8) {
 	testFile, err := os.ReadFile("assignment/assignment_test.go")
 	if err != nil {
 		panic(err)
@@ -92,6 +93,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func main() {
+	day64, err := strconv.ParseInt(os.Args[1], 10, 8)
+	if err != nil {
+		panic(err)
+	}
+
+	day := uint8(day64)
+	generateInput(day)
+	generateCodeTemplate(day)
+	addToMain(day)
+	addTestFunctions(day)
 }
 
 var dayTemplate = template.Must(template.New("").Parse(
