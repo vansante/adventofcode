@@ -53,8 +53,6 @@ func (d *Day04) getElves(input string) []d04Elve {
 		}
 		e.checkMerge()
 
-		fmt.Printf("%d-%d,%d-%d | %v\n", e.s1.start, e.s1.end, e.s2.start, e.s2.end, e.merged)
-
 		elves[i] = e
 	}
 	return elves

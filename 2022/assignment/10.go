@@ -2,6 +2,7 @@ package assignment
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vansante/adventofcode/2022/util"
 )
@@ -87,18 +88,24 @@ func (s *d10Screen) set(x, y int, on bool) {
 	s[y*d10Width+x] = on
 }
 
-func (s *d10Screen) print() {
-	fmt.Println()
+func (s *d10Screen) String() string {
+	str := strings.Builder{}
 	for y := 0; y < d10Height; y++ {
 		for x := 0; x < d10Width; x++ {
 			if s.get(x, y) {
-				print("▓")
+				str.WriteString("▓")
 				continue
 			}
-			print("░")
+			str.WriteString("░")
 		}
-		fmt.Println()
+		str.WriteString("\n")
 	}
+	return str.String()
+}
+
+func (s *d10Screen) print() {
+	fmt.Println()
+	print(s.String())
 	fmt.Println()
 }
 
@@ -111,7 +118,6 @@ func (d *Day10) SolveII(input string) any {
 
 		if cycle == d10Width*d10Height {
 			screen.print()
-			screen = d10Screen{}
 		}
 
 		switch int64(cycle % d10Width) {
@@ -122,5 +128,5 @@ func (d *Day10) SolveII(input string) any {
 		}
 	})
 
-	return 0
+	return screen.String()
 }
