@@ -8,8 +8,7 @@ import (
 	"github.com/vansante/adventofcode/2022/util"
 )
 
-type Day16 struct {
-}
+type Day16 struct{}
 
 type d16Valve struct {
 	id          uint8
@@ -202,7 +201,7 @@ func (d *Day16) SolveII(input string) any {
 
 	elephantRelease := d16Release{
 		valves: valves,
-		states: make(map[d16State]uint16, 100_000),
+		states: make(map[d16State]uint16, 1_000_000),
 	}
 
 	return release.releasePressure(valves.getID("AA"), 26, d16Opened{}, func(opened d16Opened) uint16 {

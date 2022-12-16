@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"runtime/pprof"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/vansante/adventofcode/2022/util"
 
 	"github.com/vansante/adventofcode/2022/assignment"
 )
@@ -32,12 +29,13 @@ var (
 		14: &assignment.Day14{},
 		15: &assignment.Day15{},
 		16: &assignment.Day16{},
+		17: &assignment.Day17{},
 		// <generator:add:days>
 	}
 )
 
 func main() {
-	fmt.Printf("Usage: %s <dayNumber> [<inputName>]\n\n", os.Args[0])
+	fmt.Printf("Usage: %s <dayNumber>\n\n", os.Args[0])
 
 	if len(os.Args) < 2 {
 		panic("please provide day number argument")
@@ -48,56 +46,27 @@ func main() {
 		panic(fmt.Sprintf("error parsing day number [%s]: %v", os.Args[1], err))
 	}
 
-	inputArg := ""
-	if len(os.Args) >= 3 {
-		inputArg = os.Args[2]
-	}
-
 	day, ok := days[int(dayNum)]
 	if !ok {
 		panic(fmt.Sprintf("day %d not found", dayNum))
 	}
 
-	inputs := findInputs(int(dayNum), inputArg)
+	inputs := findInputs(int(dayNum))
 
-	profile := util.SliceContains(os.Args, "<profile>")
+	separator := strings.Repeat("#", 12)
 	for _, in := range inputs {
-		var cpuFile *os.File
-		if profile {
-			var err error
-			cpuFile, err = os.CreateTemp(os.TempDir(), fmt.Sprintf("day_%02d_%s_cpu.pprof", dayNum, in.name))
-			if err != nil {
-				panic(err)
-			}
+		fmt.Printf("%s %d Day %02d - Part I - %s %s\n", separator, 2022, dayNum, in.name, separator)
+		start := time.Now()
+		resultI := day.SolveI(in.content)
+		fmt.Printf("Found answer in %v:\n%v\n", time.Since(start), resultI)
 
-			err = pprof.StartCPUProfile(cpuFile)
-			if err != nil {
-				_ = cpuFile.Close()
-				panic(err)
-			}
-		}
+		fmt.Println()
 
-		if !strings.HasPrefix(in.name, "2_") {
-			fmt.Printf("Solving 2022 day %d first assignment with '%s'\n", dayNum, in.name)
-			start := time.Now()
-			resultI := day.SolveI(in.content)
-			fmt.Printf("Solved first assignment: %v\n", resultI)
-			fmt.Printf("Time taken: %v\n", time.Since(start))
-		}
+		fmt.Printf("%s %d Day %02d - Part II - %s %s\n", separator, 2022, dayNum, in.name, separator)
+		start = time.Now()
+		resultII := day.SolveII(in.content)
+		fmt.Printf("Found answer in %v:\n%v\n", time.Since(start), resultII)
 
-		if !strings.HasPrefix(in.name, "1_") {
-			fmt.Printf("Solving 2022 day %d second assignment with '%s'\n", dayNum, in.name)
-			start := time.Now()
-			resultII := day.SolveII(in.content)
-			fmt.Printf("Solved second assignment: %v\n", resultII)
-			fmt.Printf("Time taken: %v\n", time.Since(start))
-		}
-
-		if profile {
-			pprof.StopCPUProfile()
-			fmt.Printf("Wrote cpu profile to %s\n", cpuFile.Name())
-			_ = cpuFile.Close()
-		}
 		fmt.Println()
 	}
 }
@@ -107,23 +76,12 @@ type input struct {
 	content string
 }
 
-func findInputs(dayNum int, inputArg string) []input {
+func findInputs(dayNum int) []input {
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 	dir := fmt.Sprintf("%s/%02d", wd, dayNum)
-	if inputArg != "" && inputArg[:1] != "<" {
-		contents, err := os.ReadFile(path.Join(dir, inputArg+".txt"))
-		if err != nil {
-			panic(err)
-		}
-		return []input{{
-			name:    inputArg,
-			content: string(contents),
-		}}
-	}
-
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		panic(err)
