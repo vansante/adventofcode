@@ -9,7 +9,6 @@ import (
 )
 
 type Day16 struct {
-	idCount uint8
 }
 
 type d16Valve struct {
@@ -33,9 +32,9 @@ func (d *Day16) getValves(input string) d16Valves {
 	}
 
 	for i, line := range lines {
-		d.idCount++
+		valves.idCount++
 		v := &d16Valve{
-			id: d.idCount,
+			id: valves.idCount,
 		}
 		n, err := fmt.Sscanf(line, "Valve %s has flow rate=%d;", &v.label, &v.flow)
 		util.CheckErr(err)
@@ -57,9 +56,10 @@ func (d *Day16) getValves(input string) d16Valves {
 }
 
 type d16Valves struct {
-	lst  []*d16Valve
-	mp   map[uint8]*d16Valve
-	lbls map[string]uint8
+	lst     []*d16Valve
+	mp      map[uint8]*d16Valve
+	lbls    map[string]uint8
+	idCount uint8
 }
 
 func (v *d16Valves) getID(label string) uint8 {
@@ -92,32 +92,32 @@ const maxValves = 51
 
 type d16Opened struct {
 	opened   [maxValves]uint8
-	openSize int
+	openSize int8
 }
 
 func (o *d16Opened) contains(id uint8) bool {
-	idx := sort.Search(o.openSize, func(i int) bool {
+	idx := sort.Search(int(o.openSize), func(i int) bool {
 		return o.opened[i] <= id
 	})
 
-	return idx < o.openSize && o.opened[idx] == id
+	return idx < int(o.openSize) && o.opened[idx] == id
 }
 
 func (o *d16Opened) add(id uint8) {
-	idx := sort.Search(o.openSize, func(i int) bool {
+	idx := sort.Search(int(o.openSize), func(i int) bool {
 		return o.opened[i] <= id
 	})
-	if idx < o.openSize && o.opened[idx] == id {
+	if idx < int(o.openSize) && o.opened[idx] == id {
 		return // Already in
 	}
 
-	if idx == o.openSize {
+	if idx == int(o.openSize) {
 		o.opened[idx] = id
 		o.openSize++
 		return
 	}
 
-	for i := o.openSize + 1; i > idx; i-- {
+	for i := int(o.openSize) + 1; i > idx; i-- {
 		o.opened[i] = o.opened[i-1]
 	}
 	o.opened[idx] = id
@@ -131,12 +131,15 @@ type d16State struct {
 }
 
 type d16Release struct {
-	states map[d16State]int
+	states map[d16State]uint16
 	valves d16Valves
 }
 
-func (r d16Release) releasePressure(valveID uint8, minutes int8, opened d16Opened) int {
+func (r d16Release) releasePressure(valveID uint8, minutes int8, opened d16Opened, zeroMinute func(d16Opened) uint16) uint16 {
 	if minutes <= 0 {
+		if zeroMinute != nil {
+			return zeroMinute(opened)
+		}
 		return 0
 	}
 
@@ -151,17 +154,16 @@ func (r d16Release) releasePressure(valveID uint8, minutes int8, opened d16Opene
 	}
 	valve := r.valves.get(valveID)
 
-	var released int
+	var released uint16
 	for _, v := range valve.connIDs {
-		//fmt.Println(minutes-1, "nopen", valve, v)
 		// Without opening current valve:
 		released = util.Max(
 			released,
-			r.releasePressure(v, minutes-1, opened),
+			r.releasePressure(v, minutes-1, opened, zeroMinute),
 		)
 	}
 
-	// Is there a point in opening the current valve or is it opened already?
+	// Is there a point in opening the current valve and is it opened already?
 	if opened.contains(valve.id) || valve.flow <= 0 || minutes <= 0 {
 		r.states[s] = released
 		return released
@@ -170,16 +172,14 @@ func (r d16Release) releasePressure(valveID uint8, minutes int8, opened d16Opene
 	// Now with opening current valve
 	opened.add(valve.id)
 	minutes--
-	releaseSum := int(minutes) * valve.flow
+	releaseSum := uint16(int(minutes) * valve.flow)
 	for _, v := range valve.connIDs {
-		//fmt.Println(minutes-1, "yopen", valve, v)
 		released = util.Max(
 			released,
-			releaseSum+r.releasePressure(v, minutes-1, opened),
+			releaseSum+r.releasePressure(v, minutes-1, opened, zeroMinute),
 		)
 	}
 	r.states[s] = released
-	//fmt.Println(len(r.states))
 	return released
 }
 
@@ -188,11 +188,27 @@ func (d *Day16) SolveI(input string) any {
 
 	release := d16Release{
 		valves: valves,
-		states: make(map[d16State]int, 1_000_000),
+		states: make(map[d16State]uint16, 1_000_000),
 	}
-	return release.releasePressure(valves.getID("AA"), 30, d16Opened{})
+	return release.releasePressure(valves.getID("AA"), 30, d16Opened{}, nil)
 }
 
 func (d *Day16) SolveII(input string) any {
-	return "Not Implemented Yet"
+	valves := d.getValves(input)
+
+	release := d16Release{
+		valves: valves,
+		states: make(map[d16State]uint16, 1_000_000),
+	}
+
+	elephantRelease := d16Release{
+		valves: valves,
+		states: make(map[d16State]uint16, 100_000),
+	}
+
+	return release.releasePressure(valves.getID("AA"), 26, d16Opened{}, func(opened d16Opened) uint16 {
+		// Go Go elephant helper!
+		released := elephantRelease.releasePressure(valves.getID("AA"), 26, opened, nil)
+		return released
+	})
 }

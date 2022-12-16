@@ -2,7 +2,7 @@ package assignment
 
 import "testing"
 
-func Test_d16Opened_addOpened(t *testing.T) {
+func Test_d16Opened_add(t *testing.T) {
 	open := d16Opened{}
 	vars := []uint8{50, 20, 30, 3}
 
