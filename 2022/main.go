@@ -35,10 +35,16 @@ var (
 )
 
 func main() {
-	fmt.Printf("Usage: %s <dayNumber>\n\n", os.Args[0])
+	fmt.Printf("Usage: %s [<dayNumber>]\n\n", os.Args[0])
 
-	if len(os.Args) < 2 {
-		panic("please provide day number argument")
+	if len(os.Args) <= 1 {
+		for i := 1; i <= 25; i++ {
+			if _, ok := days[i]; !ok {
+				return
+			}
+			run(i)
+		}
+		return
 	}
 
 	dayNum, err := strconv.ParseInt(os.Args[1], 10, 32)
@@ -46,60 +52,39 @@ func main() {
 		panic(fmt.Sprintf("error parsing day number [%s]: %v", os.Args[1], err))
 	}
 
-	day, ok := days[int(dayNum)]
-	if !ok {
-		panic(fmt.Sprintf("day %d not found", dayNum))
-	}
+	run(int(dayNum))
+}
 
-	inputs := findInputs(int(dayNum))
+func run(dayNum int) {
+	input := getInput(dayNum)
 
 	separator := strings.Repeat("#", 12)
-	for _, in := range inputs {
-		fmt.Printf("%s %d Day %02d - Part I - %s %s\n", separator, 2022, dayNum, in.name, separator)
-		start := time.Now()
-		resultI := day.SolveI(in.content)
-		fmt.Printf("Found answer in %v:\n%v\n", time.Since(start), resultI)
+	fmt.Printf("%s %d Day %02d - Part I  %s\n", separator, 2022, dayNum, separator)
+	start := time.Now()
+	resultI := days[dayNum].SolveI(input)
+	fmt.Printf("Found answer in %v:\n%v\n", time.Since(start), resultI)
 
-		fmt.Println()
+	fmt.Println()
 
-		fmt.Printf("%s %d Day %02d - Part II - %s %s\n", separator, 2022, dayNum, in.name, separator)
-		start = time.Now()
-		resultII := day.SolveII(in.content)
-		fmt.Printf("Found answer in %v:\n%v\n", time.Since(start), resultII)
+	fmt.Printf("%s %d Day %02d - Part II %s\n", separator, 2022, dayNum, separator)
+	start = time.Now()
+	resultII := days[dayNum].SolveII(input)
+	fmt.Printf("Found answer in %v:\n%v\n", time.Since(start), resultII)
 
-		fmt.Println()
-	}
+	fmt.Println()
 }
 
-type input struct {
-	name    string
-	content string
-}
-
-func findInputs(dayNum int) []input {
+func getInput(dayNum int) string {
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
+
 	dir := fmt.Sprintf("%s/%02d", wd, dayNum)
-	entries, err := os.ReadDir(dir)
+	contents, err := os.ReadFile(path.Join(dir, "input.txt"))
 	if err != nil {
 		panic(err)
 	}
 
-	results := make([]input, 0, 8)
-	for _, entry := range entries {
-		if !strings.HasSuffix(entry.Name(), ".txt") {
-			continue
-		}
-		contents, err := os.ReadFile(path.Join(dir, entry.Name()))
-		if err != nil {
-			panic(err)
-		}
-		results = append(results, input{
-			name:    strings.TrimSuffix(entry.Name(), ".txt"),
-			content: string(contents),
-		})
-	}
-	return results
+	return string(contents)
 }
