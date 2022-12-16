@@ -2,27 +2,42 @@ package assignment
 
 import (
 	"fmt"
-	"math"
 	"sort"
 	"strings"
 
 	"github.com/vansante/adventofcode/2022/util"
 )
 
-type Day16 struct{}
+type Day16 struct {
+	idCount uint8
+}
 
 type d16Valve struct {
-	id          string
+	id          uint8
+	label       string
 	flow        int
 	connections []string
+	connIDs     []uint8
 }
 
 func (d *Day16) getValves(input string) d16Valves {
 	lines := util.SplitLines(input)
-	m := make(map[string]*d16Valve)
-	for _, line := range lines {
-		v := &d16Valve{}
-		n, err := fmt.Sscanf(line, "Valve %s has flow rate=%d;", &v.id, &v.flow)
+
+	if len(lines) > maxValves {
+		panic("too many valves")
+	}
+
+	valves := d16Valves{
+		mp:  make(map[uint8]*d16Valve, len(lines)),
+		lst: make([]*d16Valve, len(lines)),
+	}
+
+	for i, line := range lines {
+		d.idCount++
+		v := &d16Valve{
+			id: d.idCount,
+		}
+		n, err := fmt.Sscanf(line, "Valve %s has flow rate=%d;", &v.label, &v.flow)
 		util.CheckErr(err)
 		if n != 2 {
 			panic("invalid matches for valve")
@@ -34,198 +49,148 @@ func (d *Day16) getValves(input string) d16Valves {
 		}
 		connStr := strings.TrimSpace(line[n+len(" tunnels lead to valves "):])
 		v.connections = strings.Split(connStr, ", ")
-		m[v.id] = v
+		valves.lst[i] = v
 	}
-	return m
+	valves.setMap()
+
+	return valves
 }
 
-type d16Valves map[string]*d16Valve
-
-// https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-func (v d16Valves) distances(start string) map[string]int {
-	visited := make(map[string]struct{}, 128)
-	dist := make(map[string]int, 128)
-	prev := make(map[string]string, 128)
-	queue := make([]*d16Valve, 1, 128)
-
-	const MaxDist = math.MaxInt
-
-	for s := range v {
-		dist[s] = MaxDist
-	}
-
-	dist[start] = 0
-	queue[0] = v[start]
-
-	for len(queue) > 0 {
-		var cur *d16Valve
-		cur, queue = queue[len(queue)-1], queue[:len(queue)-1]
-		visited[cur.id] = struct{}{}
-
-		for _, id := range cur.connections {
-			neighbour := v[id]
-			if _, ok := visited[id]; ok {
-				continue
-			}
-
-			shortestDist := dist[cur.id] + 1 // Cost is always 1
-			currentDist := dist[neighbour.id]
-			if shortestDist >= currentDist {
-				continue
-			}
-
-			// Insert neighbour into priority queue, lowest distance last
-			idx := sort.Search(len(queue), func(i int) bool {
-				return dist[queue[i].id] <= shortestDist
-			})
-
-			queue = append(queue[:idx], append([]*d16Valve{v[id]}, queue[idx:]...)...)
-
-			dist[neighbour.id] = shortestDist
-			prev[neighbour.id] = cur.id
-		}
-	}
-
-	return dist
+type d16Valves struct {
+	lst  []*d16Valve
+	mp   map[uint8]*d16Valve
+	lbls map[string]uint8
 }
 
-func (v d16Valves) distance(start, end string) (int, []string) {
-	visited := make(map[string]struct{}, 128)
-	dist := make(map[string]int, 128)
-	prev := make(map[string]string, 128)
-	queue := make([]*d16Valve, 1, 128)
-
-	const MaxDist = math.MaxInt
-
-	for s := range v {
-		dist[s] = MaxDist
-	}
-
-	dist[start] = 0
-	queue[0] = v[start]
-
-	for len(queue) > 0 {
-		var cur *d16Valve
-		cur, queue = queue[len(queue)-1], queue[:len(queue)-1]
-		if cur.id == end {
-			break
-		}
-		visited[cur.id] = struct{}{}
-
-		for _, id := range cur.connections {
-			neighbour := v[id]
-			if _, ok := visited[id]; ok {
-				continue
-			}
-
-			shortestDist := dist[cur.id] + 1 // Cost is always 1
-			currentDist := dist[neighbour.id]
-			if shortestDist >= currentDist {
-				continue
-			}
-
-			// Insert neighbour into priority queue, lowest distance last
-			idx := sort.Search(len(queue), func(i int) bool {
-				return dist[queue[i].id] <= shortestDist
-			})
-
-			queue = append(queue[:idx], append([]*d16Valve{v[id]}, queue[idx:]...)...)
-
-			dist[neighbour.id] = shortestDist
-			prev[neighbour.id] = cur.id
-		}
-	}
-
-	if dist[end] == MaxDist {
-		panic("no route found")
-	}
-
-	path := make([]string, 0, dist[end])
-	target := end
-	for prev[target] != "" || target == start {
-		for target != "" {
-			path = append([]string{target}, path...)
-			target = prev[target]
-		}
-	}
-
-	return dist[end], path
+func (v *d16Valves) getID(label string) uint8 {
+	return v.lbls[label]
 }
 
-type d16Score struct {
-	id       string
-	flow     int
-	distance int
+func (v *d16Valves) get(id uint8) *d16Valve {
+	return v.mp[id]
 }
 
-func (v d16Valves) getValveScores(start string, skip map[string]struct{}) []d16Score {
-	distances := v.distances(start)
+func (v *d16Valves) setMap() {
+	v.lbls = make(map[string]uint8)
+	for i := range v.lst {
+		valve := v.lst[i]
+		v.mp[valve.id] = valve
 
-	l := make([]d16Score, 0, len(v))
-	for _, valve := range v {
-		if _, ok := skip[valve.id]; ok {
-			continue
-		}
-
-		l = append(l, d16Score{
-			id:       valve.id,
-			flow:     valve.flow,
-			distance: distances[valve.id],
-		})
+		v.lbls[valve.label] = valve.id
 	}
-	return l
+
+	for i := range v.lst {
+		valve := v.lst[i]
+		valve.connIDs = make([]uint8, len(valve.connections))
+		for j := range valve.connections {
+			valve.connIDs[j] = v.getID(valve.connections[j])
+		}
+	}
 }
 
-func (v d16Valves) releasePressure(start string) int {
-	opened := make(map[string]struct{})
+const maxValves = 51
+
+type d16Opened struct {
+	opened   [maxValves]uint8
+	openSize int
+}
+
+func (o *d16Opened) contains(id uint8) bool {
+	idx := sort.Search(o.openSize, func(i int) bool {
+		return o.opened[i] <= id
+	})
+
+	return idx < o.openSize && o.opened[idx] == id
+}
+
+func (o *d16Opened) add(id uint8) {
+	idx := sort.Search(o.openSize, func(i int) bool {
+		return o.opened[i] <= id
+	})
+	if idx < o.openSize && o.opened[idx] == id {
+		return // Already in
+	}
+
+	if idx == o.openSize {
+		o.opened[idx] = id
+		o.openSize++
+		return
+	}
+
+	for i := o.openSize + 1; i > idx; i-- {
+		o.opened[i] = o.opened[i-1]
+	}
+	o.opened[idx] = id
+	o.openSize++
+}
+
+type d16State struct {
+	startID uint8
+	minutes int8
+	opened  d16Opened
+}
+
+type d16Release struct {
+	states map[d16State]int
+	valves d16Valves
+}
+
+func (r d16Release) releasePressure(valveID uint8, minutes int8, opened d16Opened) int {
+	if minutes <= 0 {
+		return 0
+	}
+
+	s := d16State{
+		startID: valveID,
+		minutes: minutes,
+		opened:  opened,
+	}
+
+	if result, ok := r.states[s]; ok {
+		return result
+	}
+	valve := r.valves.get(valveID)
 
 	var released int
-	var releaseRate int
-	for seconds := 0; seconds <= 30; seconds++ {
-		scores := v.getValveScores(start, opened)
-		sort.Slice(scores, func(i, j int) bool {
-			s1 := scores[i]
-			s2 := scores[j]
-
-			if s1.flow-s1.distance == s2.flow-s2.distance {
-				return s1.distance < s2.distance
-			}
-
-			return s1.flow-s1.distance > s2.flow-s2.distance
-		})
-
-		fmt.Println(scores)
-		for i := 0; i < scores[0].distance; i++ {
-			fmt.Println("Walking to ", scores[0], " dist ", scores[0].distance)
-			released += releaseRate
-			seconds++
-		}
-
-		seconds++
-		releaseRate += scores[0].flow
-		released += releaseRate
-
-		fmt.Println("Open ", scores[0].id)
-
-		opened[scores[0].id] = struct{}{} // Set valve to be opened
-		start = scores[0].id
+	for _, v := range valve.connIDs {
+		//fmt.Println(minutes-1, "nopen", valve, v)
+		// Without opening current valve:
+		released = util.Max(
+			released,
+			r.releasePressure(v, minutes-1, opened),
+		)
 	}
 
-	fmt.Println(releaseRate)
+	// Is there a point in opening the current valve or is it opened already?
+	if opened.contains(valve.id) || valve.flow <= 0 || minutes <= 0 {
+		r.states[s] = released
+		return released
+	}
 
-	return 0
+	// Now with opening current valve
+	opened.add(valve.id)
+	minutes--
+	releaseSum := int(minutes) * valve.flow
+	for _, v := range valve.connIDs {
+		//fmt.Println(minutes-1, "yopen", valve, v)
+		released = util.Max(
+			released,
+			releaseSum+r.releasePressure(v, minutes-1, opened),
+		)
+	}
+	r.states[s] = released
+	//fmt.Println(len(r.states))
+	return released
 }
 
 func (d *Day16) SolveI(input string) any {
 	valves := d.getValves(input)
 
-	fmt.Println()
-	fmt.Println(valves.distance("AA", "JJ"))
-	fmt.Println()
-
-	valves.releasePressure("AA")
-
-	return 0
+	release := d16Release{
+		valves: valves,
+		states: make(map[d16State]int, 1_000_000),
+	}
+	return release.releasePressure(valves.getID("AA"), 30, d16Opened{})
 }
 
 func (d *Day16) SolveII(input string) any {
