@@ -21,11 +21,6 @@ type d16Valve struct {
 
 func (d *Day16) getValves(input string) d16Valves {
 	lines := util.SplitLines(input)
-
-	if len(lines) > maxValves {
-		panic("too many valves")
-	}
-
 	valves := d16Valves{
 		mp:  make(map[uint8]*d16Valve, len(lines)),
 		lst: make([]*d16Valve, len(lines)),
@@ -50,8 +45,8 @@ func (d *Day16) getValves(input string) d16Valves {
 		v.connections = strings.Split(connStr, ", ")
 		valves.lst[i] = v
 	}
-	valves.setMap()
 
+	valves.setMap()
 	return valves
 }
 
@@ -88,7 +83,7 @@ func (v *d16Valves) setMap() {
 	}
 }
 
-const maxValves = 51
+const maxValves = 20
 
 type d16Opened struct {
 	opened   [maxValves]uint8
@@ -109,6 +104,10 @@ func (o *d16Opened) add(id uint8) {
 	})
 	if idx < int(o.openSize) && o.opened[idx] == id {
 		return // Already in
+	}
+
+	if o.openSize >= maxValves-1 {
+		panic("too many opened valves; increase array size")
 	}
 
 	if idx == int(o.openSize) {
