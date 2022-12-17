@@ -297,22 +297,15 @@ func (d *Day17) SolveII(input string) any {
 
 	rep := c.findRepetition()
 	startHeight := c.maxHeight
-	//fmt.Println(rep)
 	rep = c.findRepetition()
 	repetitionHeight := c.maxHeight - startHeight
-	//fmt.Println(rep)
 
-	fmt.Println(repetitionHeight)
-	//c.print()
 	amount := total / int64(rep)
 	height := int64(repetitionHeight) * amount
-
 	remainder := total % int64(rep)
 
-	fmt.Println(amount, height, remainder)
-
+	c = d.makeCave(dirs)
 	c.tetris(int(remainder))
 
-	// < 1532183908061
-	return height + int64(c.maxHeight) - int64(startHeight) - int64(repetitionHeight)
+	return height + int64(c.maxHeight)
 }
