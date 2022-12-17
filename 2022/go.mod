@@ -2,4 +2,7 @@ module github.com/vansante/adventofcode/2022
 
 go 1.19
 
-require golang.org/x/exp v0.0.0-20221126150942-6ab00d035af9
+require (
+	golang.org/x/exp v0.0.0-20221126150942-6ab00d035af9
+	golang.org/x/text v0.5.0
+)

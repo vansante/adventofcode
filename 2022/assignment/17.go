@@ -107,10 +107,12 @@ type d17Coord struct {
 }
 
 type d17Cave struct {
-	rocks     map[d17Coord]struct{}
-	maxHeight int
-	dirs      []d17Direction
-	dirIdx    int
+	rocks      map[d17Coord]struct{}
+	maxHeight  int
+	maxHeights [d17Width]int
+	shapeIdx   int
+	dirs       []d17Direction
+	dirIdx     int
 }
 
 func (d *Day17) makeCave(dirs []d17Direction) d17Cave {
@@ -119,6 +121,25 @@ func (d *Day17) makeCave(dirs []d17Direction) d17Cave {
 		maxHeight: 0,
 		dirs:      dirs,
 	}
+}
+
+func (c *d17Cave) state() d17State {
+	s := d17State{
+		shapeIdx: c.shapeIdx,
+		dirIdx:   c.dirIdx,
+	}
+	min := util.MinSlice(c.maxHeights[:])
+	for i := range s.heights {
+		s.heights[i] = c.maxHeights[i] - min
+	}
+	return s
+}
+
+func (c *d17Cave) shape() d17Shape {
+	shape := d17Shapes[c.shapeIdx]
+	c.shapeIdx++
+	c.shapeIdx %= len(d17Shapes)
+	return shape
 }
 
 func (c *d17Cave) direction() d17Direction {
@@ -157,6 +178,7 @@ func (c *d17Cave) set(x, y int) {
 	}
 
 	c.maxHeight = util.Max(c.maxHeight, y)
+	c.maxHeights[x] = util.Max(c.maxHeights[x], y)
 	c.rocks[d17Coord{x, y}] = struct{}{}
 }
 
@@ -188,11 +210,11 @@ func (c *d17Cave) hasCollision(s d17Shape, posX, posY int) bool {
 	return false
 }
 
-func (c *d17Cave) dropShape(s d17Shape) {
+func (c *d17Cave) dropShape() {
+	s := c.shape()
+
 	x := 2
-	//y := c.maxHeight + 3 + s.height
 	y := c.maxHeight + 4
-	//println(x, y)
 
 	if c.hasCollision(s, x, y) {
 		panic("collision at start?")
@@ -217,7 +239,6 @@ func (c *d17Cave) dropShape(s d17Shape) {
 			c.setShape(s, x, y)
 			return // Done!
 		}
-		//print("D")
 		y--
 	}
 }
@@ -234,13 +255,28 @@ func (c *d17Cave) setShape(s d17Shape, posX, posY int) {
 	}
 }
 
+type d17State struct {
+	shapeIdx int
+	dirIdx   int
+	heights  [d17Width]int
+}
+
+func (c *d17Cave) findRepetition() int {
+	states := make(map[d17State]struct{}, 50_000)
+	for i := 0; ; i++ {
+		state := c.state()
+		if _, ok := states[state]; ok {
+			return i
+		}
+
+		states[state] = struct{}{}
+		c.dropShape()
+	}
+}
+
 func (c *d17Cave) tetris(rocks int) {
 	for i := 0; i < rocks; i++ {
-		c.dropShape(d17Shapes[i%len(d17Shapes)])
-		//c.print()
-		//if i > 1 {
-		//	break
-		//}
+		c.dropShape()
 	}
 }
 
@@ -248,20 +284,35 @@ func (d *Day17) SolveI(input string) any {
 	dirs := d.getDirections(input)
 
 	c := d.makeCave(dirs)
-	//c.print()
 	c.tetris(2022)
-	//c.print()
 
 	return c.maxHeight
 }
 
 func (d *Day17) SolveII(input string) any {
+	const total = 1_000_000_000_000
+
 	dirs := d.getDirections(input)
-
 	c := d.makeCave(dirs)
-	//c.print()
-	c.tetris(1_000_000_000_000)
-	//c.print()
 
-	return c.maxHeight
+	rep := c.findRepetition()
+	startHeight := c.maxHeight
+	//fmt.Println(rep)
+	rep = c.findRepetition()
+	repetitionHeight := c.maxHeight - startHeight
+	//fmt.Println(rep)
+
+	fmt.Println(repetitionHeight)
+	//c.print()
+	amount := total / int64(rep)
+	height := int64(repetitionHeight) * amount
+
+	remainder := total % int64(rep)
+
+	fmt.Println(amount, height, remainder)
+
+	c.tetris(int(remainder))
+
+	// < 1532183908061
+	return height + int64(c.maxHeight) - int64(startHeight) - int64(repetitionHeight)
 }
