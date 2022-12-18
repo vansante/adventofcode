@@ -66,14 +66,29 @@ func (d *Day18) placeCubes(cubes []d18Cube) map[d18Coord]*d18Cube {
 	return mp
 }
 
-func (d *Day18) markSides(cubes map[d18Coord]*d18Cube, reachable map[d18Coord]struct{}) {
-	for coord := range cubes {
+func (d *Day18) markSides(cubes map[d18Coord]*d18Cube) {
+	for coord, cube := range cubes {
 		for i, vec := range d18NeighborVectors {
-			ngb := cubes[coord.add(vec)]
+			ngbCoord := coord.add(vec)
+			ngb := cubes[ngbCoord]
 			if ngb == nil {
 				continue
 			}
-			ngb.sides[i]++
+
+			cube.sides[i]++
+		}
+	}
+}
+
+func (d *Day18) markVoids(cubes map[d18Coord]*d18Cube, reachable map[d18Coord]struct{}) {
+	for coord, cube := range cubes {
+		for i, vec := range d18NeighborVectors {
+			ngbCoord := coord.add(vec)
+			if _, ok := reachable[ngbCoord]; ok {
+				continue
+			}
+
+			cube.sides[i]++
 		}
 	}
 }
@@ -83,9 +98,6 @@ func (d *Day18) countSides(mp map[d18Coord]*d18Cube) int64 {
 
 	for _, c := range mp {
 		for i := range c.sides {
-			if c.sides[i] > 1 {
-				panic("logic error")
-			}
 			if c.sides[i] == 0 {
 				sum++
 			}
@@ -96,7 +108,7 @@ func (d *Day18) countSides(mp map[d18Coord]*d18Cube) int64 {
 
 func (d *Day18) SolveI(input string) any {
 	c := d.placeCubes(d.getCubes(input))
-	d.markSides(c, nil)
+	d.markSides(c)
 
 	return d.countSides(c)
 }
@@ -151,10 +163,8 @@ func (d *Day18) reachableWalker(current, min, max d18Coord, coords map[d18Coord]
 }
 
 func (d *Day18) findReachableCoords(coords map[d18Coord]*d18Cube, min, max d18Coord) map[d18Coord]struct{} {
-	//fmt.Println(min, max)
 	reachable := make(map[d18Coord]struct{}, 100_000)
 	d.reachableWalker(min, min, max, coords, &reachable)
-	//fmt.Println(reachable)
 	return reachable
 }
 
@@ -164,9 +174,8 @@ func (d *Day18) SolveII(input string) any {
 	min, max := d.findBorderCoords(cubes)
 	reachable := d.findReachableCoords(coords, min, max)
 
-	d.markSides(coords, reachable)
-
-	fmt.Println(reachable)
+	d.markSides(coords)
+	d.markVoids(coords, reachable)
 
 	return d.countSides(coords)
 }
