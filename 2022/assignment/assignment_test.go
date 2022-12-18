@@ -363,6 +363,32 @@ func TestDay17_SolveII(t *testing.T) {
 	}
 }
 
+func TestDay18_SolveI(t *testing.T) {
+	d := Day18{}
+
+	answer := d.SolveI("1,1,1\n2,1,1")
+	if answer != int64(10) {
+		t.Errorf("%v is not equal to 10", answer)
+	}
+
+	answer = fmt.Sprintf("%v", d.SolveI(getInput(18, "example")))
+	valid := "64"
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
+func TestDay18_SolveII(t *testing.T) {
+	d := Day18{}
+	answer := fmt.Sprintf("%v", d.SolveII(getInput(18, "example")))
+	valid := "58"
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
 // <generator:add:days>
 
 func getInput(day int, fileName string) string {
