@@ -389,6 +389,26 @@ func TestDay18_SolveII(t *testing.T) {
 	}
 }
 
+func TestDay19_SolveI(t *testing.T) {
+	d := Day19{}
+	answer := fmt.Sprintf("%v", d.SolveI(getInput(19, "example")))
+	valid := "" // FIXME
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
+func TestDay19_SolveII(t *testing.T) {
+	d := Day19{}
+	answer := fmt.Sprintf("%v", d.SolveII(getInput(19, "example")))
+	valid := "" // FIXME
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
 // <generator:add:days>
 
 func getInput(day int, fileName string) string {
