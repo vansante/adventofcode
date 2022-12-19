@@ -123,7 +123,7 @@ func (d *Day{{ .Num }}) SolveII(input string) any {
 `))
 
 var testTemplate = template.Must(template.New("").Parse(
-	`func TestDay{{ .Num }}_SolveI(t *testing.T) {
+	`func Test_Day_{{ .Num }}_SolveI(t *testing.T) {
 	d := Day{{ .Num }}{}
 	answer := fmt.Sprintf("%v", d.SolveI(getInput({{ .Num }}, "example")))
 	valid := "" // FIXME
@@ -133,7 +133,7 @@ var testTemplate = template.Must(template.New("").Parse(
 	}
 }
 
-func TestDay{{ .Num }}_SolveII(t *testing.T) {
+func Test_Day_{{ .Num }}_SolveII(t *testing.T) {
 	d := Day{{ .Num }}{}
 	answer := fmt.Sprintf("%v", d.SolveII(getInput({{ .Num }}, "example")))
 	valid := "" // FIXME

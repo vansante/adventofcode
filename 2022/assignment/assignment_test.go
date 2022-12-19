@@ -343,7 +343,7 @@ func Test_Day_16_SolveII(t *testing.T) {
 	}
 }
 
-func TestDay17_SolveI(t *testing.T) {
+func Test_Day_17_SolveI(t *testing.T) {
 	d := Day17{}
 	answer := fmt.Sprintf("%v", d.SolveI(getInput(17, "example")))
 	valid := "3068"
@@ -353,7 +353,7 @@ func TestDay17_SolveI(t *testing.T) {
 	}
 }
 
-func TestDay17_SolveII(t *testing.T) {
+func Test_Day_17_SolveII(t *testing.T) {
 	d := Day17{}
 	answer := fmt.Sprintf("%v", d.SolveII(getInput(17, "example")))
 	valid := "1514285714288"
@@ -363,7 +363,7 @@ func TestDay17_SolveII(t *testing.T) {
 	}
 }
 
-func TestDay18_SolveI(t *testing.T) {
+func Test_Day_18_SolveI(t *testing.T) {
 	d := Day18{}
 
 	answer := d.SolveI("1,1,1\n2,1,1")
@@ -379,7 +379,7 @@ func TestDay18_SolveI(t *testing.T) {
 	}
 }
 
-func TestDay18_SolveII(t *testing.T) {
+func Test_Day_18_SolveII(t *testing.T) {
 	d := Day18{}
 	answer := fmt.Sprintf("%v", d.SolveII(getInput(18, "example")))
 	valid := "58"
@@ -389,7 +389,7 @@ func TestDay18_SolveII(t *testing.T) {
 	}
 }
 
-func TestDay19_SolveI(t *testing.T) {
+func Test_Day_19_SolveI(t *testing.T) {
 	d := Day19{}
 	answer := fmt.Sprintf("%v", d.SolveI(getInput(19, "example")))
 	valid := "33"
@@ -399,7 +399,7 @@ func TestDay19_SolveI(t *testing.T) {
 	}
 }
 
-func TestDay19_SolveII(t *testing.T) {
+func Test_Day_19_SolveII(t *testing.T) {
 	d := Day19{}
 	bps := d.getBlueprints(getInput(19, "example"))
 
@@ -416,7 +416,7 @@ func TestDay19_SolveII(t *testing.T) {
 	}
 }
 
-func TestDay20_SolveI(t *testing.T) {
+func Test_Day_20_SolveI(t *testing.T) {
 	d := Day20{}
 	answer := fmt.Sprintf("%v", d.SolveI(getInput(20, "example")))
 	valid := "" // FIXME
@@ -426,7 +426,7 @@ func TestDay20_SolveI(t *testing.T) {
 	}
 }
 
-func TestDay20_SolveII(t *testing.T) {
+func Test_Day_20_SolveII(t *testing.T) {
 	d := Day20{}
 	answer := fmt.Sprintf("%v", d.SolveII(getInput(20, "example")))
 	valid := "" // FIXME
