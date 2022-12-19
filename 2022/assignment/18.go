@@ -41,7 +41,7 @@ func (c d18Coord) add(other d18Coord) d18Coord {
 
 type d18Cube struct {
 	d18Coord
-	sides [6]uint
+	sides [6]uint8
 }
 
 func (d *Day18) getCubes(input string) []d18Cube {

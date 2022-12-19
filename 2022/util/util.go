@@ -146,18 +146,12 @@ func Abs[T constraints.Signed](s T) T {
 	return s
 }
 
-func Max[T constraints.Ordered](s1, s2 T) T {
-	if s1 > s2 {
-		return s1
-	}
-	return s2
+func Max[T constraints.Ordered](s ...T) T {
+	return MaxSlice(s)
 }
 
-func Min[T constraints.Ordered](s1, s2 T) T {
-	if s1 < s2 {
-		return s1
-	}
-	return s2
+func Min[T constraints.Ordered](s ...T) T {
+	return MinSlice(s)
 }
 
 func MaxSlice[T constraints.Ordered](s []T) T {
