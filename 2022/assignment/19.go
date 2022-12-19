@@ -12,7 +12,6 @@ type d19Resources struct {
 	ore      uint16
 	clay     uint16
 	obsidian uint16
-	geode    uint16
 }
 
 func (r d19Resources) has(other d19Resources) bool {
@@ -29,11 +28,19 @@ func (r d19Resources) has(other d19Resources) bool {
 }
 
 func (r d19Resources) subtract(other d19Resources) d19Resources {
-	r.ore -= other.ore
-	r.clay -= other.clay
-	r.obsidian -= other.obsidian
-	r.geode -= other.geode
-	return r
+	return d19Resources{
+		ore:      r.ore - other.ore,
+		clay:     r.clay - other.clay,
+		obsidian: r.obsidian - other.obsidian,
+	}
+}
+
+func (r d19Resources) add(bots d19Bots) d19Resources {
+	return d19Resources{
+		ore:      r.ore + bots.oreBots,
+		clay:     r.clay + bots.clayBots,
+		obsidian: r.obsidian + bots.obsidianBots,
+	}
 }
 
 type d19Blueprint struct {
@@ -69,26 +76,24 @@ func (d *Day19) getBlueprints(input string) []d19Blueprint {
 	return blueprints
 }
 
-type d19BotCounts struct {
+type d19Bots struct {
 	oreBots      uint16
 	clayBots     uint16
 	obsidianBots uint16
-	geodeBots    uint16
 }
 
-func (b d19BotCounts) clone() d19BotCounts {
-	return d19BotCounts{
+func (b d19Bots) clone() d19Bots {
+	return d19Bots{
 		oreBots:      b.oreBots,
 		clayBots:     b.clayBots,
 		obsidianBots: b.obsidianBots,
-		geodeBots:    b.geodeBots,
 	}
 }
 
 type d19State struct {
 	minute    uint8
 	resources d19Resources
-	bots      d19BotCounts
+	bots      d19Bots
 }
 
 type d19BotCollection struct {
@@ -96,7 +101,7 @@ type d19BotCollection struct {
 	blueprint d19Blueprint
 }
 
-func (b *d19BotCollection) collect(minutes uint8, bots d19BotCounts, resources d19Resources) uint16 {
+func (b *d19BotCollection) collect(minutes uint8, bots d19Bots, resources d19Resources) uint16 {
 	if minutes <= 0 {
 		return 0
 	}
@@ -110,22 +115,15 @@ func (b *d19BotCollection) collect(minutes uint8, bots d19BotCounts, resources d
 		return result
 	}
 
-	// Collect resources
-	resources.ore += bots.oreBots
-	resources.clay += bots.clayBots
-	resources.obsidian += bots.obsidianBots
-	resources.geode += bots.geodeBots
-
 	var maxGeodes uint16
 
 	// Build bots
 	if resources.has(b.blueprint.geodeBot) {
-		bots := bots.clone()
-		bots.geodeBots++
+		resources := resources.subtract(b.blueprint.geodeBot).add(bots)
 		geodesMined := uint16(minutes - 1)
 		maxGeodes = util.Max(
 			maxGeodes,
-			geodesMined+b.collect(minutes-1, bots, resources.subtract(b.blueprint.geodeBot)),
+			geodesMined+b.collect(minutes-1, bots.clone(), resources),
 		)
 
 		// Always build one when we can
@@ -134,57 +132,60 @@ func (b *d19BotCollection) collect(minutes uint8, bots d19BotCounts, resources d
 	}
 
 	if bots.obsidianBots < b.blueprint.geodeBot.obsidian && resources.has(b.blueprint.obsidianBot) {
+		resources := resources.subtract(b.blueprint.obsidianBot).add(bots)
 		bots := bots.clone()
 		bots.obsidianBots++
 		maxGeodes = util.Max(
 			maxGeodes,
-			b.collect(minutes-1, bots, resources.subtract(b.blueprint.obsidianBot)),
+			b.collect(minutes-1, bots, resources),
 		)
 	}
 
 	if bots.clayBots < b.blueprint.obsidianBot.clay && resources.has(b.blueprint.clayBot) {
+		resources := resources.subtract(b.blueprint.clayBot).add(bots)
 		bots := bots.clone()
 		bots.clayBots++
 		maxGeodes = util.Max(
 			maxGeodes,
-			b.collect(minutes-1, bots, resources.subtract(b.blueprint.clayBot)),
+			b.collect(minutes-1, bots, resources),
 		)
 	}
 
 	maxOre := util.Max(b.blueprint.geodeBot.ore, b.blueprint.obsidianBot.ore, b.blueprint.clayBot.ore, b.blueprint.oreBot.ore)
 	if bots.oreBots < maxOre && resources.has(b.blueprint.oreBot) {
+		resources := resources.subtract(b.blueprint.oreBot).add(bots)
 		bots := bots.clone()
 		bots.oreBots++
 		maxGeodes = util.Max(
 			maxGeodes,
-			b.collect(minutes-1, bots, resources.subtract(b.blueprint.oreBot)),
+			b.collect(minutes-1, bots, resources),
 		)
 	}
 
 	// Continue without building bot:
 	maxGeodes = util.Max(
 		maxGeodes,
-		b.collect(minutes-1, bots, resources),
+		b.collect(minutes-1, bots, resources.add(bots)),
 	)
 
 	b.states[state] = maxGeodes
 	return maxGeodes
 }
 
+func (d *Day19) makeBotCollections(bp d19Blueprint) d19BotCollection {
+	return d19BotCollection{
+		states:    make(map[d19State]uint16, 1_000_000),
+		blueprint: bp,
+	}
+}
+
 func (d *Day19) SolveI(input string) any {
 	bps := d.getBlueprints(input)
 
-	fmt.Println(bps)
-
 	var sum int
 	for _, bp := range bps {
-		bc := d19BotCollection{
-			states:    make(map[d19State]uint16, 1_000_000),
-			blueprint: bp,
-		}
-		max := bc.collect(24, d19BotCounts{oreBots: 1}, d19Resources{})
-		fmt.Println(bp.id, max)
-
+		bc := d.makeBotCollections(bp)
+		max := bc.collect(24, d19Bots{oreBots: 1}, d19Resources{})
 		sum += int(bp.id) * int(max)
 	}
 
@@ -192,5 +193,14 @@ func (d *Day19) SolveI(input string) any {
 }
 
 func (d *Day19) SolveII(input string) any {
-	return "Not Implemented Yet"
+	bps := d.getBlueprints(input)
+
+	total := int64(1)
+	for _, bp := range bps[:3] {
+		bc := d.makeBotCollections(bp)
+		max := bc.collect(32, d19Bots{oreBots: 1}, d19Resources{})
+		total *= int64(max)
+	}
+
+	return total
 }

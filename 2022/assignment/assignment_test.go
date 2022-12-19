@@ -401,11 +401,18 @@ func TestDay19_SolveI(t *testing.T) {
 
 func TestDay19_SolveII(t *testing.T) {
 	d := Day19{}
-	answer := fmt.Sprintf("%v", d.SolveII(getInput(19, "example")))
-	valid := "" // FIXME
+	bps := d.getBlueprints(getInput(19, "example"))
 
-	if answer != valid {
-		t.Errorf("%v is not equal to %v", answer, valid)
+	bc := d.makeBotCollections(bps[0])
+	answer := bc.collect(32, d19Bots{oreBots: 1}, d19Resources{})
+	if answer != 56 {
+		t.Errorf("%v is not equal to %v", answer, 56)
+	}
+
+	bc = d.makeBotCollections(bps[1])
+	answer = bc.collect(32, d19Bots{oreBots: 1}, d19Resources{})
+	if answer != 62 {
+		t.Errorf("%v is not equal to %v", answer, 62)
 	}
 }
 
