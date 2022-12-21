@@ -449,7 +449,7 @@ func Test_Day_21_SolveI(t *testing.T) {
 func Test_Day_21_SolveII(t *testing.T) {
 	d := Day21{}
 	answer := fmt.Sprintf("%v", d.SolveII(getInput(21, "example")))
-	valid := "" // FIXME
+	valid := "301"
 
 	if answer != valid {
 		t.Errorf("%v is not equal to %v", answer, valid)
