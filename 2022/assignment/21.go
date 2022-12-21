@@ -1,6 +1,8 @@
 package assignment
 
 import (
+	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -24,30 +26,44 @@ type d21Monkey struct {
 	operator   string
 }
 
-func (m *d21Monkey) reverseCalc() int64 {
+func (m *d21Monkey) calculate(a, b int64) int64 {
 	switch m.operator {
 	case "+":
-		return m.monkeyNums[0] + m.monkeyNums[1]
+		return a + b
 	case "-":
-		return m.monkeyNums[0] - m.monkeyNums[1]
+		return a - b
 	case "*":
-		return m.monkeyNums[0] / m.monkeyNums[1]
+		return a * b
 	case "/":
-		return m.monkeyNums[0] * m.monkeyNums[1]
+		return a / b
 	}
 	panic("unknown operator")
 }
 
-func (m *d21Monkey) calculate() int64 {
+func (m *d21Monkey) equalizeLeft(left, equalTo int64) int64 {
 	switch m.operator {
 	case "+":
-		return m.monkeyNums[0] + m.monkeyNums[1]
+		return equalTo - left
 	case "-":
-		return m.monkeyNums[0] - m.monkeyNums[1]
+		return -equalTo + left
 	case "*":
-		return m.monkeyNums[0] * m.monkeyNums[1]
+		return equalTo / left
 	case "/":
-		return m.monkeyNums[0] / m.monkeyNums[1]
+		return left / equalTo
+	}
+	panic("unknown operator")
+}
+
+func (m *d21Monkey) equalizeRight(right, equalTo int64) int64 {
+	switch m.operator {
+	case "+":
+		return equalTo - right
+	case "-":
+		return equalTo + right
+	case "*":
+		return equalTo / right
+	case "/":
+		return equalTo * right
 	}
 	panic("unknown operator")
 }
@@ -56,11 +72,10 @@ func (d *Day21) getMonkeys(input string, skipHuman bool) *d21Monkeys {
 	lines := util.SplitLines(input)
 
 	m := &d21Monkeys{
-		list: make([]*d21Monkey, len(lines)),
-		mp:   make(map[string]*d21Monkey, len(lines)),
+		mp: make(map[string]*d21Monkey, len(lines)),
 	}
 
-	for i, line := range lines {
+	for _, line := range lines {
 		split := strings.Split(line, ":")
 
 		if skipHuman && split[0] == d21Human {
@@ -72,15 +87,13 @@ func (d *Day21) getMonkeys(input string, skipHuman bool) *d21Monkeys {
 			number:     math.MaxInt,
 			monkeyNums: [2]int64{math.MaxInt, math.MaxInt},
 		}
-		m.list[i] = mon
+		m.mp[mon.name] = mon
 
 		str := strings.TrimSpace(split[1])
 		if unicode.IsDigit(rune(str[0])) {
 			var err error
 			mon.number, err = strconv.ParseInt(str, 10, 32)
 			util.CheckErr(err)
-
-			m.mp[mon.name] = mon
 			continue
 		}
 
@@ -92,48 +105,86 @@ func (d *Day21) getMonkeys(input string, skipHuman bool) *d21Monkeys {
 	return m
 }
 
-func (m *d21Monkeys) solve(name string) int64 {
-	for {
-		for _, mon := range m.list {
-			if mon.number != math.MaxInt {
-				continue
-			}
-
-			num1, ok1 := m.mp[mon.monkeys[0]]
-			num2, ok2 := m.mp[mon.monkeys[1]]
-			if !ok1 || !ok2 {
-				continue
-			}
-			mon.monkeyNums[0] = num1.number
-			mon.monkeyNums[1] = num2.number
-
-			mon.number = mon.calculate()
-			m.mp[mon.name] = mon
-		}
-
-		val, ok := m.mp[name]
-		if ok {
-			return val.number
-		}
-	}
-}
-
 type d21Monkeys struct {
-	list []*d21Monkey
-	mp   map[string]*d21Monkey
+	mp map[string]*d21Monkey
 }
 
-func (d *Day21) equality() {
+func (m *d21Monkeys) calculate(name string) int64 {
+	mon := m.mp[name]
+	if mon.number != math.MaxInt {
+		return mon.number
+	}
 
+	return mon.calculate(
+		m.calculate(mon.monkeys[0]),
+		m.calculate(mon.monkeys[1]),
+	)
+}
+
+func (m *d21Monkeys) findMonkey(root, name string) bool {
+	if root == name {
+		return true
+	}
+	mon, ok := m.mp[root]
+	if !ok {
+		return false
+	}
+	if mon.name == name {
+		return true
+	}
+	return m.findMonkey(mon.monkeys[0], name) || m.findMonkey(mon.monkeys[1], name)
+}
+
+func (m *d21Monkeys) mustEqual(root, human string, result int64) int64 {
+	mon, ok := m.mp[root]
+	if !ok {
+		if root == human {
+			return result
+		}
+		log.Panicf("root monkey %s not found", root)
+	}
+
+	if mon.number == math.MaxInt {
+		if m.findMonkey(mon.monkeys[0], d21Human) {
+			// Human is in the left branch
+			right := m.calculate(mon.monkeys[1])
+			return m.mustEqual(mon.monkeys[0], human, mon.equalizeRight(right, result))
+		}
+		// Human is in the right branch
+		left := m.calculate(mon.monkeys[0])
+		return m.mustEqual(mon.monkeys[1], human, mon.equalizeLeft(left, result))
+	}
+
+	panic(fmt.Sprintf("wrong monkey %s", mon.name))
+}
+
+func (m *d21Monkeys) findHumanValue() int64 {
+	mon, ok := m.mp[d21Root]
+	if !ok {
+		panic("root monkey not found")
+	}
+
+	var result int64
+	var branchRoot string
+	if m.findMonkey(mon.monkeys[0], d21Human) {
+		// Human is in the left branch
+		result = m.calculate(mon.monkeys[1])
+		branchRoot = mon.monkeys[0]
+	} else {
+		// Human is in the right branch
+		result = m.calculate(mon.monkeys[0])
+		branchRoot = mon.monkeys[1]
+	}
+
+	return m.mustEqual(branchRoot, d21Human, result)
 }
 
 func (d *Day21) SolveI(input string) any {
 	monkeys := d.getMonkeys(input, false)
-	return monkeys.solve(d21Root)
+	return monkeys.calculate(d21Root)
 }
 
 func (d *Day21) SolveII(input string) any {
-	//monkeys := d.getMonkeys(input, true)
-
-	return "Not Implemented Yet"
+	monkeys := d.getMonkeys(input, true)
+	return monkeys.findHumanValue()
 }
