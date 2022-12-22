@@ -113,7 +113,7 @@ func (d *Day22) getNotes(input string) (d22Grid, []d22Direction) {
 type d22Facing uint8
 
 const (
-	d22FaceRight = iota
+	d22FaceRight d22Facing = iota
 	d22FaceDown
 	d22FaceLeft
 	d22FaceUp
@@ -143,7 +143,9 @@ func (f d22Facing) step(coord d22Coord) d22Coord {
 	return coord
 }
 
-func (g *d22Grid) wrap(c d22Coord, facing d22Facing) (possible bool, coord d22Coord) {
+type d22Wrapper func(c d22Coord, facing d22Facing) (bool, d22Coord, d22Facing)
+
+func (g *d22Grid) wrapLinear(c d22Coord, facing d22Facing) (bool, d22Coord, d22Facing) {
 	switch facing {
 	case d22FaceRight:
 		c.x = g.minX
@@ -157,30 +159,138 @@ func (g *d22Grid) wrap(c d22Coord, facing d22Facing) (possible bool, coord d22Co
 	for g.get(c) == d22TypeNothing {
 		c = facing.step(c)
 	}
-	return g.get(c) == d22TypeOpen, c
+	return g.get(c) == d22TypeOpen, c, facing
 }
 
-func (g *d22Grid) normalizeStep(coord d22Coord, facing d22Facing, walk int) d22Coord {
+const (
+	d22Side = 50
+)
+
+// Warning, hardcoded wrapping coming up
+func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) {
+	switch {
+	case c.x <= 2*d22Side && c.y <= d22Side: // side A
+		switch f {
+		case d22FaceUp: // Wrap to F
+			f = d22FaceRight
+			c.y = 3*d22Side + c.x
+			c.x = 1
+		case d22FaceLeft: // Wrap to D
+			f = d22FaceRight
+			c.y = 2*d22Side + (d22Side - c.x)
+			c.x = 1
+		default:
+			panic("invalid wrap")
+		}
+	case c.x > 2*d22Side && c.y <= d22Side: // Side B
+		switch f {
+		case d22FaceUp: // Wrap to F
+			f = d22FaceUp
+			c.x = c.x - d22Side
+			c.y = 3 * d22Side
+		case d22FaceRight: // Wrap to E
+			f = d22FaceLeft
+			c.x = 2 * d22Side
+			c.y = 3*d22Side - c.y
+		case d22FaceDown: // Wrap to C
+			f = d22FaceLeft
+			c.y = c.x
+			c.x = 2 * d22Side
+		default:
+			panic("invalid wrap")
+		}
+	case c.x <= 2*d22Side && c.y <= d22Side*2: // Side C
+		switch f {
+		case d22FaceLeft: // Wrap to D
+			f = d22FaceDown
+			c.x = c.y - d22Side
+			c.y = 2*d22Side + 1
+		case d22FaceRight: // Wrap to B
+			f = d22FaceUp
+			c.x = c.y
+			c.y = d22Side
+		default:
+			panic("invalid wrap")
+		}
+	case c.x <= d22Side && c.y <= d22Side*3: // Side D
+		switch f {
+		case d22FaceUp: // Wrap to C
+			f = d22FaceRight
+			c.y = d22Side + c.x
+			c.x = d22Side + 1
+		case d22FaceLeft: // Wrap to A
+			f = d22FaceRight
+			c.y = d22Side - (c.x - 2*d22Side)
+			c.x = d22Side + 1
+		default:
+			panic("invalid wrap")
+		}
+	case c.x <= 2*d22Side && c.y <= d22Side*3: // Side E
+		switch f {
+		case d22FaceRight: // Wrap to B
+			f = d22FaceLeft
+			c.y = d22Side - (c.y - 2*d22Side)
+			c.x = 3 * d22Side
+		case d22FaceDown: // Wrap to F
+			f = d22FaceLeft
+			c.y = 3*d22Side + c.x
+			c.x = d22Side
+		default:
+			panic("invalid wrap")
+		}
+	case c.x <= d22Side && c.y <= d22Side*4: // Side F
+		switch f {
+		case d22FaceLeft: // Wrap to A
+			f = d22FaceDown
+			c.x = c.y - 3*d22Side
+			c.y = 1
+		case d22FaceDown: // Wrap to B
+			f = d22FaceDown
+			c.x = c.x + 2*d22Side
+			c.y = 1
+		case d22FaceRight: // Wrap to E
+			f = d22FaceUp
+			c.x = c.y - 2*d22Side
+			c.y = 3 * d22Side
+		default:
+			panic("invalid wrap")
+		}
+	}
+	return g.get(c) == d22TypeOpen, c, f
+}
+
+func (g *d22Grid) normalizeStep(coord d22Coord, facing d22Facing, walk int, wrapFn d22Wrapper) (d22Coord, d22Facing) {
 	for i := 0; i < walk; i++ {
 		// check next step
-		switch g.get(facing.step(coord)) {
+		c := facing.step(coord)
+		tp := g.get(c)
+		switch tp {
 		case d22TypeOpen:
 			coord = facing.step(coord)
 		case d22TypeWall:
 			// Return last step
-			return coord
+			return coord, facing
 		case d22TypeNothing:
 			// Wrap
-			possible, newCoord := g.wrap(coord, facing)
+			possible, c, f := wrapFn(coord, facing)
 			if possible {
-				coord = newCoord
+				coord = c
+				facing = f
 			}
 		}
 	}
-	return coord
+	return coord, facing
 }
 
-func (g *d22Grid) walk(start d22Coord, facing d22Facing, dirs []d22Direction) (d22Coord, d22Facing) {
+func (g *d22Grid) findStart() d22Coord {
+	c := d22Coord{1, 1}
+	for g.get(c) != d22TypeOpen {
+		c = d22FaceRight.step(c)
+	}
+	return c
+}
+
+func (g *d22Grid) walk(start d22Coord, facing d22Facing, dirs []d22Direction, wrapFn d22Wrapper) (d22Coord, d22Facing) {
 	c := start
 	f := facing
 	for _, dir := range dirs {
@@ -189,20 +299,24 @@ func (g *d22Grid) walk(start d22Coord, facing d22Facing, dirs []d22Direction) (d
 			continue
 		}
 
-		c = g.normalizeStep(c, f, dir.num)
+		c, f = g.normalizeStep(c, f, dir.num, wrapFn)
 	}
 	return c, f
 }
 
-func (d *Day22) SolveI(input string) any {
-	grid, directions := d.getNotes(input)
-	grid.print()
-
-	coords, facing := grid.walk(d22Coord{1, 1}, d22FaceRight, directions)
-
+func (d *Day22) getCode(coords d22Coord, facing d22Facing) int {
 	return (1000 * coords.y) + (4 * coords.x) + int(facing)
 }
 
+func (d *Day22) SolveI(input string) any {
+	grid, directions := d.getNotes(input)
+	coord, facing := grid.walk(grid.findStart(), d22FaceRight, directions, grid.wrapLinear)
+	return d.getCode(coord, facing)
+}
+
 func (d *Day22) SolveII(input string) any {
-	return "Not Implemented Yet"
+	grid, directions := d.getNotes(input)
+	coord, facing := grid.walk(grid.findStart(), d22FaceRight, directions, grid.wrapCube)
+	// < 103019
+	return d.getCode(coord, facing)
 }
