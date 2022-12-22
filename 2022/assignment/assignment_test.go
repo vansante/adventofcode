@@ -470,7 +470,7 @@ func Test_Day_22_SolveII(t *testing.T) {
 	d := Day22{}
 	answer := d.SolveII(getInput(22, "input")).(int)
 
-	if answer >= 103019 {
+	if answer >= 41571 {
 		t.Errorf("%v is too high", answer)
 	}
 	if answer <= 35363 {

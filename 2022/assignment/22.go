@@ -207,7 +207,7 @@ func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) 
 			c.y = 2*d22Side + 1
 		case d22FaceRight: // Wrap to B
 			f = d22FaceUp
-			c.x = c.y
+			c.x = c.y + d22Side
 			c.y = d22Side
 		default:
 			panic("invalid wrap")
@@ -242,7 +242,7 @@ func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) 
 		switch f {
 		case d22FaceLeft: // Wrap to A
 			f = d22FaceDown
-			c.x = c.y - 3*d22Side
+			c.x = c.y - 2*d22Side
 			c.y = 1
 		case d22FaceDown: // Wrap to B
 			f = d22FaceDown
@@ -274,10 +274,13 @@ func (g *d22Grid) normalizeStep(coord d22Coord, facing d22Facing, walk int, wrap
 			return coord, facing
 		case d22TypeNothing:
 			// Wrap
-			possible, c, f := wrapFn(coord, facing)
+			possible, nwCoord, nwFacing := wrapFn(coord, facing)
 			if possible {
-				coord = c
-				facing = f
+				if g.get(nwCoord) == d22TypeNothing {
+					panic("invalid wrap")
+				}
+				coord = nwCoord
+				facing = nwFacing
 			}
 		}
 	}
