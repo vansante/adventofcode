@@ -468,12 +468,15 @@ func Test_Day_22_SolveI(t *testing.T) {
 
 func Test_Day_22_SolveII(t *testing.T) {
 	d := Day22{}
-	answer := fmt.Sprintf("%v", d.SolveII(getInput(22, "input")))
-	valid := "??"
+	answer := d.SolveII(getInput(22, "input")).(int)
 
-	if answer != valid {
-		t.Errorf("%v is not equal to %v", answer, valid)
+	if answer >= 103019 {
+		t.Errorf("%v is too high", answer)
 	}
+	if answer <= 35363 {
+		t.Errorf("%v is too low", answer)
+	}
+	t.Log(answer)
 }
 
 // <generator:add:days>

@@ -177,7 +177,7 @@ func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) 
 			c.x = 1
 		case d22FaceLeft: // Wrap to D
 			f = d22FaceRight
-			c.y = 2*d22Side + (d22Side - c.x)
+			c.y = 2*d22Side + (d22Side - c.y)
 			c.x = 1
 		default:
 			panic("invalid wrap")
@@ -186,8 +186,8 @@ func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) 
 		switch f {
 		case d22FaceUp: // Wrap to F
 			f = d22FaceUp
-			c.x = c.x - d22Side
-			c.y = 3 * d22Side
+			c.x = c.x - 2*d22Side
+			c.y = 4 * d22Side
 		case d22FaceRight: // Wrap to E
 			f = d22FaceLeft
 			c.x = 2 * d22Side
@@ -220,7 +220,7 @@ func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) 
 			c.x = d22Side + 1
 		case d22FaceLeft: // Wrap to A
 			f = d22FaceRight
-			c.y = d22Side - (c.x - 2*d22Side)
+			c.y = d22Side - (c.y - 2*d22Side)
 			c.x = d22Side + 1
 		default:
 			panic("invalid wrap")
@@ -233,7 +233,7 @@ func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) 
 			c.x = 3 * d22Side
 		case d22FaceDown: // Wrap to F
 			f = d22FaceLeft
-			c.y = 3*d22Side + c.x
+			c.y = 2*d22Side + c.x
 			c.x = d22Side
 		default:
 			panic("invalid wrap")
@@ -255,6 +255,8 @@ func (g *d22Grid) wrapCube(c d22Coord, f d22Facing) (bool, d22Coord, d22Facing) 
 		default:
 			panic("invalid wrap")
 		}
+	default:
+		panic("invalid side")
 	}
 	return g.get(c) == d22TypeOpen, c, f
 }
@@ -317,6 +319,5 @@ func (d *Day22) SolveI(input string) any {
 func (d *Day22) SolveII(input string) any {
 	grid, directions := d.getNotes(input)
 	coord, facing := grid.walk(grid.findStart(), d22FaceRight, directions, grid.wrapCube)
-	// < 103019
 	return d.getCode(coord, facing)
 }
