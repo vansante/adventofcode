@@ -467,16 +467,25 @@ func Test_Day_22_SolveI(t *testing.T) {
 }
 
 func Test_Day_22_SolveII(t *testing.T) {
-	d := Day22{}
-	answer := d.SolveII(getInput(22, "input")).(int)
+	in := getInput(22, "input")
 
-	if answer >= 41571 {
-		t.Errorf("%v is too high", answer)
+	d := Day22{}
+	grid, directions := d.getNotes(in)
+	coord, facing := grid.walk(grid.findStart(), d22FaceRight, directions, grid.wrapCube)
+	if coord.x != 37 {
+		t.Errorf("X: %v is not %v", coord.x, 37)
 	}
-	if answer <= 35363 {
-		t.Errorf("%v is too low", answer)
+	if coord.y != 103 {
+		t.Errorf("Y: %v is not %v", coord.y, 103)
 	}
-	t.Log(answer)
+	if facing != d22FaceUp {
+		t.Errorf("Dir: %v is not %v", facing, d22FaceUp)
+	}
+
+	answer := d.SolveII(in).(int)
+	if answer != 37415 {
+		t.Errorf("%v is not %v", answer, 37415)
+	}
 }
 
 // <generator:add:days>
