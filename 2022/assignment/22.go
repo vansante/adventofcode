@@ -54,8 +54,8 @@ func (g *d22Grid) set(x, y int, val d22Tile) {
 	g.maxY = util.Max(y, g.maxY)
 }
 
-func (g *d22Grid) get(x, y int) d22Tile {
-	return g.coords[d22Coord{x, y}]
+func (g *d22Grid) get(coord d22Coord) d22Tile {
+	return g.coords[coord]
 }
 
 type d22Direction struct {
@@ -110,14 +110,97 @@ func (d *Day22) getNotes(input string) (d22Grid, []d22Direction) {
 	return g, dirs
 }
 
+type d22Facing uint8
+
+const (
+	d22FaceRight = iota
+	d22FaceDown
+	d22FaceLeft
+	d22FaceUp
+)
+
+func (f d22Facing) turn(turn string) d22Facing {
+	switch turn {
+	case "L":
+		return (f + 4 - 1) % 4
+	case "R":
+		return (f + 1) % 4
+	}
+	panic("invalid turn")
+}
+
+func (f d22Facing) step(coord d22Coord) d22Coord {
+	switch f {
+	case d22FaceRight:
+		coord.x++
+	case d22FaceDown:
+		coord.y++
+	case d22FaceLeft:
+		coord.x--
+	case d22FaceUp:
+		coord.y--
+	}
+	return coord
+}
+
+func (g *d22Grid) wrap(c d22Coord, facing d22Facing) (possible bool, coord d22Coord) {
+	switch facing {
+	case d22FaceRight:
+		c.x = g.minX
+	case d22FaceDown:
+		c.y = g.minY
+	case d22FaceLeft:
+		c.x = g.maxX
+	case d22FaceUp:
+		c.y = g.maxY
+	}
+	for g.get(c) == d22TypeNothing {
+		c = facing.step(c)
+	}
+	return g.get(c) == d22TypeOpen, c
+}
+
+func (g *d22Grid) normalizeStep(coord d22Coord, facing d22Facing, walk int) d22Coord {
+	for i := 0; i < walk; i++ {
+		// check next step
+		switch g.get(facing.step(coord)) {
+		case d22TypeOpen:
+			coord = facing.step(coord)
+		case d22TypeWall:
+			// Return last step
+			return coord
+		case d22TypeNothing:
+			// Wrap
+			possible, newCoord := g.wrap(coord, facing)
+			if possible {
+				coord = newCoord
+			}
+		}
+	}
+	return coord
+}
+
+func (g *d22Grid) walk(start d22Coord, facing d22Facing, dirs []d22Direction) (d22Coord, d22Facing) {
+	c := start
+	f := facing
+	for _, dir := range dirs {
+		if dir.num == 0 {
+			f = f.turn(dir.turn)
+			continue
+		}
+
+		c = g.normalizeStep(c, f, dir.num)
+	}
+	return c, f
+}
+
 func (d *Day22) SolveI(input string) any {
 	grid, directions := d.getNotes(input)
-
 	grid.print()
 
-	fmt.Println(directions)
+	coords, facing := grid.walk(d22Coord{1, 1}, d22FaceRight, directions)
 
-	return "Not Implemented Yet"
+	return (1000 * coords.y) + (4 * coords.x) + int(facing)
 }
 
 func (d *Day22) SolveII(input string) any {
