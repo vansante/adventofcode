@@ -19,11 +19,10 @@ const (
 )
 
 type d21Monkey struct {
-	name       string
-	number     int64
-	monkeys    [2]string
-	monkeyNums [2]int64
-	operator   string
+	name     string
+	number   int64
+	monkeys  [2]string
+	operator string
 }
 
 func (m *d21Monkey) calculate(a, b int64) int64 {
@@ -68,7 +67,7 @@ func (m *d21Monkey) equalizeRight(right, equalTo int64) int64 {
 	panic("unknown operator")
 }
 
-func (d *Day21) getMonkeys(input string, skipHuman bool) *d21Monkeys {
+func (d *Day21) getMonkeys(input string) *d21Monkeys {
 	lines := util.SplitLines(input)
 
 	m := &d21Monkeys{
@@ -78,14 +77,9 @@ func (d *Day21) getMonkeys(input string, skipHuman bool) *d21Monkeys {
 	for _, line := range lines {
 		split := strings.Split(line, ":")
 
-		if skipHuman && split[0] == d21Human {
-			continue
-		}
-
 		mon := &d21Monkey{
-			name:       split[0],
-			number:     math.MaxInt,
-			monkeyNums: [2]int64{math.MaxInt, math.MaxInt},
+			name:   split[0],
+			number: math.MaxInt,
 		}
 		m.mp[mon.name] = mon
 
@@ -136,11 +130,12 @@ func (m *d21Monkeys) findMonkey(root, name string) bool {
 }
 
 func (m *d21Monkeys) mustEqual(root, human string, result int64) int64 {
+	if root == human {
+		return result
+	}
+
 	mon, ok := m.mp[root]
 	if !ok {
-		if root == human {
-			return result
-		}
 		log.Panicf("root monkey %s not found", root)
 	}
 
@@ -180,11 +175,11 @@ func (m *d21Monkeys) findHumanValue() int64 {
 }
 
 func (d *Day21) SolveI(input string) any {
-	monkeys := d.getMonkeys(input, false)
+	monkeys := d.getMonkeys(input)
 	return monkeys.calculate(d21Root)
 }
 
 func (d *Day21) SolveII(input string) any {
-	monkeys := d.getMonkeys(input, true)
+	monkeys := d.getMonkeys(input)
 	return monkeys.findHumanValue()
 }
