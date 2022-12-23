@@ -43,7 +43,6 @@ var (
 type d23Elf struct {
 	position d23Coord
 	proposal *d23Coord
-	round    int
 }
 
 type d23Grid struct {
@@ -144,7 +143,6 @@ func (g *d23Grid) round(round int) int {
 	moved := 0
 	for _, e := range g.coords {
 		if e.proposal == nil {
-			e.round++
 			continue
 		}
 
