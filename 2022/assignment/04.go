@@ -29,23 +29,23 @@ func (s *d04Section) contains(other d04Section) bool {
 	return s.start <= other.start && s.end >= other.end
 }
 
-type d04Elve struct {
+type d04Elf struct {
 	s1, s2 d04Section
 	merged *d04Section
 }
 
-func (e *d04Elve) checkMerge() {
+func (e *d04Elf) checkMerge() {
 	e.merged = e.s1.canMerge(e.s2)
 	if e.merged == nil {
 		e.merged = e.s2.canMerge(e.s1)
 	}
 }
 
-func (d *Day04) getElves(input string) []d04Elve {
+func (d *Day04) getElves(input string) []d04Elf {
 	lines := util.SplitLines(input)
-	elves := make([]d04Elve, len(lines))
+	elves := make([]d04Elf, len(lines))
 	for i, line := range lines {
-		e := d04Elve{}
+		e := d04Elf{}
 		n, err := fmt.Sscanf(line, "%d-%d,%d-%d", &e.s1.start, &e.s1.end, &e.s2.start, &e.s2.end)
 		util.CheckErr(err)
 		if n != 4 {
