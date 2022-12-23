@@ -100,8 +100,8 @@ func (g *d23Grid) hasElf(start d23Coord, vectors []d23Coord) bool {
 	return false
 }
 
-func (g *d23Grid) propose(round int) map[d23Coord][]*d23Elf {
-	proposals := make(map[d23Coord][]*d23Elf, 1024)
+func (g *d23Grid) propose(round int) map[d23Coord]int {
+	proposals := make(map[d23Coord]int, 1024)
 
 	for c, e := range g.coords {
 		if !g.hasElf(c, d23Vectors) {
@@ -116,7 +116,7 @@ func (g *d23Grid) propose(round int) map[d23Coord][]*d23Elf {
 
 			coord := c.add(d23Cardinals[cardinal][1])
 			e.proposal = &coord
-			proposals[coord] = append(proposals[coord], e)
+			proposals[coord]++
 			break
 		}
 	}
@@ -149,7 +149,7 @@ func (g *d23Grid) round(round int) int {
 		coord := *e.proposal
 		// Reset proposal for next round
 		e.proposal = nil
-		switch len(proposals[coord]) {
+		switch proposals[coord] {
 		case 0:
 			panic("proposal expected")
 		case 1:
