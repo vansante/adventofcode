@@ -501,6 +501,26 @@ func Test_Day_23_SolveI(t *testing.T) {
 func Test_Day_23_SolveII(t *testing.T) {
 	d := Day23{}
 	answer := fmt.Sprintf("%v", d.SolveII(getInput(23, "example")))
+	valid := "20"
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
+func Test_Day_24_SolveI(t *testing.T) {
+	d := Day24{}
+	answer := fmt.Sprintf("%v", d.SolveI(getInput(24, "example")))
+	valid := "" // FIXME
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
+func Test_Day_24_SolveII(t *testing.T) {
+	d := Day24{}
+	answer := fmt.Sprintf("%v", d.SolveII(getInput(24, "example")))
 	valid := "" // FIXME
 
 	if answer != valid {
