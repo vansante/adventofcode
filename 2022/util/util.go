@@ -132,7 +132,7 @@ func SliceSort[T constraints.Ordered](s []T, ascending bool) {
 }
 
 func CopySlice[T any](s []T) []T {
-	cp := make([]T, len(s))
+	cp := make([]T, len(s), cap(s))
 	for i := 0; i < len(s); i++ {
 		cp[i] = s[i]
 	}
