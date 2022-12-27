@@ -528,6 +528,16 @@ func Test_Day_24_SolveII(t *testing.T) {
 	}
 }
 
+func Test_Day_25_SolveI(t *testing.T) {
+	d := Day25{}
+	answer := fmt.Sprintf("%v", d.SolveI(getInput(25, "example")))
+	valid := "2=-1=0"
+
+	if answer != valid {
+		t.Errorf("%v is not equal to %v", answer, valid)
+	}
+}
+
 // <generator:add:days>
 
 func getInput(day int, fileName string) string {
