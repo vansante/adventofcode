@@ -43,7 +43,7 @@ const parseInput = (rawInput: string): Array<Game> => {
         }
       }
 
-      game.sets.push(s)      
+      game.sets.push(s)
     }
 
     games.push(game)
