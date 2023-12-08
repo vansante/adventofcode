@@ -37,7 +37,7 @@ const parseInput = (rawInput: string): Array<Card> => {
   return cards
 }
 
-const part1 = (rawInput: string) => {
+const part1 = (rawInput: string): number => {
   const cards = parseInput(rawInput)
 
   let total = 0
@@ -59,7 +59,7 @@ const part1 = (rawInput: string) => {
   return total
 }
 
-const part2 = (rawInput: string) => {
+const part2 = (rawInput: string): number => {
   const cards = parseInput(rawInput)
 
   for (let i = 0; i < cards.length; i++) {
