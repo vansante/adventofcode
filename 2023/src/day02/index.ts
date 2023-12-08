@@ -18,25 +18,25 @@ const parseInput = (rawInput: string): Array<Game> => {
   for (const line of lines) {
     const game = {
       id: NaN,
-      sets: []
+      sets: [],
     } as Game
-    game.id = parseInt(line.substring(5, line.indexOf(':')))
+    game.id = parseInt(line.substring(5, line.indexOf(":")))
 
-    const sets = line.substring(line.indexOf(':') + 2).split('; ')
+    const sets = line.substring(line.indexOf(":") + 2).split("; ")
     for (const set of sets) {
       const s = {
         red: 0,
         green: 0,
-        blue: 0
+        blue: 0,
       } as Set
 
-      const dice = set.split(', ')
+      const dice = set.split(", ")
       for (const die of dice) {
-        const num = parseInt(die.substring(0, die.indexOf(' ')), 10)
+        const num = parseInt(die.substring(0, die.indexOf(" ")), 10)
 
-        if (die.indexOf('red') >= 0) {
+        if (die.indexOf("red") >= 0) {
           s.red = num
-        } else if (die.indexOf('green') >= 0) {
+        } else if (die.indexOf("green") >= 0) {
           s.green = num
         } else {
           s.blue = num
@@ -54,7 +54,7 @@ const parseInput = (rawInput: string): Array<Game> => {
 
 const part1 = (rawInput: string): number => {
   const games = parseInput(rawInput)
-  
+
   const maxRed = 12
   const maxGreen = 13
   const maxBlue = 14
@@ -83,17 +83,20 @@ const minimumDice = (game: Game, color: string): number => {
     const s = set as any
     if (s[color] > minimum) {
       minimum = s[color]
-    } 
+    }
   }
   return minimum
 }
 
 const part2 = (rawInput: string): number => {
   const games = parseInput(rawInput)
-  
+
   let total = 0
   for (const game of games) {
-    const power = minimumDice(game, 'red') * minimumDice(game, 'green') * minimumDice(game, 'blue')
+    const power =
+      minimumDice(game, "red") *
+      minimumDice(game, "green") *
+      minimumDice(game, "blue")
 
     total += power
   }

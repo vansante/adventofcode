@@ -16,20 +16,26 @@ const parseInput = (rawInput: string): Array<Card> => {
       id: NaN,
       wins: new Set(),
       nums: [],
-      count: 1
+      count: 1,
     } as Card
-    
-    card.id = parseInt(line.substring(5, line.indexOf(':')))
 
-    const nums = line.substring(line.indexOf(':') + 2).split(' | ')
+    card.id = parseInt(line.substring(5, line.indexOf(":")))
+
+    const nums = line.substring(line.indexOf(":") + 2).split(" | ")
     card.wins = new Set(
-      nums[0].split(' ').map((val: string): number => {
-        return parseInt(val, 10)
-      }).filter((val: number) => !Number.isNaN(val))
+      nums[0]
+        .split(" ")
+        .map((val: string): number => {
+          return parseInt(val, 10)
+        })
+        .filter((val: number) => !Number.isNaN(val)),
     )
-    card.nums = nums[1].split(' ').map((val: string): number => {
-      return parseInt(val, 10)
-    }).filter((val: number) => !Number.isNaN(val))
+    card.nums = nums[1]
+      .split(" ")
+      .map((val: string): number => {
+        return parseInt(val, 10)
+      })
+      .filter((val: number) => !Number.isNaN(val))
 
     cards.push(card)
   }

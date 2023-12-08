@@ -5,7 +5,7 @@ const parseInput = (rawInput: string): Array<string> => {
 }
 
 const isDot = (str: string): boolean => {
-  return str === '.'
+  return str === "."
 }
 
 const isNumber = (str: string): boolean => {
@@ -18,7 +18,7 @@ const isSymbol = (str: string): boolean => {
 }
 
 const isGear = (str: string): boolean => {
-  return str.length > 0 && str === '*'
+  return str.length > 0 && str === "*"
 }
 
 interface Coord {
@@ -26,27 +26,44 @@ interface Coord {
   y: number
 }
 
-const surroundSymbols = (input: Array<string>, line: number, start: number, len: number, testFn: Function = isSymbol): Coord|null => {
+const surroundSymbols = (
+  input: Array<string>,
+  line: number,
+  start: number,
+  len: number,
+  testFn: Function = isSymbol,
+): Coord | null => {
   if (line > 0) {
     for (let i = start - 1; i < start + len + 1; i++) {
-      if (i >= 0 && i < input[line - 1].length && testFn(input[line - 1].charAt(i))) {
-        return {x: line - 1, y: i}
+      if (
+        i >= 0 &&
+        i < input[line - 1].length &&
+        testFn(input[line - 1].charAt(i))
+      ) {
+        return { x: line - 1, y: i }
       }
     }
   }
 
   if (start > 0 && testFn(input[line].charAt(start - 1))) {
-    return {x: line, y: start - 1}
+    return { x: line, y: start - 1 }
   }
 
-  if (start + len < input[line].length && testFn(input[line].charAt(start + len))) {
-    return {x: line, y: start + len}
+  if (
+    start + len < input[line].length &&
+    testFn(input[line].charAt(start + len))
+  ) {
+    return { x: line, y: start + len }
   }
 
   if (line < input.length - 1) {
     for (let i = start - 1; i < start + len + 1; i++) {
-      if (i >= 0 && i < input[line + 1].length && testFn(input[line + 1].charAt(i))) {
-        return {x: line + 1, y: i}
+      if (
+        i >= 0 &&
+        i < input[line + 1].length &&
+        testFn(input[line + 1].charAt(i))
+      ) {
+        return { x: line + 1, y: i }
       }
     }
   }
@@ -87,7 +104,6 @@ const part1 = (rawInput: string) => {
       const numStr = line.substring(numStart, numStart + numLen)
       total += parseInt(numStr, 10)
     }
-
 
     numStart = -1
     numLen = 0
