@@ -70,18 +70,6 @@ const nextNode = (instr: string, nd: Node, nodes: Map<string, Node>): Node|null 
   return nd
 }
 
-const part1 = (rawInput: string): number => {
-  const input = parseInput(rawInput)
-
-  let nd = input.nodes.get(start) as Node
-  if (!nd) {
-    console.error('start not found', start)
-    return 0
-  }
-
-  return solve(input, nd, (nd: Node) => { return nd.name === end})
-}
-
 const solve = (inp: Input, nd: Node, isEnd: Function): number => {
   let steps = 0
   let instr = 0
@@ -99,6 +87,18 @@ const solve = (inp: Input, nd: Node, isEnd: Function): number => {
   return steps
 }
 
+const part1 = (rawInput: string): number => {
+  const input = parseInput(rawInput)
+
+  let nd = input.nodes.get(start) as Node
+  if (!nd) {
+    console.error('start not found', start)
+    return 0
+  }
+
+  return solve(input, nd, (nd: Node) => { return nd.name === end})
+}
+
 const isStart = (nd: Node): boolean => {
   return nd.name.endsWith('A')
 }
@@ -107,11 +107,26 @@ const isEnd = (nd: Node): boolean => {
   return nd.name.endsWith('Z')
 }
 
-const isAllEnd = (nodes: Array<Node>): boolean => {
-  return nodes.filter((nd: Node) => !isEnd(nd)).length === 0
+const greatestCommonDivisor = (a: number, b: number): number => {
+  if (!b) {
+    return b === 0 ? a : NaN;
+  }
+  return greatestCommonDivisor(b, a%b);
 }
 
-const part2 = (rawInput: string): number => {
+const leastCommonMultiple = (a: number, b: number): number => {
+  return a * b / greatestCommonDivisor(a, b);
+}
+
+const leastCommonMultipleArray = (array: Array<number>): number => {
+  let n = 1;
+  for (let i = 0; i < array.length; ++i) {
+    n = leastCommonMultiple(array[i], n);
+  }
+  return n;
+}
+
+const part2 = (rawInput: string) => {
   const input = parseInput(rawInput)
 
   let nodes = [] as Array<Node>
@@ -121,29 +136,12 @@ const part2 = (rawInput: string): number => {
     }
   })
 
-  let steps = 0
-  let instr = 0
-  while (true) {
-    const instruction = input.instr.charAt(instr)
-
-    const newNodes = [] as Array<Node>
-    for (const nd of nodes) {
-      newNodes.push(nextNode(instruction, nd, input.nodes) as Node)
-    }
-    nodes = newNodes
-
-    instr++
-    if (instr >= input.instr.length) {
-      instr = 0
-    }
-    steps++
-
-    if (isAllEnd(nodes)) {
-      break
-    }
+  const periods = [] as Array<number>
+  for (const nd of nodes) {
+    periods.push(solve(input, nd, isEnd))
   }
 
-  return steps
+  return leastCommonMultipleArray(periods)
 }
 
 run({
@@ -191,5 +189,5 @@ XXX = (XXX, XXX)`,
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 })
