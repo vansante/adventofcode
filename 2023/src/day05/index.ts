@@ -129,7 +129,7 @@ const translateReverse = (map: Mapping, id: number): number => {
   return id
 }
 
-const part2 = (rawInput: string) => {
+const part2 = (rawInput: string): number => {
   const input = parseInput(rawInput)
 
   const end = "seed"
@@ -152,7 +152,7 @@ const part2 = (rawInput: string) => {
   }
 
   console.error("not found")
-  return null
+  return -999_999_999
 }
 
 run({
