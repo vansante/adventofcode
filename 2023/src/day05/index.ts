@@ -60,6 +60,7 @@ const parseInput = (rawInput: string): Input => {
     const range = line
       .split(" ")
       .map((val: string): number => parseInt(val, 10))
+
     curMap?.ranges.push({
       dstStart: range[0],
       srcStart: range[1],
