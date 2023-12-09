@@ -19,11 +19,11 @@ const isZeroes = (vals: Array<number>): boolean => {
   return vals.filter((val: number): boolean => val !== 0).length === 0
 }
 
-const newValue = (vals: Array<number>, delta: number): number => {
+const nextValue = (vals: Array<number>, delta: number): number => {
   return vals[vals.length - 1] + delta
 }
 
-const findNext = (vals: Array<number>): number => {
+const makeStack = (vals: Array<number>): Array<Array<number>> => {
   let cur = vals
   const stack = [vals]
   while (true) {
@@ -34,11 +34,16 @@ const findNext = (vals: Array<number>): number => {
       break
     }
   }
+  return stack
+}
+
+const findNext = (vals: Array<number>): number => {
+  const stack = makeStack(vals)
 
   // add the extra zero to the end
   let newVal = 0
   for (let i = stack.length - 2; i >= 0; i--) {
-    newVal = newValue(stack[i], newVal)
+    newVal = nextValue(stack[i], newVal)
   }
   return newVal
 }
@@ -53,10 +58,29 @@ const part1 = (rawInput: string): number => {
   return total
 }
 
+const previousValue = (vals: Array<number>, delta: number): number => {
+  return vals[0] - delta
+}
+
+const findPrevious = (vals: Array<number>): number => {
+  const stack = makeStack(vals)
+
+  // add the extra zero to the beginning
+  let newVal = 0
+  for (let i = stack.length - 2; i >= 0; i--) {
+    newVal = previousValue(stack[i], newVal)
+  }
+  return newVal
+}
+
 const part2 = (rawInput: string): number => {
   const input = parseInput(rawInput)
 
-  return 0
+  let total = 0
+  for (const vals of input) {
+    total += findPrevious(vals)
+  }
+  return total
 }
 
 run({
