@@ -1,6 +1,6 @@
 import run from "aocrunner"
 
-const cardTypes = [
+const cardTypes1 = [
   "A",
   "K",
   "Q",
@@ -14,6 +14,22 @@ const cardTypes = [
   "4",
   "3",
   "2",
+].reverse()
+
+const cardTypes2 = [
+  "A",
+  "K",
+  "Q",
+  "T",
+  "9",
+  "8",
+  "7",
+  "6",
+  "5",
+  "4",
+  "3",
+  "2",
+  "J",
 ].reverse()
 
 interface Hand {
@@ -32,7 +48,7 @@ const parseInput = (rawInput: string): Array<Hand> => {
   })
 }
 
-const strength = (cards: string): number => {
+const frequencies = (cards: string): Map<string, number> => {
   const freqs = new Map<string, number>()
 
   for (let i = 0; i < cards.length; i++) {
@@ -42,6 +58,12 @@ const strength = (cards: string): number => {
       freqs.set(cards[i], 1)
     }
   }
+
+  return freqs
+}
+
+const strength = (cards: string): number => {
+  const freqs = frequencies(cards)
 
   switch (freqs.size) {
     case 1:
@@ -78,22 +100,44 @@ const strength = (cards: string): number => {
   return 4
 }
 
-const strongerCard = (a: string, b: string): boolean => {
+const strongerCard = (
+  a: string,
+  b: string,
+  cardTypes: Array<string>,
+): number => {
   for (let i = 0; i < a.length; i++) {
     const aCard = cardTypes.indexOf(a[i])
     const bCard = cardTypes.indexOf(b[i])
-    // console.log(a[i], aCard, b[i], bCard)
 
     if (aCard > bCard) {
-      return true
+      return 1
     }
     if (bCard > aCard) {
-      return false
+      return -1
     }
   }
 
   console.error("Same cards!", a, b)
-  return true
+  return 0
+}
+
+const solve = (hands: Array<Hand>, cardTypes: Array<string>): number => {
+  const sorted = hands.sort((a: Hand, b: Hand): number => {
+    if (a.strength > b.strength) {
+      return 1
+    }
+    if (b.strength > a.strength) {
+      return -1
+    }
+    return strongerCard(a.cards, b.cards, cardTypes)
+  })
+
+  let total = 0
+  sorted.forEach((h: Hand, idx: number) => {
+    total += h.bid * (idx + 1)
+  })
+
+  return total
 }
 
 const part1 = (rawInput: string): number => {
@@ -103,29 +147,39 @@ const part1 = (rawInput: string): number => {
     h.strength = strength(h.cards)
   })
 
-  const sorted = hands.sort((a: Hand, b: Hand): number => {
-    if (a.strength > b.strength) {
-      return 1
-    }
-    if (b.strength > a.strength) {
-      return -1
-    }
-    return strongerCard(a.cards, b.cards) ? 1 : -1
-  })
+  return solve(hands, cardTypes1)
+}
 
-  // console.log(sorted)
-  let total = 0
-  sorted.forEach((h: Hand, idx: number) => {
-    total += h.bid * (idx + 1)
-  })
+const jokerize = (cards: string): string => {
+  if (cards.indexOf("J") === -1) {
+    return cards
+  }
 
-  return total
+  const freqs = frequencies(cards)
+
+  let high = 0
+  let card = ""
+  freqs.forEach((f: number, c: string) => {
+    if (f > high && c !== "J") {
+      card = c
+      high = f
+    }
+  })
+  if (card === "") {
+    card = "A"
+  }
+
+  return cards.replaceAll("J", card)
 }
 
 const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput)
+  const hands = parseInput(rawInput)
 
-  return
+  hands.forEach((h: Hand) => {
+    h.strength = strength(jokerize(h.cards))
+  })
+
+  return solve(hands, cardTypes2)
 }
 
 run({
@@ -144,10 +198,14 @@ QQQJA 483`,
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: "",
-      // },
+      {
+        input: `32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483`,
+        expected: 5905,
+      },
     ],
     solution: part2,
   },
