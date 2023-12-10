@@ -19,10 +19,14 @@ const opposite = (card: string): string => {
 }
 
 interface Tile {
+  x: number
+  y: number
   connectors: Map<string, boolean>
-  tiles: Map<string, Tile>
+  cardTiles: Map<string, Tile>
+  pipeTiles: Map<string, Tile>
   distance: number
   isStart: boolean
+  isReachable: boolean
 }
 
 interface Input {
@@ -49,10 +53,14 @@ const parseInput = (rawInput: string): Input => {
     for (let x = 0; x < line.length; x++) {
       const char = line[x]
       const t = {
+        x,
+        y,
         connectors: new Map<string, boolean>(),
-        tiles: new Map<string, Tile>(),
+        cardTiles: new Map<string, Tile>(),
+        pipeTiles: new Map<string, Tile>(),
         distance: Number.MAX_SAFE_INTEGER,
         isStart: false,
+        isReachable: false,
       } as Tile
 
       switch (char) {
@@ -99,18 +107,22 @@ const parseInput = (rawInput: string): Input => {
 
     for (let x = 0; x < line.length; x++) {
       const tile = line[x]
-      if (x > 0 && tile.connectors.get("w")) {
+      if (x > 0) {
         const west = line[x - 1]
-        if (west.connectors.get("e")) {
-          tile.tiles.set("w", west)
-          west.tiles.set("e", tile)
+        tile.cardTiles.set("w", west)
+        west.cardTiles.set("e", tile)
+        if (tile.connectors.get("w") && west.connectors.get("e")) {
+          tile.pipeTiles.set("w", west)
+          west.pipeTiles.set("e", tile)
         }
       }
-      if (y > 0 && tile.connectors.get("n")) {
+      if (y > 0) {
         const north = input.tiles[y - 1][x]
-        if (north.connectors.get("s")) {
-          tile.tiles.set("n", north)
-          north.tiles.set("s", tile)
+        tile.cardTiles.set("n", north)
+        north.cardTiles.set("s", tile)
+        if (tile.connectors.get("n") && north.connectors.get("s")) {
+          tile.pipeTiles.set("n", north)
+          north.pipeTiles.set("s", tile)
         }
       }
     }
@@ -125,7 +137,7 @@ const connectingTile = (t: Tile, from: string): [string, Tile] => {
       continue
     }
 
-    const tile = t.tiles.get(card)
+    const tile = t.pipeTiles.get(card)
     if (tile) {
       return [card, tile]
     }
@@ -163,8 +175,6 @@ const part1 = (rawInput: string): number => {
   const card = walkCircle(input.start as Tile, "")
   walkCircle(input.start as Tile, card)
 
-  // console.log(input.tiles)
-
   let dist = 0
   for (const line of input.tiles) {
     for (const tile of line) {
@@ -177,10 +187,68 @@ const part1 = (rawInput: string): number => {
   return dist
 }
 
+const isEdge = (inp: Input, x: number, y: number): boolean => {
+  return (
+    x === 0 ||
+    y === 0 ||
+    y === inp.tiles.length - 1 ||
+    x === inp.tiles[y].length - 1
+  )
+}
+
+const floodFill = (input: Input) => {
+  const queue = [input.tiles[0][0]] as Array<Tile>
+
+  while (queue.length) {
+    const t = queue.shift() as Tile
+    t.isReachable = true
+
+    t.cardTiles.forEach((tile: Tile, card: string) => {
+      if (tile.isReachable) {
+        // Done already
+        return
+      }
+      if (tile.cardTiles.size < 4) {
+        // edge
+        queue.push(tile)
+        return
+      }
+      if (tile.distance === Number.MAX_SAFE_INTEGER) {
+        // no pipe
+        queue.push(tile)
+        return
+      }
+
+      if (
+        (card === "n" && !tile.connectors.get("e")) ||
+        tile.connectors.get("w")
+      ) {
+        queue.push(tile)
+        return
+      }
+    })
+  }
+}
+
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput)
 
-  return
+  const card = walkCircle(input.start as Tile, "")
+  walkCircle(input.start as Tile, card)
+
+  floodFill(input)
+  // console.log(input)
+  let unreachable = 0
+
+  for (const line of input.tiles) {
+    for (const tile of line) {
+      if (tile.distance === Number.MAX_SAFE_INTEGER && !tile.isReachable) {
+        unreachable++
+      }
+    }
+  }
+
+  return unreachable
 }
 
 run({
@@ -207,10 +275,56 @@ LJ...`,
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: "",
-      // },
+      {
+        input: `...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........`,
+        expected: 4,
+      },
+      {
+        input: `..........
+.S------7.
+.|F----7|.
+.||OOOO||.
+.||OOOO||.
+.|L-7F-J|.
+.|II||II|.
+.L--JL--J.
+..........`,
+        expected: 4,
+      },
+      //       {
+      //         input: `.F----7F7F7F7F-7....
+      // .|F--7||||||||FJ....
+      // .||.FJ||||||||L7....
+      // FJL7L7LJLJ||LJ.L-7..
+      // L--J.L7...LJS7F-7L7.
+      // ....F-J..F7FJ|L7L7L7
+      // ....L7.F7||L7|.L7L7|
+      // .....|FJLJ|FJ|F7|.LJ
+      // ....FJL-7.||.||||...
+      // ....L---J.LJ.LJLJ...`,
+      //         expected: 8,
+      //       },
+      //       {
+      //         input: `FF7FSF7F7F7F7F7F---7
+      // L|LJ||||||||||||F--J
+      // FL-7LJLJ||||||LJL-77
+      // F--JF--7||LJLJ7F7FJ-
+      // L---JF-JLJ.||-FJLJJ7
+      // |F|F-JF---7F7-L7L|7|
+      // |FFJF7L7F-JF7|JL---7
+      // 7-L-JL7||F7|L7F-7F7|
+      // L.L7LFJ|||||FJL7||LJ
+      // L7JLJL-JLJLJL--JLJ.L`,
+      //         expected: 10,
+      //       },
     ],
     solution: part2,
   },
