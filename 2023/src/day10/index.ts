@@ -26,7 +26,6 @@ interface Tile {
   pipeTiles: Map<string, Tile>
   distance: number
   isStart: boolean
-  isReachable: boolean
 }
 
 interface Input {
@@ -60,7 +59,6 @@ const parseInput = (rawInput: string): Input => {
         pipeTiles: new Map<string, Tile>(),
         distance: Number.MAX_SAFE_INTEGER,
         isStart: false,
-        isReachable: false,
       } as Tile
 
       switch (char) {
@@ -155,7 +153,6 @@ const walkCircle = (t: Tile, card: string): string => {
 
   while (!tile.isStart || dist === 0) {
     ;[card, tile] = connectingTile(tile, opposite(card))
-    // console.log("step", card, tile)
     if (firstCard === "") {
       firstCard = card
     }
