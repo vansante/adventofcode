@@ -75,10 +75,6 @@ const parseInput = (rawInput: string, expFactor: number): Grid => {
   return g
 }
 
-const manhattanDist = (a: Coord, b: Coord): number => {
-  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y)
-}
-
 const distance = (g: Grid, a: Coord, b: Coord): number => {
   let distance = 0
 
@@ -163,9 +159,7 @@ run({
         expected: 8410,
       },
     ],
-    solution: (rawInput: string): number => {
-      return distances(parseInput(rawInput, 100))
-    },
+    solution: part2,
   },
   trimTestInputs: true,
   onlyTests: false,

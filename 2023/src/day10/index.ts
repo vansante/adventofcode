@@ -187,68 +187,48 @@ const part1 = (rawInput: string): number => {
   return dist
 }
 
-const isEdge = (inp: Input, x: number, y: number): boolean => {
-  return (
-    x === 0 ||
-    y === 0 ||
-    y === inp.tiles.length - 1 ||
-    x === inp.tiles[y].length - 1
-  )
+const fixStartConnectors = (tile: Tile) => {
+  for (const card of cardinals) {
+    if (!tile.pipeTiles.get(card)) {
+      tile.connectors.delete(card)
+    }
+  }
 }
 
-const floodFill = (input: Input) => {
-  const queue = [input.tiles[0][0]] as Array<Tile>
-
-  while (queue.length) {
-    const t = queue.shift() as Tile
-    t.isReachable = true
-
-    t.cardTiles.forEach((tile: Tile, card: string) => {
-      if (tile.isReachable) {
-        // Done already
-        return
-      }
-      if (tile.cardTiles.size < 4) {
-        // edge
-        queue.push(tile)
-        return
-      }
-      if (tile.distance === Number.MAX_SAFE_INTEGER) {
-        // no pipe
-        queue.push(tile)
-        return
-      }
-
-      if (
-        (card === "n" && !tile.connectors.get("e")) ||
-        tile.connectors.get("w")
-      ) {
-        queue.push(tile)
-        return
-      }
-    })
+const contained = (tile: Tile): boolean => {
+  if (tile.distance !== Number.MAX_SAFE_INTEGER) {
+    return false
   }
+
+  let pipeCount = 0
+  let t = tile.cardTiles.get("e")
+
+  while (t) {
+    if (t.distance !== Number.MAX_SAFE_INTEGER && t?.connectors.get("n")) {
+      pipeCount++
+    }
+    t = t.cardTiles.get("e")
+  }
+
+  return pipeCount % 2 === 1
 }
 
 const part2 = (rawInput: string) => {
   const input = parseInput(rawInput)
 
-  const card = walkCircle(input.start as Tile, "")
-  walkCircle(input.start as Tile, card)
+  walkCircle(input.start as Tile, "")
+  fixStartConnectors(input.start as Tile)
 
-  floodFill(input)
-  // console.log(input)
-  let unreachable = 0
-
+  let count = 0
   for (const line of input.tiles) {
     for (const tile of line) {
-      if (tile.distance === Number.MAX_SAFE_INTEGER && !tile.isReachable) {
-        unreachable++
+      if (contained(tile)) {
+        count++
       }
     }
   }
 
-  return unreachable
+  return count
 }
 
 run({
@@ -299,32 +279,32 @@ LJ...`,
 ..........`,
         expected: 4,
       },
-      //       {
-      //         input: `.F----7F7F7F7F-7....
-      // .|F--7||||||||FJ....
-      // .||.FJ||||||||L7....
-      // FJL7L7LJLJ||LJ.L-7..
-      // L--J.L7...LJS7F-7L7.
-      // ....F-J..F7FJ|L7L7L7
-      // ....L7.F7||L7|.L7L7|
-      // .....|FJLJ|FJ|F7|.LJ
-      // ....FJL-7.||.||||...
-      // ....L---J.LJ.LJLJ...`,
-      //         expected: 8,
-      //       },
-      //       {
-      //         input: `FF7FSF7F7F7F7F7F---7
-      // L|LJ||||||||||||F--J
-      // FL-7LJLJ||||||LJL-77
-      // F--JF--7||LJLJ7F7FJ-
-      // L---JF-JLJ.||-FJLJJ7
-      // |F|F-JF---7F7-L7L|7|
-      // |FFJF7L7F-JF7|JL---7
-      // 7-L-JL7||F7|L7F-7F7|
-      // L.L7LFJ|||||FJL7||LJ
-      // L7JLJL-JLJLJL--JLJ.L`,
-      //         expected: 10,
-      //       },
+      {
+        input: `.F----7F7F7F7F-7....
+.|F--7||||||||FJ....
+.||.FJ||||||||L7....
+FJL7L7LJLJ||LJ.L-7..
+L--J.L7...LJS7F-7L7.
+....F-J..F7FJ|L7L7L7
+....L7.F7||L7|.L7L7|
+.....|FJLJ|FJ|F7|.LJ
+....FJL-7.||.||||...
+....L---J.LJ.LJLJ...`,
+        expected: 8,
+      },
+      {
+        input: `FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`,
+        expected: 10,
+      },
     ],
     solution: part2,
   },
