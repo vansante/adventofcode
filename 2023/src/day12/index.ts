@@ -36,7 +36,13 @@ const count = (
   strPos: number,
   groupPos: number,
   groupLen: number,
+  cache: Map<string, number>,
 ): number => {
+  const key = `${strPos}_${groupPos}_${groupLen}`
+  if (cache.has(key)) {
+    return cache.get(key) as number
+  }
+
   if (strPos === cond.springs.length) {
     if (groupPos === cond.groups.length && groupLen === 0) {
       return 1
@@ -53,17 +59,19 @@ const count = (
   let total = 0
   if (cond.springs[strPos] === "." || cond.springs[strPos] === "?") {
     if (groupLen === 0) {
-      total += count(cond, strPos + 1, groupPos, 0)
+      total += count(cond, strPos + 1, groupPos, 0, cache)
     } else if (
       groupPos < cond.groups.length &&
       cond.groups[groupPos] === groupLen
     ) {
-      total += count(cond, strPos + 1, groupPos + 1, 0)
+      total += count(cond, strPos + 1, groupPos + 1, 0, cache)
     }
   }
   if (cond.springs[strPos] === "#" || cond.springs[strPos] === "?") {
-    total += count(cond, strPos + 1, groupPos, groupLen + 1)
+    total += count(cond, strPos + 1, groupPos, groupLen + 1, cache)
   }
+
+  cache.set(key, total)
 
   return total
 }
@@ -73,17 +81,42 @@ const part1 = (rawInput: string): number => {
 
   let total = 0
   for (const cond of conds) {
-    console.log(cond, count(cond, 0, 0, 0))
-    total += count(cond, 0, 0, 0)
+    const cache = new Map<string, number>()
+    total += count(cond, 0, 0, 0, cache)
   }
 
   return total
 }
 
-const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput)
+const unfold = (cond: Condition, factor: number): Condition => {
+  const c = {
+    springs: [],
+    groups: [],
+  } as Condition
 
-  return
+  for (let i = 0; i < factor; i++) {
+    c.springs.push(...cond.springs)
+    if (i < factor - 1) {
+      c.springs.push("?")
+    }
+    c.groups.push(...cond.groups)
+  }
+
+  return c
+}
+
+const part2 = (rawInput: string) => {
+  const conds = parseInput(rawInput)
+
+  let total = 0
+  for (const cond of conds) {
+    const unfolded = unfold(cond, 5)
+    const cache = new Map<string, number>()
+
+    total += count(unfolded, 0, 0, 0, cache)
+  }
+
+  return total
 }
 
 run({
