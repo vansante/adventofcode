@@ -1,79 +1,129 @@
 import run from "aocrunner"
 
 interface Grid {
-  g: Array<string>
+  g: Array<Array<string>>
 }
 
 const parseInput = (rawInput: string): Array<Grid> => {
   return rawInput.split("\n\n").map((grid: string): Grid => {
     return {
-      g: grid.split("\n"),
+      g: grid.split("\n").map((v: string) => {
+        return v.split("")
+      }),
     }
   })
 }
 
-const hasVerticalMirror = (g: Grid, xCheck: number): boolean => {
+const hasVerticalMirror = (
+  g: Grid,
+  xCheck: number,
+): [boolean, undefined | [number, number]] => {
   if (xCheck === g.g[0].length - 1) {
-    return false
+    return [false, undefined]
   }
 
   const len = Math.min(xCheck + 1, g.g[0].length - xCheck - 1)
   if (len < 1) {
-    return false
+    return [false, undefined]
   }
 
+  let mistakes = 0
+  let coord = [0, 0] as [number, number]
   for (let y = 0; y < g.g.length; y++) {
     for (let x = 0; x < len; x++) {
       const a = g.g[y][xCheck - x]
       const b = g.g[y][xCheck + 1 + x]
 
       if (a !== b) {
-        return false
+        mistakes++
+        coord = [x, y]
+        if (mistakes > 1) {
+          return [false, undefined]
+        }
       }
     }
   }
-  return true
+
+  return [mistakes === 0, coord]
 }
 
-const hasHorizontalMirror = (g: Grid, yCheck: number): boolean => {
+const hasHorizontalMirror = (
+  g: Grid,
+  yCheck: number,
+): [boolean, undefined | [number, number]] => {
   if (yCheck === g.g.length - 1) {
-    return false
+    return [false, undefined]
   }
 
   const len = Math.min(yCheck + 1, g.g.length - yCheck - 1)
   if (len < 1) {
-    return false
+    return [false, undefined]
   }
 
+  let mistakes = 0
+  let coord = [0, 0] as [number, number]
   for (let y = 0; y < len; y++) {
     for (let x = 0; x < g.g[y].length; x++) {
       const a = g.g[yCheck - y][x]
       const b = g.g[yCheck + 1 + y][x]
 
       if (a !== b) {
-        return false
+        mistakes++
+        coord = [x, y]
+        if (mistakes > 1) {
+          return [false, undefined]
+        }
       }
     }
   }
 
-  return true
+  return [mistakes === 0, coord]
 }
 
-const findMirrors = (g: Grid): [number, number] => {
+const findMirrors = (
+  g: Grid,
+  mistakes: number = 0,
+): [number | undefined, number | undefined] => {
   const horizontal = []
   for (let y = 0; y < g.g.length; y++) {
-    if (hasHorizontalMirror(g, y)) {
+    const [result, coord] = hasHorizontalMirror(g, y)
+    if (result && mistakes === 0) {
       horizontal.push(y)
+    } else if (coord && mistakes > 0) {
+      // console.log("fix hor", coord)
+      g.g[coord[1]][coord[0]] = g.g[coord[1]][coord[0]] === "." ? "#" : "."
+
+      // const [nwResult, nwCoord] = hasHorizontalMirror(g, y)
+      // if (nwResult) {
+      horizontal.push(y)
+      // }
+      mistakes--
+      if (mistakes === 0) {
+        return [y, undefined]
+      }
     }
   }
   if (horizontal.length > 1) {
-    console.log("more than one horizontal detected", horizontal)
+    console.log("more than one horizontal detected", horizontal, g.g)
   }
 
   const vertical = []
   for (let x = 0; x < g.g[0].length; x++) {
-    if (hasVerticalMirror(g, x)) {
+    const [result, coord] = hasVerticalMirror(g, x)
+    if (result && mistakes === 0) {
       vertical.push(x)
+    } else if (coord && mistakes > 0) {
+      // console.log("fix ver", coord)
+      g.g[coord[1]][coord[0]] = g.g[coord[1]][coord[0]] === "." ? "#" : "."
+
+      // const [nwResult, nwCoord] = hasVerticalMirror(g, x)
+      // if (nwResult) {
+      vertical.push(x)
+      // }
+      mistakes--
+      if (mistakes === 0) {
+        return [x, undefined]
+      }
     }
   }
   if (vertical.length > 1) {
@@ -88,7 +138,7 @@ const part1 = (rawInput: string) => {
 
   let total = 0
   for (const grid of grids) {
-    const results = findMirrors(grid)
+    const results = findMirrors(grid, 0)
     if (results[0] !== undefined) {
       total += (results[0] + 1) * 100
     }
@@ -101,9 +151,21 @@ const part1 = (rawInput: string) => {
 }
 
 const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput)
+  const grids = parseInput(rawInput)
 
-  return
+  let total = 0
+  for (const grid of grids) {
+    const results = findMirrors(grid, 1)
+    // console.log(results)
+    if (results[0] !== undefined) {
+      total += (results[0] + 1) * 100
+    }
+    if (results[1] !== undefined) {
+      total += results[1] + 1
+    }
+  }
+
+  return total
 }
 
 run({
