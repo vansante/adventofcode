@@ -12,22 +12,21 @@ const parseInput = (rawInput: string): Array<Grid> => {
   })
 }
 
-const hasVerticalMirror = (g: Grid, x: number): boolean => {
-  if (x === g.g[0].length - 1) {
+const hasVerticalMirror = (g: Grid, xCheck: number): boolean => {
+  if (xCheck === g.g[0].length - 1) {
     return false
   }
 
-  const len = Math.min(x + 1, g.g[0].length - x - 1)
+  const len = Math.min(xCheck + 1, g.g[0].length - xCheck - 1)
   if (len < 1) {
     return false
   }
 
-  for (const line of g.g) {
-    for (let char = 0; char < len; char++) {
-      const a = line[x - char]
-      const b = line[x + 1 + char]
+  for (let y = 0; y < g.g.length; y++) {
+    for (let x = 0; x < len; x++) {
+      const a = g.g[y][xCheck - x]
+      const b = g.g[y][xCheck + 1 + x]
 
-      // console.log(x, len, char, a, "<>", b)
       if (a !== b) {
         return false
       }
@@ -36,23 +35,24 @@ const hasVerticalMirror = (g: Grid, x: number): boolean => {
   return true
 }
 
-const hasHorizontalMirror = (g: Grid, y: number): boolean => {
-  if (y === g.g.length - 1) {
+const hasHorizontalMirror = (g: Grid, yCheck: number): boolean => {
+  if (yCheck === g.g.length - 1) {
     return false
   }
 
-  const len = Math.min(y + 1, g.g.length - y - 1)
+  const len = Math.min(yCheck + 1, g.g.length - yCheck - 1)
   if (len < 1) {
     return false
   }
 
-  for (let line = 0; line < len; line++) {
-    const a = g.g[y - line]
-    const b = g.g[y + 1 + line]
+  for (let y = 0; y < len; y++) {
+    for (let x = 0; x < g.g[y].length; x++) {
+      const a = g.g[yCheck - y][x]
+      const b = g.g[yCheck + 1 + y][x]
 
-    // console.log(y, len, line, a, "<>", b)
-    if (a !== b) {
-      return false
+      if (a !== b) {
+        return false
+      }
     }
   }
 
@@ -97,8 +97,6 @@ const part1 = (rawInput: string) => {
     }
   }
 
-  // 43210 too low
-  // === 43614
   return total
 }
 
@@ -180,10 +178,24 @@ run({
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: 0,
-      // },
+      {
+        input: `#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#`,
+        expected: 400,
+      },
     ],
     solution: part2,
   },
