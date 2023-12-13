@@ -12,18 +12,6 @@ const parseInput = (rawInput: string): Array<Grid> => {
   })
 }
 
-// const isReversed = (a: string, b: string): boolean => {
-//   if (a.length !== b.length) {
-//     return false
-//   }
-//   for (let i = 0; i < a.length; i++) {
-//     if (a[i] !== b[b.length - 1 - i]) {
-//       return false
-//     }
-//   }
-//   return true
-// }
-
 const hasVerticalMirror = (g: Grid, x: number): boolean => {
   if (x === g.g[0].length - 1) {
     return false
@@ -39,19 +27,11 @@ const hasVerticalMirror = (g: Grid, x: number): boolean => {
       const a = line[x - char]
       const b = line[x + 1 + char]
 
-      console.log(x, len, char, a, "<>", b)
+      // console.log(x, len, char, a, "<>", b)
       if (a !== b) {
         return false
       }
     }
-
-    // const a = line.substring(x - len, x)
-    // const b = line.substring(x, x + len)
-    // // console.log(x, len, a, "<>", b, line)
-
-    // if (!isReversed(a, b)) {
-    //   return false
-    // }
   }
   return true
 }
@@ -60,6 +40,7 @@ const hasHorizontalMirror = (g: Grid, y: number): boolean => {
   if (y === g.g.length - 1) {
     return false
   }
+
   const len = Math.min(y + 1, g.g.length - y - 1)
   if (len < 1) {
     return false
@@ -104,22 +85,20 @@ const findMirrors = (g: Grid): [number, number] => {
 
 const part1 = (rawInput: string) => {
   const grids = parseInput(rawInput)
-  // console.log(grids)
 
   let total = 0
   for (const grid of grids) {
     const results = findMirrors(grid)
-    console.log(results)
-
-    if (results[0]) {
+    if (results[0] !== undefined) {
       total += (results[0] + 1) * 100
     }
-    if (results[1]) {
+    if (results[1] !== undefined) {
       total += results[1] + 1
     }
   }
 
   // 43210 too low
+  // === 43614
   return total
 }
 
@@ -178,6 +157,24 @@ run({
 ...#....#......`,
         expected: 12,
       },
+      {
+        input: `#...####.##.###
+.#####.#...####
+#.#.#..#.#..##.
+#.#.#..#.#..##.
+.#####.#...####
+....####.##.###
+###..###.###.#.
+..##...#.#..#.#
+#.#.#...###.###
+.###..#...##..#
+######.......#.
+#...#####..##.#
+#...#####..##.#
+######.......#.
+.###..#...##..#`,
+        expected: 1200,
+      },
     ],
     solution: part1,
   },
@@ -191,5 +188,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 })
