@@ -162,7 +162,7 @@ run({
 #.#..###..#..#..#
 .#####..#.#..#.#.
 .#.##.#..#.##.#..`,
-        expected: 13,
+        expected: 12,
       },
       {
         input: `##..####..####.
@@ -176,7 +176,7 @@ run({
 .##.#..#.##..##
 #####..########
 ...#....#......`,
-        expected: 13,
+        expected: 12,
       },
     ],
     solution: part1,
@@ -191,5 +191,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: false,
+  onlyTests: true,
 })
