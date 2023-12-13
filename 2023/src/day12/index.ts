@@ -2,7 +2,7 @@ import run from "aocrunner"
 
 interface Condition {
   springs: Array<string>
-  groups: Array<Number>
+  groups: Array<number>
 }
 
 const parseInput = (rawInput: string): Array<Condition> => {
