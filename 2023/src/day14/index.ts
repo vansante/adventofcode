@@ -171,23 +171,20 @@ const part2 = (rawInput: string): number => {
       diff1 = rep[len - 1] - rep[len - 2]
       const diff2 = rep[len - 2] - rep[len - 3]
       if (diff1 === diff2) {
-        console.log(`repeating repetition of ${diff1} detected at ${i}`)
+        console.log(
+          `repeating repetition of ${diff1} detected at ${i} (${rep.length})`,
+        )
         break
       }
     }
   }
 
+  const rounds = ((count - i - 1) % (diff1 + i)) + 1
+  console.log(`rounds to do: ${rounds}`)
+
   grid = parseInput(rawInput)
-  const rounds = (count - i - 1) % (diff1 + i + 1)
-  console.log(rounds)
-
-  // let remainder = (count - i) % diff1
-  // console.log(`${remainder} steps remaining`)
-
   cycles(grid, rounds)
 
-  // > 98020
-  // < 98876
   return totalLoad(grid)
 }
 
