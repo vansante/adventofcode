@@ -83,28 +83,21 @@ const hasHorizontalMirror = (
 const findMirrors = (
   g: Grid,
   mistakes: number = 0,
-): [number | undefined, number | undefined] => {
+): [Array<number>, Array<number>] => {
   const horizontal = []
   for (let y = 0; y < g.g.length; y++) {
     const [result, coord] = hasHorizontalMirror(g, y)
     if (result && mistakes === 0) {
       horizontal.push(y)
     } else if (coord && mistakes > 0) {
-      // console.log("fix hor", coord)
       g.g[coord[1]][coord[0]] = g.g[coord[1]][coord[0]] === "." ? "#" : "."
 
-      // const [nwResult, nwCoord] = hasHorizontalMirror(g, y)
-      // if (nwResult) {
       horizontal.push(y)
-      // }
       mistakes--
-      if (mistakes === 0) {
-        return [y, undefined]
-      }
     }
   }
   if (horizontal.length > 1) {
-    console.log("more than one horizontal detected", horizontal, g.g)
+    console.log("more than one horizontal detected", horizontal)
   }
 
   const vertical = []
@@ -113,24 +106,17 @@ const findMirrors = (
     if (result && mistakes === 0) {
       vertical.push(x)
     } else if (coord && mistakes > 0) {
-      // console.log("fix ver", coord)
       g.g[coord[1]][coord[0]] = g.g[coord[1]][coord[0]] === "." ? "#" : "."
 
-      // const [nwResult, nwCoord] = hasVerticalMirror(g, x)
-      // if (nwResult) {
       vertical.push(x)
-      // }
       mistakes--
-      if (mistakes === 0) {
-        return [x, undefined]
-      }
     }
   }
   if (vertical.length > 1) {
     console.log("more than one vertical detected", vertical)
   }
 
-  return [horizontal[0], vertical[0]]
+  return [horizontal, vertical]
 }
 
 const part1 = (rawInput: string) => {
@@ -139,12 +125,13 @@ const part1 = (rawInput: string) => {
   let total = 0
   for (const grid of grids) {
     const results = findMirrors(grid, 0)
-    if (results[0] !== undefined) {
-      total += (results[0] + 1) * 100
-    }
-    if (results[1] !== undefined) {
-      total += results[1] + 1
-    }
+    // console.log(results)
+    results[0].forEach((v: number) => {
+      total += (v + 1) * 100
+    })
+    results[1].forEach((v: number) => {
+      total += v + 1
+    })
   }
 
   return total
@@ -156,13 +143,13 @@ const part2 = (rawInput: string) => {
   let total = 0
   for (const grid of grids) {
     const results = findMirrors(grid, 1)
-    // console.log(results)
-    if (results[0] !== undefined) {
-      total += (results[0] + 1) * 100
-    }
-    if (results[1] !== undefined) {
-      total += results[1] + 1
-    }
+    console.log(results)
+    results[0].forEach((v: number) => {
+      total += (v + 1) * 100
+    })
+    results[1].forEach((v: number) => {
+      total += v + 1
+    })
   }
 
   return total
