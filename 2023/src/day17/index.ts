@@ -1,5 +1,46 @@
 import run from "aocrunner"
 
+interface PriorityQueue<T> {
+  insert(item: T, priority: number): void
+  peek(): T | null
+  pop(): T | null
+  size(): number
+  isEmpty(): boolean
+}
+
+const priorityQueue = <T>(): PriorityQueue<T> => {
+  const data: [number, T][] = []
+
+  return {
+    insert: (i: T, p: number) => {
+      if (data.length == 0) {
+        data.push([p, i])
+        return
+      }
+
+      for (let index = 0; index < data.length; index++) {
+        if (index == data.length - 1) {
+          data.push([p, i])
+          return
+        }
+
+        if (data[index][0] > p) {
+          data.splice(index, 0, [p, i])
+          return
+        }
+      }
+    },
+
+    isEmpty: () => data.length === 0,
+
+    peek: () => (data.length === 0 ? null : data[0][1]),
+
+    pop: () => (data.length === 0 ? null : data.pop()[1]),
+
+    size: () => data.length,
+  }
+}
+
 interface Tile {
   c: Coord
   loss: number
@@ -105,34 +146,38 @@ const dijkstra = (g: Grid, start: Coord, end: Coord): number => {
   const visited = new Set<string>()
   const distance = new Map<string, number>()
   const previous = new Map<string, Coord>()
-  const queue = [] as Array<Coord>
+  const queue = priorityQueue<Coord>()
 
   distance.set(start.toString(), 0)
-  queue.push(start)
+  queue.insert(start, 0)
 
-  while (queue.length) {
-    const current = queue.shift() as Coord
+  while (queue.size()) {
+    const current = queue.pop() as Coord
     if (current.equals(end)) {
       break
     }
-    visited.add(current.toString())
 
     let forbiddenDir = -1
+    const key = [current.toString()]
     const prevCoord = previous.get(current.toString())
     if (prevCoord) {
-      const prevPrevCoord = previous.get(prevCoord.toString())
+      key.push(prevCoord.toString())
 
+      const prevPrevCoord = previous.get(prevCoord.toString())
       if (prevPrevCoord) {
+        key.push(prevCoord.toString())
         forbiddenDir = forbiddenDirection(prevPrevCoord, prevCoord, current)
-        console.log(
-          "FORBIDDEN",
-          forbiddenDir,
-          prevPrevCoord,
-          prevCoord,
-          current,
-        )
+        // console.log(
+        //   "FORBIDDEN",
+        //   forbiddenDir,
+        //   prevPrevCoord,
+        //   prevCoord,
+        //   current,
+        // )
       }
     }
+
+    visited.add(key.join("-"))
 
     for (let i = 0; i < directions.length; i++) {
       const dir = directions[i]
@@ -141,10 +186,13 @@ const dijkstra = (g: Grid, start: Coord, end: Coord): number => {
       }
 
       const neighbor = current.add(dir)
-      if (neighbor.equals(current)) {
+      if (prevCoord && neighbor.equals(prevCoord)) {
         continue
       }
-      if (visited.has(neighbor.toString())) {
+
+      key.push(neighbor.toString())
+      console.log("ey", key.slice(1).join("-"))
+      if (visited.has(key.slice(1).join("-"))) {
         continue
       }
 
@@ -162,10 +210,16 @@ const dijkstra = (g: Grid, start: Coord, end: Coord): number => {
         continue
       }
 
-      queue.push(neighbor)
+      queue.insert(neighbor, shortest)
       distance.set(neighbor.toString(), shortest)
       previous.set(neighbor.toString(), current)
     }
+  }
+
+  let nd = end
+  while (!nd.equals(start)) {
+    console.log(nd)
+    nd = previous.get(nd.toString()) as Coord
   }
 
   return distance.get(end.toString()) || Number.MAX_SAFE_INTEGER
