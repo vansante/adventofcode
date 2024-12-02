@@ -1,9 +1,5 @@
 import Algorithms
 
-enum Day01Error: Error {
-    case runtimeError(String)
-}
-
 struct Day01: AdventDay {
   // Save your data in a corresponding text file in the `Data` directory.
   var data: String
@@ -21,10 +17,9 @@ struct Day01: AdventDay {
     return l
   }
 
-  func countOccurrences(list: Int, num: Int) -> Int {
-    let l = lists[list]
+  func countOccurrences(list: [Int], num: Int) -> Int {
     var count: Int = 0
-    l.forEach { n in
+    list.forEach { n in
       if n == num {
         count += 1
       }
@@ -53,9 +48,10 @@ struct Day01: AdventDay {
 
   func part2() -> Any {
     let l1 = lists[0]
+    let l2 = lists[1]
     var total: Int = 0
     l1.forEach { num in
-      total += self.countOccurrences(list: 1, num: num) * num
+      total += self.countOccurrences(list: l2, num: num) * num
     }
     return total
   }
