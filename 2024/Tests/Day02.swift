@@ -15,12 +15,12 @@ struct Day02Tests {
     1 3 6 7 9
     """
 
-  @Test func testPart1() async throws {
+  @Test func testPartD21() async throws {
     let challenge = Day02(data: testData)
     #expect(String(describing: challenge.part1()) == "2")
   }
 
-  @Test func testPart2() async throws {
+  @Test func testPartD22() async throws {
     let challenge = Day02(data: testData)
     #expect(String(describing: challenge.part2()) == "4")
   }
