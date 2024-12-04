@@ -43,7 +43,7 @@ struct Day04: AdventDay {
 
   func findWord(grid: [[String]], word: [String], xStart: Int, yStart: Int, xDelta: Int, yDelta: Int) -> Bool {
     var x = xStart, y = yStart
-    for i in 1...word.count-1 {
+    for i in 0...word.count-1 {
       if y < 0 || y >= grid.count {
         return false
       }
@@ -60,13 +60,14 @@ struct Day04: AdventDay {
     return true
   }
 
-  func findWordDirections1(grid: [[String]], word: [String], xStart: Int, yStart: Int) -> Bool {
+  func findWordDirections1(grid: [[String]], word: [String], xStart: Int, yStart: Int) -> Int {
+    var total = 0
     for dir in directions1 {
       if findWord(grid: grid, word: word, xStart: xStart, yStart: yStart, xDelta: dir.0, yDelta: dir.1) {
-        return true
+        total += 1
       }
     }
-    return false
+    return total
   }
 
   func part1() -> Any {
@@ -75,14 +76,7 @@ struct Day04: AdventDay {
     var total = 0
     for y in 0...g.count-1 {
       for x in 0...g[y].count-1 {
-        // if findWordDirections1(grid: g, word: word1, xStart: x, yStart: y) {
-        //   total += 1
-        // }
-        for dir in directions1 {
-          if findWord(grid: g, word: word1, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1) {
-            total += 1
-          }
-        }
+        total += findWordDirections1(grid: g, word: word1, xStart: x, yStart: y)
       }
     }
     return total
@@ -95,21 +89,21 @@ struct Day04: AdventDay {
     reverse.reverse()
 
     var total = 0    
-    // for y in 0...g.count-1 {
-    //   for x in 0...g[y].count-1 {
-    //     for dir in directions2 {
-    //       var found = findWord(grid: g, word: word2, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
-    //         && (
-    //           findWord(grid: g, word: word2, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
-    //           ||
-    //           findWord(grid: g, word: reverse, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
-    //         )
-    //       if found {
-    //         total += 1
-    //       }
-    //     }
-    //   }
-    // }
+    for y in 0...g.count-1 {
+      for x in 0...g[y].count-1 {
+        for dir in directions2 {
+          var found = findWord(grid: g, word: word2, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
+            && (
+              findWord(grid: g, word: word2, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
+              ||
+              findWord(grid: g, word: reverse, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
+            )
+          if found {
+            total += 1
+          }
+        }
+      }
+    }
     return total
   }
 }
