@@ -70,6 +70,24 @@ struct Day04: AdventDay {
     return total
   }
 
+  func findWordCross(grid: [[String]], word: [String], xStart: Int, yStart: Int) -> Bool {
+    var revWord = word
+    revWord.reverse()
+
+    let firstWordFound = 
+      findWord(grid: grid, word: word, xStart: xStart, yStart: yStart, xDelta: 1, yDelta: 1)
+      || findWord(grid: grid, word: revWord , xStart: xStart, yStart: yStart, xDelta: 1, yDelta: 1)
+
+    if !firstWordFound {
+      return false
+    }
+
+    return (
+      findWord(grid: grid, word: word, xStart: xStart + 2, yStart: yStart, xDelta: -1, yDelta: 1)
+      || findWord(grid: grid, word: revWord, xStart: xStart + 2, yStart: yStart, xDelta: -1, yDelta: 1)
+    )
+  }
+
   func part1() -> Any {
     let g = grid
     
@@ -85,22 +103,11 @@ struct Day04: AdventDay {
   func part2() -> Any {
     let g = grid
     
-    var reverse = word2
-    reverse.reverse()
-
     var total = 0    
     for y in 0...g.count-1 {
       for x in 0...g[y].count-1 {
-        for dir in directions2 {
-          var found = findWord(grid: g, word: word2, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
-            && (
-              findWord(grid: g, word: word2, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
-              ||
-              findWord(grid: g, word: reverse, xStart: x, yStart: y, xDelta: dir.0, yDelta: dir.1)
-            )
-          if found {
-            total += 1
-          }
+        if findWordCross(grid: g, word: word2, xStart: x, yStart: y) {
+          total += 1
         }
       }
     }
