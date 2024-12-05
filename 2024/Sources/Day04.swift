@@ -24,15 +24,6 @@ struct Day04: AdventDay {
     ]
   }
 
-  var directions2: [(Int, Int)] {
-    [
-      (1, 1),
-      (1, -1),
-      (-1, 1),
-      (-1, -1),
-    ]
-  }
-
   var grid: [[String]] {
     data.split(separator: "\n").map {
       $0.split(separator: "").map {
