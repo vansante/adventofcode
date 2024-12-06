@@ -37,14 +37,18 @@ struct Day06: AdventDay {
     return Point(x: 0, y: -1)
   }
 
-  func canWalk(mp: [[Bool]], p: Point) -> Bool {
+  func onMap(mp: [[Bool]], p: Point) -> Bool {
     if p.y < 0 || p.y >= mp.count {
       return false
     }
     if p.x < 0 || p.x >= mp[p.y].count {
       return false
     }
-    return !mp[p.y][p.x]
+    return true
+  }
+
+  func hasObstacle(mp: [[Bool]], p: Point) -> Bool {
+    return onMap(mp: mp, p: p) && mp[p.y][p.x]
   }
 
   func walk(mp: [[Bool]], start: Point, direction: Point) -> Int {
@@ -59,30 +63,25 @@ struct Day06: AdventDay {
         visited[p]!.insert(dir)
       } else if visited[p]!.contains(dir) {
         // Circle complete
+        print("complete")
         break
       } else {
         visited[p]!.insert(dir)
       }
 
-      var next = p.add(p: dir)
-      // print("walk", p, next)
-      if canWalk(mp: mp, p: next) {
-        p = next
-        positions.insert(p)
+      let next = p.add(p: dir)
+      if !onMap(mp: mp, p: next) {
+        print("leaving map")
+        break
+      }
+      if hasObstacle(mp: mp, p: next){
+        print("rotate")
+        dir = dir.rotate()
         continue
       }
-      // print("fail", next)
-
-      dir = dir.rotate()
-      next = p.add(p: dir)
-      // print("rotate", p, next)
-      if (canWalk(mp: mp, p: next)) {
-        p = next
-        positions.insert(p)
-        continue
-      }
-      print("cannot walk here", next)
-      break
+      print("walk", p, next)
+      p = next
+      positions.insert(p)
     }
 
     return positions.count
@@ -93,9 +92,7 @@ struct Day06: AdventDay {
     let pos = guardPosition
     let dir = guardDirection
 
-    // Too high: 4634
     return walk(mp: mp, start: pos, direction: dir)
-    // return positions.count
   }
 
   func part2() -> Any {
