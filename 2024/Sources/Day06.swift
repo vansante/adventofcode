@@ -51,7 +51,7 @@ struct Day06: AdventDay {
     return onMap(mp: mp, p: p) && mp[p.y][p.x]
   }
 
-  func walk(mp: [[Bool]], start: Point, direction: Point) -> Int {
+  func walk(mp: [[Bool]], start: Point, direction: Point) -> (Int, Bool) {
     var p = start
     var dir = direction
     var positions = Set<Point>()
@@ -63,28 +63,23 @@ struct Day06: AdventDay {
         visited[p]!.insert(dir)
       } else if visited[p]!.contains(dir) {
         // Circle complete
-        print("complete")
-        break
+        return (positions.count, true)
       } else {
         visited[p]!.insert(dir)
       }
 
       let next = p.add(p: dir)
       if !onMap(mp: mp, p: next) {
-        print("leaving map")
-        break
+        // Left the map
+        return (positions.count, false)
       }
       if hasObstacle(mp: mp, p: next){
-        print("rotate")
         dir = dir.rotate()
         continue
       }
-      print("walk", p, next)
       p = next
       positions.insert(p)
     }
-
-    return positions.count
   }
 
   func part1() -> Any {
@@ -92,11 +87,29 @@ struct Day06: AdventDay {
     let pos = guardPosition
     let dir = guardDirection
 
-    return walk(mp: mp, start: pos, direction: dir)
+    return walk(mp: mp, start: pos, direction: dir).0
   }
 
   func part2() -> Any {
+    var mp = map
+    let pos = guardPosition
+    let dir = guardDirection
 
-    return 0
+    var looping = 0
+    for (y, _) in mp.enumerated() {
+      for (x, _) in mp[y].enumerated() {
+        if mp[y][x] {
+          continue
+        }
+
+        // temp flip and check:
+        mp[y][x] = true
+        if walk(mp: mp, start: pos, direction: dir).1 {
+          looping += 1
+        }
+        mp[y][x] = false
+      }
+    }
+    return looping
   }
 }
