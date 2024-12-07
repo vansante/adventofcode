@@ -35,6 +35,11 @@ struct Day07: AdventDay {
   }
 
   func evalEquals(result: Int, vals: [Int], idx: Int, current: Int, concat: Bool) -> Bool {
+    if current > result {
+      // None of the operators actually decreases the result
+      return false
+    }
+
     if idx >= vals.count {
       print("index out of range >= length", idx)
       return false
