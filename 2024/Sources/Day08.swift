@@ -46,41 +46,74 @@ struct Day08: AdventDay {
     return mapping
   }
 
-  func antiNodes(c1: (Int, Int), c2: (Int, Int)) -> [(Int, Int)] {
-    return [
-      (2 * c2.0 - c1.0, 2 * c2.1 - c1.1),
-      (2 * c1.0 - c2.0, 2 * c1.1 - c2.1),
-    ]
+  func antiNodes(map: [[Location]], c1: (Int, Int), c2: (Int, Int), resHarm: Bool = false) -> [(Int, Int)] {
+    if !resHarm {
+      return [
+        (2 * c2.0 - c1.0, 2 * c2.1 - c1.1),
+        (2 * c1.0 - c2.0, 2 * c1.1 - c2.1),
+      ]
+    }
+
+    var nds: [(Int, Int)] = []
+    for i in 1...10_000 {
+      var c = (
+        (i + 1) * c2.0 - i * c1.0,
+        (i + 1) * c2.1 - i * c1.1
+      )
+      if !inBounds(map: map, c: c) {
+        break
+      }
+      nds += [c]
+    }
+    for i in 1...10_000 {
+      var c = (
+        (i + 1) * c1.0 - i * c2.0, 
+        (i + 1) * c1.1 - i * c2.1
+      )
+      if !inBounds(map: map, c: c) {
+        break
+      }
+      nds += [c]
+    }
+    print("nodes:", nds)
+    return nds
+  }
+
+  func inBounds(map: [[Location]], c: (Int, Int)) -> Bool {
+    if c.1 < 0 || c.1 >= map.count {
+      return false
+    }
+    if c.0 < 0 || c.0 >= map[c.1].count {
+      return false
+    }
+    return true
   }
 
   func markAntiNode(map: inout [[Location]], c: (Int, Int)) {
-    if c.1 < 0 || c.1 >= map.count {
-      return
-    }
-    if c.0 < 0 || c.0 >= map[c.1].count {
+    if !inBounds(map: map, c: c) {
       return
     }
     map[c.1][c.0].antiNode = true
   }
 
-  func markAntiNodes(antenna: AntennaType, map: inout [[Location]]) {
+  func markAntiNodes(antenna: AntennaType, map: inout [[Location]], resHarm: Bool = false) {
     for (idx1, c1) in antenna.coords.enumerated() {
       for (idx2, c2) in antenna.coords.enumerated() {
         if idx1 == idx2 {
           continue
         }
-        for anti in antiNodes(c1: c1, c2: c2) {
+        for anti in antiNodes(map: map, c1: c1, c2: c2, resHarm: resHarm) {
           markAntiNode(map: &map, c: anti)
         }
       }
     }
   }
 
-  func countAntiNodes(map: [[Location]]) -> Int {
+  func countAntiNodes(map: [[Location]], antennas: Bool) -> Int {
     var total = 0
     for line in map {
       for loc in line {
-        if loc.antiNode {
+        if loc.antiNode || (antennas && loc.antenna != "") {
           total += 1
           continue
         }
@@ -112,18 +145,20 @@ struct Day08: AdventDay {
     var map = antennaMap
     let tps = antennaTypes
 
-    // printMap(map: map, anti: true)
-
     for (_, tp) in tps {
       markAntiNodes(antenna: tp, map: &map)
     }
-    // printMap(map: map, anti: true)
-    // printMap(map: map, anti: false)
-    // 356 too low
-    return countAntiNodes(map: map)
+    return countAntiNodes(map: map, antennas: false)
   }
 
   func part2() -> Any {
-    return 0
+    var map = antennaMap
+    let tps = antennaTypes
+
+    for (_, tp) in tps {
+      markAntiNodes(antenna: tp, map: &map, resHarm: true)
+    }
+
+    return countAntiNodes(map: map, antennas: true)
   }
 }
