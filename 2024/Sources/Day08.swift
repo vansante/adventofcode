@@ -56,7 +56,7 @@ struct Day08: AdventDay {
 
     var nds: [(Int, Int)] = []
     for i in 1...10_000 {
-      var c = (
+      let c = (
         (i + 1) * c2.0 - i * c1.0,
         (i + 1) * c2.1 - i * c1.1
       )
@@ -66,7 +66,7 @@ struct Day08: AdventDay {
       nds += [c]
     }
     for i in 1...10_000 {
-      var c = (
+      let c = (
         (i + 1) * c1.0 - i * c2.0, 
         (i + 1) * c1.1 - i * c2.1
       )
