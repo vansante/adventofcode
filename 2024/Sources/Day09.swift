@@ -1,255 +1,167 @@
 import Algorithms
 
 struct Day09: AdventDay {
-  class Space {
-    var size: Int
-
-    init(size: Int) {
-      self.size = size
-    }
-
-    func toString() -> String {
-      return String(repeating: ".", count: size)
-    }
-  }
-
-  class File : Space {
+  class File {
     let id: Int
 
-    init(size: Int, id: Int) {
+    init(id: Int) {
       self.id = id
-      super.init(size: size)
-    }
-
-    override func toString() -> String {
-      return String(repeating: String(id), count: size)
     }
   }
 
   var data: String
 
-  var disk: [Space] {
+  var disk: [File?] {
+    var dsk: [File?] = []
     var idx = 0
-    return data.split(separator: "").compactMap { 
+    data.split(separator: "").forEach {
       let num = Int($0)
       if num! <= 0 {
         idx += 1
-        return nil
+        return
       }
-      var i: Space
+
       if idx % 2 == 0 {
-        i = File(size: num!, id: idx / 2)
-      } else {
-        i = Space(size: num!)
+        dsk += Array(repeating: File(id: idx / 2), count: num!)
+        idx += 1
+        return
       }
+
+      dsk += Array(repeating: nil, count: num!)
       idx += 1
-      return i
     }
+    return dsk
   }
 
-  func previousFileId(dsk: [Space], fileId: Int = -1) -> (Int, Int) {
-    for i in (0...dsk.count - 1).reversed() {
-      let f = dsk[i] as? File
-      if f == nil {
-        continue
-      }
-      if fileId == f!.id || fileId == -1 {
-        return (i, f!.id)
-      }
-    }
-    return (-1, -1)
+  var maxId: Int {
+    data.count / 2
   }
 
-  func findFirstFreeSpace(dsk: [Space], size: Int = 1) -> (Int, Bool) {
-    var firstFreeSpace = -1
-    var lastFile = -1
-
-    for (i, s) in dsk.enumerated() {
-      let f = s as? File
-      if f != nil {
-        lastFile = i
+  func moveFiles1(dsk: inout [File?]) {
+    for idx in (0...dsk.count - 1).reversed() {
+      if dsk[idx] == nil {
         continue
       }
 
-      if s.size < size {
-        continue
-      }
-      assert(s.size >= size, "1. not enough free space \(s.size) < \(size)")
-
-      if firstFreeSpace == -1 {
-        firstFreeSpace = i
-      }
-    }
-
-    if firstFreeSpace != -1 {
-      assert(dsk[firstFreeSpace].size >= size, "2. not enough space free")
-    }
-    return (firstFreeSpace, lastFile > firstFreeSpace)
-  }
-
-  func combineFreeSpace(dsk: inout [Space]) {
-    var firstFreeIdx = -1
-    var lastFreeIdx = -1
-    for (i, s) in dsk.enumerated() {
-      let f = s as? File
-      if f == nil {
-        if firstFreeIdx == -1 {
-          firstFreeIdx = i
-        }
-        lastFreeIdx = i
-        continue
-      }
-      
-      if firstFreeIdx < 0 {
-        continue
-      }
-      
-      let count = lastFreeIdx - firstFreeIdx
-      if count <= 1 {
-        firstFreeIdx = -1
-        continue
-      }
-
-      var space = dsk[lastFreeIdx].size
-      for j in firstFreeIdx...lastFreeIdx {
-        space += dsk[j].size
-        if j < lastFreeIdx {
-          dsk.remove(at: j)
+      var newIdx = -1
+      for j in (0...idx) {
+        if dsk[j] == nil {
+          newIdx = j
+          break
         }
       }
-      dsk[firstFreeIdx].size = space
+      if newIdx < 0 || newIdx >= idx {
+        continue
+      }
+
+      dsk[newIdx] = dsk[idx]
+      dsk[idx] = nil
+    }
+  }
+
+  func findSpace2(dsk: inout [File?], size: Int, beforeIdx: Int) -> Int {
+    var idx = 0
+    while true {
+      if idx >= beforeIdx {
+        return -1
+      }
+
+      if dsk[idx] != nil {
+        idx += 1
+        continue
+      }
+
+      let start = idx
+      for _ in 0...size - 1 {
+        idx += 1
+        if dsk[idx] != nil {
+          break
+        }
+      }
+
+      if idx - start == size {
+        return start
+      }
+    }
+  }
+
+  func moveFile2(dsk: inout [File?], startIdx: Int, endIdx: Int) {
+    let size = endIdx - startIdx + 1
+    let toIdx = findSpace2(dsk: &dsk, size: size, beforeIdx: startIdx)
+    if toIdx < 0 {
       return
     }
+
+    for i in 0...size - 1 {
+      dsk[toIdx + i] = dsk[startIdx + i]
+      dsk[startIdx + i] = nil
+    }
   }
 
-  func moveFiles1(dsk: inout [Space]) {
-    let freeSpace = Space(size: 0)
-    dsk += [freeSpace]
-
-    var i = dsk.count-1
-    while i > 0 {
-      // printDisk(dsk: dsk)
-      let s = dsk[i]
-      let f = s as? File
+  func findFile(dsk: [File?], id: Int) -> (Int, Int) {
+    var rng = (-1, -1)
+    for (idx, f) in dsk.enumerated() {
       if f == nil {
-        i -= 1
-        continue
-      }
-
-      let (freeIdx, more) = findFirstFreeSpace(dsk: dsk)
-      if !more {
-        return
-      }
-
-      let free = dsk[freeIdx]
-      if free.size > f!.size {
-        free.size -= f!.size
-        freeSpace.size += f!.size
-        dsk.remove(at: i)
-        dsk.insert(contentsOf: [f!], at: freeIdx)
-        continue
-      }
-      if free.size == f!.size {
-        dsk[freeIdx] = f!
-        dsk.remove(at: i)
-        freeSpace.size += f!.size
-        i -= 1
-        continue
-      }
-
-      // At this point, free size is smaller than the wanted file
-      let fCopy = File(size: free.size, id: f!.id)
-      f!.size -= fCopy.size
-      dsk[freeIdx] = fCopy
-      freeSpace.size += fCopy.size
-    }
-  }
-
-  func moveFiles2(dsk: inout [Space]) {
-    var count = 0
-    var (idx, fid) = previousFileId(dsk: dsk)
-    while fid >= 0 && idx >= 0 {
-      // print("MOVE", fid, idx)
-      // printDisk(dsk: dsk)
-
-      let file = dsk[idx]
-      let (freeIdx, _) = findFirstFreeSpace(dsk: dsk, size: file.size)
-      if freeIdx < 0 || freeIdx >= idx {
-        // No move possible
-        if fid == 0 {
-          return
+        if rng.0 != -1 {
+          return rng
         }
-        (idx, fid) = previousFileId(dsk: dsk, fileId: fid - 1)
-        count += 1
         continue
       }
 
-      let free = dsk[freeIdx]
-      assert(free.size >= file.size, "3. not enough free space \(file.size) > \(free.size)")
-      // print("size", free.size, file.size, free.size >= file.size)
-      // print("moving", idx, freeIdx, dsk.count)
-      
-      dsk[freeIdx] = file
-      dsk[idx] = free
-      if free.size == file.size {
-        combineFreeSpace(dsk: &dsk)
-        if fid == 0 {
-          return
+      if f!.id != id {
+        if rng.0 != -1 {
+          return rng
         }
-        (idx, fid) = previousFileId(dsk: dsk, fileId: fid - 1)
-        count += 1
         continue
       }
-      assert(free.size - file.size > 0, "wrong free size \(free.size) - \(file.size)")
-      dsk.insert(contentsOf: [Space(size: free.size - file.size)], at: freeIdx + 1)
-      free.size = file.size
-
-      if fid == 0 {
-        return
+      if rng.0 == -1 {
+        rng.0 = idx
       }
-      (idx, fid) = previousFileId(dsk: dsk, fileId: fid - 1)
-      count += 1
+      rng.1 = idx
+    }
+    assert(rng.0 >= 0, "file id \(id) not found")
+    return rng
+  }
+  
+  func moveFiles2(dsk: inout [File?]) {
+    for id in (0...maxId).reversed() {
+      let rng = findFile(dsk: dsk, id: id)
+      moveFile2(dsk: &dsk, startIdx: rng.0, endIdx: rng.1)
     }
   }
 
-  func printDisk(dsk: [Space]) {
-    var str = ""
-    for (idx, s) in dsk.enumerated() {
-      str += "|"
-      if let f = s as? File {
-        assert(f.size >= 0, "file \(idx) id \(f.id) negative size")
-        str += String(repeating: String(f.id), count: f.size)
-      } else {
-        assert(s.size >= 0, "space \(idx) negative size")
-        str += String(repeating: ".", count: s.size)
-      }
-    }
-    print(str)
-  }
-
-  func checksum(dsk: [Space]) -> Int {
+  func checksum(dsk: [File?]) -> Int {
     var total = 0
     var idx = 0
-    for s in dsk {
-      let f = s as? File
+    for f in dsk {
       if f == nil {
-        for _ in 0...s.size - 1 {
-          idx += 1
-        }
+        idx += 1
         continue
       }
 
-      for _ in 0...f!.size - 1 {
-        total += f!.id * idx
-        idx += 1
-      }
+      total += f!.id * idx
+      idx += 1
     }
     return total
   }
 
+  func printDisk(dsk: [File?]) {
+    var str = ""
+    for f in dsk {
+      if f == nil {
+        str += "."
+        continue
+      }
+      str += String(f!.id)
+    }
+    print(str)
+  }
+
   func part1() -> Any {
     var dsk = disk
+    // printDisk(dsk: dsk)
     moveFiles1(dsk: &dsk)
+    // printDisk(dsk: dsk)
     return checksum(dsk: dsk)
   }
 
@@ -257,10 +169,7 @@ struct Day09: AdventDay {
     var dsk = disk
     // printDisk(dsk: dsk)
     moveFiles2(dsk: &dsk)
-    printDisk(dsk: dsk)
-    
-    // 15689548622102 too high
-    // == 6347435485773
+    // printDisk(dsk: dsk)
     return checksum(dsk: dsk)
   }
 }
