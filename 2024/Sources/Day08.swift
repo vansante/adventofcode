@@ -75,7 +75,6 @@ struct Day08: AdventDay {
       }
       nds += [c]
     }
-    print("nodes:", nds)
     return nds
   }
 
