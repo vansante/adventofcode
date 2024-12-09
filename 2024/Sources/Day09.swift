@@ -80,7 +80,7 @@ struct Day09: AdventDay {
 
     var i = dsk.count-1
     while i > 0 {
-      printDisk(dsk: dsk)
+      // printDisk(dsk: dsk)
       let s = dsk[i]
       let f = s as? File
       if f == nil {
@@ -99,7 +99,7 @@ struct Day09: AdventDay {
         freeSpace.size += f!.size
         dsk.remove(at: i)
         dsk.insert(contentsOf: [f!], at: freeIdx)
-        print("bigger free")
+        // print("bigger free")
         continue
       }
       if free.size == f!.size {
@@ -107,7 +107,7 @@ struct Day09: AdventDay {
         dsk.remove(at: i)
         freeSpace.size += f!.size
         i -= 1
-        print("equal free")
+        // print("equal free")
         continue
       }
 
@@ -117,7 +117,7 @@ struct Day09: AdventDay {
       dsk[freeIdx] = fCopy
       freeSpace.size += fCopy.size
 
-      print("smaller free", fCopy.toString())
+      // print("smaller free", fCopy.toString())
     }
   }
 
@@ -134,13 +134,33 @@ struct Day09: AdventDay {
     print(str)
   }
 
+  func checksum(dsk: [Space]) -> Int {
+    var total = 0
+    var idx = 0
+    for s in dsk {
+      let f = s as? File
+      if f == nil {
+        idx += 1
+        continue
+      }
+
+      for i in 0...f!.size - 1 {
+        print(">>", f!.id, idx, i, "==", f!.id * idx)
+        total += f!.id * idx
+        idx += 1
+      }
+    }
+    return total
+  }
+
   func part1() -> Any {
     var dsk = disk
     
     printDisk(dsk: dsk)
     moveFiles(dsk: &dsk)
     printDisk(dsk: dsk)
-    return 0
+
+    return checksum(dsk: dsk)
   }
 
   func part2() -> Any {
