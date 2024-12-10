@@ -66,48 +66,48 @@ struct Day10: AdventDay {
     return coords
   }
 
-  func walkToTop(mp: [[Int]], start: Point, tops: inout Set<Point>) {
+  func walkToTop(mp: [[Int]], start: Point, tops: inout Set<Point>) -> Int {
+    var routes = 0
     let height = mapHeight(mp: mp, p: start)
     if height == top {
-      // print("TOP", start)
       tops.insert(start)
-      return
+      routes += 1
+      return routes
     }
     
     var p = start
     for h in height...top {
       if h == top {
-        // print("TOP", p)
         tops.insert(p)
-        return
+        routes += 1
+        return routes
       }
 
-      // print("height", h)
       let ns = findNeighbours(mp: mp, p: p, height: h + 1)
       if ns.count > 1 {
         for n in ns {
-          walkToTop(mp: mp, start: n, tops: &tops)
+          routes += walkToTop(mp: mp, start: n, tops: &tops)
         }
         // Let our little spawned functions do the rest of the work
-        return
+        return routes
       }
       if ns.count > 0 {
         p = ns[0]
         continue
       }
-      return
+      return routes
     }
+    return routes
   }
 
   func part1() -> Any {
     let mp = map
     let starts = findHeight(mp: mp, height: 0)
-    print("START", mp)
+
     var total = 0
     for start in starts {
       var tops: Set<Point> = []
       walkToTop(mp: mp, start: start, tops: &tops)
-      print("start:", start, "tops:", tops)
       total += tops.count
     }
 
@@ -115,6 +115,15 @@ struct Day10: AdventDay {
   }
 
   func part2() -> Any {
-    return 0
+    let mp = map
+    let starts = findHeight(mp: mp, height: 0)
+
+    var total = 0
+    for start in starts {
+      var tops: Set<Point> = []
+      total += walkToTop(mp: mp, start: start, tops: &tops)
+    }
+
+    return total
   }
 }
