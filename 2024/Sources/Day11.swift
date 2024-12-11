@@ -1,116 +1,68 @@
 import Algorithms
 
 struct Day11: AdventDay {
-  class Node {
-    var next: Node?
-    var val: Int
-
-    init(val: Int) {
-      self.val = val
-    }
-
-    init(next: Node?, val: Int) {
-      self.next = next
-      self.val = val
-    }
-
-    func add(val: Int) -> Node {
-      let n = Node(next: self.next, val: val)
-      self.next = n
-      return n
-    }
-  }
-
-  class List {
-    var count: Int
-    var head: Node?
-
-    init() {
-      self.count = 0
-    }
-
-    func add(val: Int) -> Node {
-      if head != nil {
-        print("list not empty!")
-        return Node(next: nil, val: val)
-      }
-      head = Node(next: nil, val: val)
-      count += 1
-      return head!
-    }
-
-    func printList() {
-      var str = ""
-      var n: Node? = self.head
-
-      while n != nil {
-        str += "\(n?.val), "
-        n = n!.next
-      }
-    }
-  }
-
   var data: String
 
-  var stones: List {
-    var l = List()
-    var n: Node?
+  var stones: [Int: Int] {
+    var d: [Int: Int] = [:]
     data
       .trimmingCharacters(in: .whitespacesAndNewlines)
       .split(separator: " ")
       .forEach {
-        if n == nil {
-          n = l.add(val: Int($0)!)
-        } else {
-          n!.add(val: Int($0)!)
-          l.count += 1
-        }
+        let num = Int($0)!
+        d[num] = (d[num] ?? 0) + 1
       }
-      return l
+      return d
   }
 
-  func blink(stones: inout List) {
-    var n: Node? = stones.head
-    while n != nil {
-      if n!.val == 0 {
-        n!.val = 1
-        n = n!.next
+  func blink(stones: [Int: Int]) -> [Int: Int] {
+    var nw:[Int: Int] = [:]
+    for (stoneNum, amount) in stones {
+      if stoneNum == 0 {
+        // nw[0] = 0
+        nw[1] = (nw[1] ?? 0) + amount
         continue
       }
 
-      let label = String(n!.val)
+      let label = String(stoneNum)
       if label.count % 2 == 0 {
         let half = label.count / 2
         let upperBound = label.index(label.startIndex, offsetBy: half)
 
-        n!.val = Int(label[..<upperBound])!
-        n = n!.add(val: Int(label[upperBound...])!)
-        stones.count += 1
-        n = n!.next
+        let firstHalf = Int(label[..<upperBound])!
+        nw[firstHalf] = (nw[firstHalf] ?? 0) + amount
+        let secondHalf = Int(label[upperBound...])!
+        nw[secondHalf] = (nw[secondHalf] ?? 0) + amount
         continue
       }
 
-      n!.val *= 2024
-      n = n!.next
+      let multi = stoneNum * 2024
+      nw[multi] = (nw[multi] ?? 0) + amount
     }
+    return nw
+  }
+
+  func countStones(stones: [Int: Int]) -> Int {
+    var total = 0
+    for (stoneNum, amount) in stones {
+      total += amount
+    }
+    return total
   }
 
   func part1() -> Any {
-    var stones: Day11.List = stones
-    stones.printList()
+    var stones = stones
     for i in 1...25 {
-      blink(stones: &stones)
+      stones = blink(stones: stones)
     }
-    stones.printList()
-    return stones.count
+    return countStones(stones: stones)
   }
 
   func part2() -> Any {
     var stones = stones
     for i in 1...75 {
-      print(i)
-      blink(stones: &stones)
+      stones = blink(stones: stones)
     }
-    return stones.count
+    return countStones(stones: stones)
   }
 }

@@ -13,29 +13,46 @@ struct Day11Tests {
   @Test func testPartD111() async throws {
     var challenge = Day11(data: testData1)
 
-    // var stones = [0, 1, 10, 99, 999]
-    // challenge.blink(stones: &stones)
-    // #expect(String(describing: stones) == "[1, 2024, 1, 0, 9, 9, 2021976]")
+    var stones = [0: 1, 1: 1, 10: 1, 99: 1, 999: 1]
+    stones = challenge.blink(stones: stones)
+    print("test1", stones)
+    #expect(stones[0] == 1)
+    #expect(stones[2024] == 1)
+    #expect(stones[1] == 2)
+    #expect(stones[9] == 2)
+    #expect(stones[2021976] == 1)
 
-    // stones = [125, 17]
-    // challenge.blink(stones: &stones)
-    // #expect(String(describing: stones) == "[253000, 1, 7]")
-    // challenge.blink(stones: &stones)
-    // #expect(String(describing: stones) == "[253, 0, 2024, 14168]")
-    // challenge.blink(stones: &stones)
-    // #expect(String(describing: stones) == "[512072, 1, 20, 24, 28676032]")
-    // challenge.blink(stones: &stones)
-    // #expect(String(describing: stones) == "[512, 72, 2024, 2, 0, 2, 4, 2867, 6032]")
-    // challenge.blink(stones: &stones)
-    // #expect(String(describing: stones) == "[1036288, 7, 2, 20, 24, 4048, 1, 4048, 8096, 28, 67, 60, 32]")
-    // challenge.blink(stones: &stones)
-    // #expect(String(describing: stones) == "[2097446912, 14168, 4048, 2, 0, 2, 4, 40, 48, 2024, 40, 48, 80, 96, 2, 8, 6, 7, 6, 0, 3, 2]")
+    stones = [125: 1, 17: 1]
+    stones = challenge.blink(stones: stones)
+    #expect(stones[253000] == 1)
+    #expect(stones[1] == 1)
+    #expect(stones[7] == 1)
+    stones = challenge.blink(stones: stones)
+    #expect(stones[253] == 1)
+    #expect(stones[0] == 1)
+    #expect(stones[2024] == 1)
+    #expect(stones[14168] == 1)
+    stones = challenge.blink(stones: stones)
+    #expect(stones[512072] == 1)
+    #expect(stones[1] == 1)
+    #expect(stones[20] == 1)
+    #expect(stones[24] == 1)
+    #expect(stones[28676032] == 1)
+    stones = challenge.blink(stones: stones)
+    #expect(stones[512] == 1)
+    #expect(stones[72] == 1)
+    #expect(stones[2024] == 1)
+    #expect(stones[2] == 2)
+    #expect(stones[0] == 1)
+    #expect(stones[4] == 1)
+    #expect(stones[2867] == 1)
+    #expect(stones[6032] == 1)
 
     #expect(String(describing: challenge.part1()) == "55312")
   }
 
   @Test func testPartD112() async throws {
-    var challenge = Day11(data: testData1)
-    #expect(String(describing: challenge.part2()) == "0")
+    // var challenge = Day11(data: testData1)
+    // #expect(String(describing: challenge.part2()) == "0")
   }
 }
