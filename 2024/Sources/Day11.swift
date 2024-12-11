@@ -44,7 +44,7 @@ struct Day11: AdventDay {
 
   func countStones(stones: [Int: Int]) -> Int {
     var total = 0
-    for (stoneNum, amount) in stones {
+    for (_, amount) in stones {
       total += amount
     }
     return total
@@ -52,7 +52,7 @@ struct Day11: AdventDay {
 
   func part1() -> Any {
     var stones = stones
-    for i in 1...25 {
+    for _ in 1...25 {
       stones = blink(stones: stones)
     }
     return countStones(stones: stones)
@@ -60,7 +60,7 @@ struct Day11: AdventDay {
 
   func part2() -> Any {
     var stones = stones
-    for i in 1...75 {
+    for _ in 1...75 {
       stones = blink(stones: stones)
     }
     return countStones(stones: stones)
