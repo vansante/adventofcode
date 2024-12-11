@@ -1,83 +1,114 @@
 import Algorithms
 
 struct Day11: AdventDay {
-  struct Node {
+  class Node {
     var next: Node?
     var val: Int
 
-    func insert(val: Int) -> Node {
+    init(val: Int) {
+      self.val = val
+    }
+
+    init(next: Node?, val: Int) {
+      self.next = next
+      self.val = val
+    }
+
+    func add(val: Int) -> Node {
       let n = Node(next: self.next, val: val)
       self.next = n
       return n
     }
   }
-  struct List {
+
+  class List {
     var count: Int
     var head: Node?
+
+    init() {
+      self.count = 0
+    }
 
     func add(val: Int) -> Node {
       if head != nil {
         print("list not empty!")
         return Node(next: nil, val: val)
       }
-      self.head = Node(next: nil, val: val)
-      self.count += 1
+      head = Node(next: nil, val: val)
+      count += 1
+      return head!
+    }
+
+    func printList() {
+      var str = ""
+      var n: Node? = self.head
+
+      while n != nil {
+        str += "\(n?.val), "
+        n = n!.next
+      }
     }
   }
 
   var data: String
 
-  var stones: [Int] {
-    return data
+  var stones: List {
+    var l = List()
+    var n: Node?
+    data
       .trimmingCharacters(in: .whitespacesAndNewlines)
       .split(separator: " ")
-      .compactMap {
-        return Int($0)
+      .forEach {
+        if n == nil {
+          n = l.add(val: Int($0)!)
+        } else {
+          n!.add(val: Int($0)!)
+          l.count += 1
+        }
       }
+      return l
   }
 
-  func blink(stones: inout [Int]) {
-    var idx = 0
-    while idx < stones.count {
-      // print(idx)
-      if stones[idx] == 0 {
-        stones[idx] = 1
-        idx += 1
+  func blink(stones: inout List) {
+    var n: Node? = stones.head
+    while n != nil {
+      if n!.val == 0 {
+        n!.val = 1
+        n = n!.next
         continue
       }
 
-      let label = String(stones[idx])
+      let label = String(n!.val)
       if label.count % 2 == 0 {
         let half = label.count / 2
         let upperBound = label.index(label.startIndex, offsetBy: half)
 
-        stones[idx] = Int(label[..<upperBound])!
-        stones.insert(Int(label[upperBound...])!, at: idx + 1)
-        // blink(stones: &stones, startIdx: idx + 2)
-        idx += 2
-        // FIXME: Skip next iteration
-        // return
+        n!.val = Int(label[..<upperBound])!
+        n = n!.add(val: Int(label[upperBound...])!)
+        stones.count += 1
+        n = n!.next
         continue
       }
 
-      stones[idx] *= 2024
-      idx += 1
+      n!.val *= 2024
+      n = n!.next
     }
   }
 
   func part1() -> Any {
-    var stones = stones
-    print(stones)
+    var stones: Day11.List = stones
+    stones.printList()
     for i in 1...25 {
       blink(stones: &stones)
     }
-    // print(stones)
+    stones.printList()
     return stones.count
   }
 
   func part2() -> Any {
     var stones = stones
     for i in 1...75 {
+      print(i)
       blink(stones: &stones)
     }
     return stones.count
