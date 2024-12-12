@@ -15,7 +15,6 @@ struct Day11Tests {
 
     var stones = [0: 1, 1: 1, 10: 1, 99: 1, 999: 1]
     stones = challenge.blink(stones: stones)
-    print("test1", stones)
     #expect(stones[0] == 1)
     #expect(stones[2024] == 1)
     #expect(stones[1] == 2)
