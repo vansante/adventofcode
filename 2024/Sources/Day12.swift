@@ -94,7 +94,75 @@ struct Day12: AdventDay {
     return fences
   }
 
-  func regionPrice(mp: [[String]], region: Region) -> Int {
+  func regionFenceDiscount(mp: [[String]], region: Region) -> Int {
+    let maxX = mp[0].count - 1
+    let maxY = mp.count - 1
+    let ps = region.points
+
+    var total = 0
+    
+    for y in -1 ... maxY {
+      var topFence = 0
+      var bottomFence = 0
+      for x in -1 ... maxX {
+        let top = Point(x: x, y: y)
+        let bottom = Point(x: x, y: y + 1)
+
+        // When we are at the end of a fence, either both or neither top and bottom are filled:
+        if (!ps.contains(top) && !ps.contains(bottom)) || (ps.contains(top) && ps.contains(bottom)) {
+          total += topFence + bottomFence
+          topFence = 0
+          bottomFence = 0
+          continue
+        }
+
+        if ps.contains(top) && !ps.contains(bottom) {
+          topFence = 1
+          continue
+        }
+
+        if ps.contains(bottom) && !ps.contains(top) {
+          bottomFence = 1
+          continue
+        }
+      }
+      total += topFence + bottomFence
+    }
+
+    for x in -1 ... maxX {
+      var leftFence = 0
+      var rightFence = 0
+      for y in -1 ... maxY {
+        let left = Point(x: x, y: y)
+        let right = Point(x: x + 1, y: y)
+
+        // When we are at the end of a fence, either both or neither left and right are filled:
+        if (!ps.contains(left) && !ps.contains(right)) || (ps.contains(left) && ps.contains(right)) {
+          total += leftFence + rightFence
+          leftFence = 0
+          rightFence = 0
+          continue
+        }
+
+        if ps.contains(left) && !ps.contains(right) {
+          leftFence = 1
+          continue
+        }
+
+        if ps.contains(right) && !ps.contains(left) {
+          rightFence = 1
+          continue
+        }
+      }
+      total += leftFence + rightFence
+    }
+    return total
+  }
+
+  func regionPrice(mp: [[String]], region: Region, discount: Bool) -> Int {
+    if discount {
+      return region.points.count * regionFenceDiscount(mp: mp, region: region)
+    }
     return region.points.count * regionFences(mp: mp, region: region)
   }
 
@@ -107,12 +175,22 @@ struct Day12: AdventDay {
 
     var total = 0
     for (_, region) in regions {
-      total += regionPrice(mp: mp, region: region)
+      total += regionPrice(mp: mp, region: region, discount: false)
     }
     return total
   }
 
   func part2() -> Any {
-    return 0
+    let mp = map
+    var regions: [Point: Region] = [:]
+    var visited = Set<Point>()
+    
+    findRegions(mp: mp, regions: &regions, visited: &visited)
+
+    var total = 0
+    for (_, region) in regions {
+      total += regionPrice(mp: mp, region: region, discount: true)
+    }
+    return total
   }
 }

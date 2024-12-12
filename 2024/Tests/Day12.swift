@@ -33,6 +33,23 @@ struct Day12Tests {
     MMMISSJEEE
     """
 
+  let testData4 = """
+    EEEEE
+    EXXXX
+    EEEEE
+    EXXXX
+    EEEEE
+    """
+  
+  let testData5 = """
+    AAAAAA
+    AAABBA
+    AAABBA
+    ABBAAA
+    ABBAAA
+    AAAAAA
+    """
+
   @Test func testPartD121() async throws {
     var challenge = Day12(data: testData1)
     #expect(String(describing: challenge.part1()) == "140")
@@ -46,6 +63,15 @@ struct Day12Tests {
 
   @Test func testPartD122() async throws {
     var challenge = Day12(data: testData1)
-    #expect(String(describing: challenge.part2()) == "0")
+    #expect(String(describing: challenge.part2()) == "80")
+
+    challenge = Day12(data: testData2)
+    #expect(String(describing: challenge.part2()) == "436")
+
+    challenge = Day12(data: testData4)
+    #expect(String(describing: challenge.part2()) == "236")
+
+    challenge = Day12(data: testData5)
+    #expect(String(describing: challenge.part2()) == "368")
   }
 }
