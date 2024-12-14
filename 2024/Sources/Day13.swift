@@ -5,10 +5,6 @@ struct Day13: AdventDay {
   struct Point : Hashable {
     let x: Int
     let y: Int
-
-    func add(p: Point) -> Point {
-      return Point(x: x + p.x, y: y + p.y)
-    }
   }
 
   struct Button {
