@@ -123,24 +123,24 @@ struct Day14: AdventDay {
   func move2(width: Int = 101, height: Int = 103) -> Any {
     var bots = getRobots()
 
-    for i in 0...7500 {
+    for i in 1...15_000 {
       moveBots(bots: &bots, width: width, height: height)
 
-      if i > 5000 {
-        createImage(frame: i, width: 101, height: 103, bots: bots)
+      if i > 8140 && i < 8160 {
+        createImage(frame: i, width: width + 2, height: height, bots: bots)
       }
     }
-    return 0
+    // Visual identification \o/
+    return 8149
   }
 
   func part2() -> Any {
     var bots = getRobots()
-    move2()
-    return 0
+    return move2()
   }
   
   // https://stackoverflow.com/questions/40205830/how-to-create-an-image-pixel-by-pixel
-  func createImage(frame: Int, width: Int, height: Int, bots: [Robot]) {
+  func createImage(frame: Int, width: Int, height: Int, bots: [Robot], directory: String = FileManager.default.currentDirectoryPath + "/Day14_img") {
     let colorSpace       = CGColorSpaceCreateDeviceRGB()
     let bytesPerPixel    = 4
     let bitsPerComponent = 8
@@ -169,23 +169,19 @@ struct Day14: AdventDay {
           b += 1
         }
 
+        let p = y * height + x
         if b == 0 {
-          pixelBuffer[y * height + x] = .black
+          pixelBuffer[p] = .black
           continue
         }
-        pixelBuffer[y * height + x] = RGBA32(red: 10 * UInt8(b), green: 255, blue: 10 * UInt8(b), alpha: 255)
+        pixelBuffer[p] = RGBA32(red: 40 * UInt8(b), green: 255, blue: 40 * UInt8(b), alpha: 255)
       }
     }
 
     let cgImage = context.makeImage()!
-
     let image = NSImage(cgImage: cgImage, size: NSSize(width: Double(width), height: Double(height)))
 
-    // or
-    //
-    // let image = UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .up)
-
-    if !image.save(as: "frame_"+String(frame), fileType: .png, at: URL(fileURLWithPath: FileManager.default.currentDirectoryPath + "/Day14_img")) {
+    if !image.save(as: "frame_"+String(frame), fileType: .png, at: URL(fileURLWithPath: directory)) {
       print("error saving")
     }
   }
