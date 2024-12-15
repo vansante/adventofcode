@@ -127,6 +127,7 @@ struct Day14: AdventDay {
       moveBots(bots: &bots, width: width, height: height)
 
       if i > 8140 && i < 8160 {
+        // Make the frame buffer properly aligned by adding a bit of width...
         createImage(frame: i, width: width + 2, height: height, bots: bots)
       }
     }
