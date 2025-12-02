@@ -50,7 +50,8 @@ public class Day01 : BaseDay
         }
     }
 
-    public override ValueTask<string> Solve_1() {
+    public override ValueTask<string> Solve_1()
+    {
         int zeroCount = 0;
         int dial = 50;
         for (int i = 0; i < instructions.Length; i++) {
@@ -80,7 +81,8 @@ public class Day01 : BaseDay
         return ((dial % DialSize) + DialSize) % DialSize;
     }
 
-    public override ValueTask<string> Solve_2() {
+    public override ValueTask<string> Solve_2()
+    {
         int zeroCount = 0;
         int dial = DialStart;
         for (int i = 0; i < instructions.Length; i++) {
