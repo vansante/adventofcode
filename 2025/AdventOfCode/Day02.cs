@@ -129,11 +129,6 @@ public class Day02 : BaseDay
                 }
 
                 invalidSum += j;
-                if (invalidSum < 0)
-                {
-                    throw new Exception("negative");
-                }
-                Console.WriteLine($"Invalid ID: {j}");
             }
         }
 
