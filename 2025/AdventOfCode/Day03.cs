@@ -27,36 +27,34 @@ public class Day03 : BaseDay
         }
     }
 
-    public static int FindHighestJoltage(int[] bank)
+    public static long FindHighestJoltage(int[] bank, int batteries)
     {
-        int highestFirst = 0;
-        int idxUsed = 0;
-        for (int i = 0; i < bank.Length - 1; i++)
+        long sum = 0;
+        int curIdx = -1;
+
+        for (int b = batteries; b > 0; b--)
         {
-            if (highestFirst < bank[i])
+            int curHigh = 0;
+            for (int i = curIdx + 1; i < bank.Length - b + 1; i++)
             {
-                idxUsed = i;
-                highestFirst = bank[i];
+                if (curHigh < bank[i])
+                {
+                    curIdx = i;
+                    curHigh = bank[i];
+                }
             }
+            sum += (long) Math.Pow(10, b - 1) * curHigh;
         }
 
-        int highestSecond = 0;
-        for (int i = idxUsed + 1; i < bank.Length; i++)
-        {
-            if (highestSecond < bank[i])
-            {
-                highestSecond = bank[i];
-            }
-        }
-        return highestFirst * 10 + highestSecond;
+        return sum;
     }
 
     public override ValueTask<string> Solve_1()
     {
-        int joltageSum = 0;
+        long joltageSum = 0;
         for (int i = 0; i < banks.Length; i++)
         {
-            joltageSum += FindHighestJoltage(banks[i]);
+            joltageSum += FindHighestJoltage(banks[i], 2);
         }
 
         return new($"Highest joltage sum is {joltageSum}");
@@ -64,6 +62,12 @@ public class Day03 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        return new($"Invalid ID sum is ");
+        long joltageSum = 0;
+        for (int i = 0; i < banks.Length; i++)
+        {
+            joltageSum += FindHighestJoltage(banks[i], 12);
+        }
+
+        return new($"Highest joltage sum is {joltageSum}");
     }
 }
