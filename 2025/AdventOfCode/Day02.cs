@@ -25,7 +25,7 @@ public class Day02 : BaseDay
 
         for (int i = 0; i < rngs.Length; i++)
         {
-            int pos = rngs[i].IndexOf("-");
+            int pos = rngs[i].IndexOf('-');
             if (pos <= 0)
             {
                 throw new Exception("invalid dash position");
