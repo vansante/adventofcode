@@ -7,31 +7,37 @@ namespace AdventOfCode;
 
 public class Day06 : BaseDay
 {
-    enum Operator
+    public enum Operator
     {
         Add,
         Multiply,
     }
 
-    private static long Operate(Operator op, long a, long b)
+    private static Operator FromChar(char c)
     {
-        switch (op)
-        {
-            case Operator.Add:
-                return a + b;
-            case Operator.Multiply:
-                return a * b;
-            default:
-                throw new Exception("invalid operator");
-        }
+        return c switch {
+            '+' => Operator.Add,
+            '*' => Operator.Multiply,
+            _ => throw new Exception("not an operator"),
+        };
     }
 
-    class Problem
+    private static long Operate(Operator op, long a, long b)
+    {
+        return op switch
+        {
+            Operator.Add => a + b,
+            Operator.Multiply => a * b,
+            _ => throw new Exception("invalid operator"),
+        };
+    }
+
+    public class Problem
     {
         public List<long> nums;
         public Operator op;
 
-        public long Solve1()
+        public long Solve()
         {
             long total = nums[0];
             for (int i = 1; i < nums.Count; i++)
@@ -40,67 +46,18 @@ public class Day06 : BaseDay
             }
             return total;
         }
-
-        public static long GetNthDigit(long num, int n) {
-            if (n <= 0)
-            {
-                return 0;
-            }
-
-            long divisor = (long) Math.Pow(10, n - 1);
-
-            // Get the digit: shift right by n-1 places, then get the last digit
-            return (num / divisor) % 10;
-        }
-
-        public List<long> CephNums()
-        {
-            List<long> cnums = [];
-
-            for (int digit = 0; digit < 10; digit++)
-            {
-                long cnum = 0;
-                long curDigit = 0;
-                for (int i = nums.Count - 1; i >= 0 ; i--)
-                {
-                    long num = nums[i];
-                    long cdigit = GetNthDigit(num, digit);
-                    if (cdigit != 0)
-                    {
-                        curDigit++;
-                        cnum += GetNthDigit(num, digit) * (long) Math.Pow(10, curDigit - 1);
-                    }
-                }
-
-                if (cnum > 0)
-                {
-                    cnums.Add(cnum);
-                    continue;
-                }
-            }
-
-            return cnums;
-        }
-
-        public long Solve2()
-        {
-            List<long> cnums = CephNums();
-            long total = cnums[0];
-            for (int i = 1; i < cnums.Count; i++)
-            {
-                total = Operate(op, total, cnums[i]);
-            }
-            return total;
-        }
     }
 
     private readonly string _input;
 
-    private readonly List<Problem> problems = [];
-
     public Day06()
     {
         _input = File.ReadAllText(InputFilePath).Trim();
+    }
+
+    public List<Problem> GetProblems1() 
+    {
+        List<Problem> problems = [];
         string[] lines = _input.Split("\n");
 
         bool first = true;
@@ -144,15 +101,79 @@ public class Day06 : BaseDay
             }
             first = false;
         }
+        return problems;
+    }
 
+    public List<Problem> GetProblems2() 
+    {
+        List<Problem> problems = [];
+        string[] lines = _input.Split("\n");
+
+        List<int> opIdx = [];
+
+        // First find the indexes of all operators:
+        int opLineIdx = lines.Length - 1;
+        string opLine = lines[opLineIdx];
+
+        for (int i = 0; i < opLine.Length; i++)
+        {
+            char c = opLine[i];
+
+            if (c.Equals('+') || c.Equals('*'))
+            {
+                opIdx.Add(i);
+                problems.Add(new Problem
+                {
+                    op = FromChar(c),
+                    nums = [],
+                });
+            }
+        }
+
+        // Loop over all problems (denoted by the operator in the bottom line)
+        for (int op = 0; op < opIdx.Count; op++)
+        {
+            int curOpIdx = opIdx[op];
+            // Guard for the last problem, default to the lines max length
+            int nextOpIdx = op < opIdx.Count - 1 ? opIdx[op + 1] : lines[0].Length;
+
+            // Loop over all columns in the current problem
+            for (int col = curOpIdx; col < nextOpIdx; col++)
+            {
+                List<char> chars = [];
+                // Loop over the characters in the current column
+                for (int l = 0; l < opLineIdx; l++)
+                {
+                    if (lines[l][col].Equals(' '))
+                    {
+                        continue;
+                    }
+                    chars.Add(lines[l][col]);
+                }
+                
+                // Skip lines with just whitespace
+                if (chars.Count == 0)
+                {
+                    continue;
+                }
+
+                // Add the found number to the current problem
+                problems[op].nums.Add(
+                    long.Parse(
+                        new string([.. chars])
+                    )
+                );
+            }
+        }
+        return problems;
     }
 
     public override ValueTask<string> Solve_1()
     {
         long sum = 0;
-        foreach (Problem p in problems)
+        foreach (Problem p in GetProblems1())
         {
-            sum  += p.Solve1();
+            sum  += p.Solve();
         }
 
         return new($"The grand total is {sum}");
@@ -161,9 +182,9 @@ public class Day06 : BaseDay
     public override ValueTask<string> Solve_2()
     {
         long sum = 0;
-        foreach (Problem p in problems)
+        foreach (Problem p in GetProblems2())
         {
-            sum  += p.Solve2();
+            sum  += p.Solve();
         }
 
         return new($"The grand total is {sum}");
