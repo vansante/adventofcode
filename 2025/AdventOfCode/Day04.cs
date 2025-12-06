@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.ComponentModel;
-using System.Numerics;
-
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day04 : BaseDay
 {

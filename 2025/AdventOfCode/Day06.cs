@@ -1,9 +1,4 @@
-﻿using System.Collections;
-using System.ComponentModel;
-using System.Net.NetworkInformation;
-using System.Numerics;
-
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day06 : BaseDay
 {
@@ -151,7 +146,7 @@ public class Day06 : BaseDay
                     chars.Add(lines[l][col]);
                 }
                 
-                // Skip lines with just whitespace
+                // Skip columns with just whitespace
                 if (chars.Count == 0)
                 {
                     continue;
