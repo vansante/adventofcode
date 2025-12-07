@@ -14,6 +14,7 @@ public class Day07 : BaseDay
         public Type tp;
         public int x;
         public int y;
+        public long timelines = 0;
     }
 
     
@@ -71,6 +72,7 @@ public class Day07 : BaseDay
                 l.coords.Add(c);
                 if (tp == Type.Origin)
                 {
+                    c.timelines = 1;
                     grid.origin = c;
                 }
             }
@@ -110,6 +112,38 @@ public class Day07 : BaseDay
         return splitCount;
     }
 
+    public static long TraceTimelines(Grid g)
+    {
+        foreach (Line l in g.lines)
+        {
+            foreach (Coord c in l.coords)
+            {
+                // Skip the last line
+                if (c.y == g.lines.Count - 1)
+                {
+                    continue;
+                }
+
+                if (c.tp == Type.Splitter)
+                {
+                    g.lines[c.y + 1].coords[c.x - 1].timelines += c.timelines;
+                    g.lines[c.y + 1].coords[c.x + 1].timelines += c.timelines;
+                    continue;
+                }
+                
+                g.lines[c.y + 1].coords[c.x].timelines += c.timelines;
+            }
+        }
+
+        long timelineSum = 0;
+        foreach (Coord c in g.lines[g.lines.Count - 1].coords)
+        {
+            timelineSum += c.timelines;
+        }
+
+        return timelineSum;
+    }
+
     public override ValueTask<string> Solve_1()
     {
         long sum = TraceBeams(grid);
@@ -119,8 +153,8 @@ public class Day07 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        long sum = TraceBeams(grid);
+        long sum = TraceTimelines(grid);
 
-        return new($"The beam was split {sum} times");
+        return new($"There are  {sum} timelines");
     }
 }
