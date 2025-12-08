@@ -17,7 +17,6 @@ public class Day07 : BaseDay
         public long timelines = 0;
     }
 
-    
     public class Line
     {
         public List<Coord> coords;
@@ -135,6 +134,7 @@ public class Day07 : BaseDay
             }
         }
 
+        // Sum up the last line of timelines to get the total
         long timelineSum = 0;
         foreach (Coord c in g.lines[g.lines.Count - 1].coords)
         {
