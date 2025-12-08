@@ -2,17 +2,44 @@
 
 public class Day08 : BaseDay
 {
-    public class Box
+    public class Group
     {
         private static int nextGroupId = 0;
 
+        public int id;
+
+        public HashSet<Box> boxes = [];
+
+        public Group()
+        {
+            id = ++nextGroupId;
+        }
+
+        public void AddBox(Box b)
+        {
+            boxes.Add(b);
+        }
+    }
+
+    public class Box
+    {
         public int x;
         public int y;
         public int z;
 
         public HashSet<Box> connectedTo = [];
 
-        public int groupId = 0;
+        public Group group;
+
+        public Box(int x, int y, int z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+
+            group = new Group();
+            groups.Add(group);
+        }
 
         public bool Equals(Box other)
         {
@@ -43,24 +70,31 @@ public class Day08 : BaseDay
             connectedTo.Add(other);
             other.connectedTo.Add(this);
 
-            if (groupId != 0)
+            if (group != null)
             {
-                other.SetGroupId(groupId);
-            } else if (other.groupId != 0)
+                SetGroup(group);
+
+                if (other.group != null)
+                {
+                    groups.Remove(other.group);
+                }
+            } else if (other.group != null)
             {
-                groupId = other.groupId;
+                SetGroup(other.group);
             } else
             {
-                SetGroupId(++nextGroupId);
+                group = new();
+                groups.Add(group);
+                SetGroup(group);
             }
         }
 
-        public void SetGroupId(int id)
+        private void SetGroup(Group grp)
         {
-            SetGroupId(id, []);
+            SetGroup(grp, []);
         }
 
-        private void SetGroupId(int id, HashSet<Box> visited)
+        private void SetGroup(Group grp, HashSet<Box> visited)
         {
             visited.Add(this);
             foreach (Box b in connectedTo)
@@ -70,37 +104,19 @@ public class Day08 : BaseDay
                     continue;
                 }
 
-                b.SetGroupId(id, visited);
+                b.SetGroup(grp, visited);
             }
 
-            groupId = id;
-        }
-
-        public int CountBoxes()
-        {
-            return CountBoxes([]);
-        }
-
-        public int CountBoxes(HashSet<Box> visited)
-        {
-            int sum = 1;
-            visited.Add(this);
-            foreach (Box b in connectedTo)
-            {
-                if (visited.Contains(b))
-                {
-                    continue;
-                }
-
-                sum += b.CountBoxes(visited);
-            }
-            return sum;
+            grp.AddBox(this);
+            group = grp;
         }
     }
 
     private readonly string _input;
 
     private readonly List<Box> boxes = [];
+
+    public static List<Group> groups = [];
 
     public Day08()
     {
@@ -111,13 +127,7 @@ public class Day08 : BaseDay
         {
             string[] coords = lines[y].Split(",");
 
-            Box b = new()
-            {
-                x = int.Parse(coords[0]),
-                y = int.Parse(coords[1]),
-                z = int.Parse(coords[2]),
-            };
-
+            Box b = new(int.Parse(coords[0]), int.Parse(coords[1]), int.Parse(coords[2]));
             boxes.Add(b);
         }
     }
@@ -141,15 +151,15 @@ public class Day08 : BaseDay
         return dict;
     }
 
-    public void ConnectShortestDistances(int count)
+    public (Box, Box) ConnectShortestDistances(int count = -1)
     {
         Dictionary<(Box, Box), double> distances = CalculateDistances();
 
         double currentShortest = 0;
-        for (int i = 0; i < count; i++)
+        Box a = null, b = null;
+        for (int i = 0; ; i++)
         {
             double shortest = double.MaxValue;
-            Box a = null, b = null;
 
             foreach (KeyValuePair<(Box,Box), double> entry in distances)
             {
@@ -168,7 +178,14 @@ public class Day08 : BaseDay
 
             a.Connect(b);
             currentShortest = shortest;
+
+            if (count > 0 && i >= count)
+            {
+                break;
+            }
         }
+
+        return (a, b);
     }
 
     public Dictionary<int, int> GroupConnections()
@@ -177,12 +194,12 @@ public class Day08 : BaseDay
 
         foreach (Box b in boxes)
         {
-            if (b.groupId == 0 || groups.ContainsKey(b.groupId))
+            if (b.group == null || groups.ContainsKey(b.group.id))
             {
                 continue;
             }
 
-            groups.Add(b.groupId, b.CountBoxes());
+            groups.Add(b.group.id, b.group.boxes.Count);
         }
         return groups;
     }
