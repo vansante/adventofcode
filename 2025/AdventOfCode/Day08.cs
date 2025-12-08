@@ -1,7 +1,4 @@
-﻿using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
-
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day08 : BaseDay
 {
@@ -108,23 +105,27 @@ public class Day08 : BaseDay
 
     public static List<Group> groups = [];
 
+    public List<(double, (Box, Box))> orderedDistances = [];
+
     public Day08()
     {
         _input = File.ReadAllText(InputFilePath).Trim();
         string[] lines = _input.Split("\n");
 
-        for (int y = 0; y < lines.Length; y++)
+        for (int i = 0; i < lines.Length; i++)
         {
-            string[] coords = lines[y].Split(",");
+            string[] coords = lines[i].Split(",");
 
             Box b = new(int.Parse(coords[0]), int.Parse(coords[1]), int.Parse(coords[2]));
             boxes.Add(b);
         }
+
+        OrderDistances(CalculateDistances());
     }
 
     public Dictionary<(Box, Box), double> CalculateDistances()
     {
-        Dictionary<(Box, Box), double> dict = [];
+        Dictionary<(Box, Box), double> distances = [];
         for (int i = 0; i < boxes.Count; i++)
         {
             for (int j = 0; j < boxes.Count; j++)
@@ -134,40 +135,34 @@ public class Day08 : BaseDay
                     continue;
                 }
 
+                if (distances.ContainsKey((boxes[j], boxes[i]))) {
+                    continue;
+                }
+
                 double dist = boxes[i].Distance(boxes[j]);
-                dict.Add((boxes[i], boxes[j]), dist);
+                distances.Add((boxes[i], boxes[j]), dist);
             }
         }
-        return dict;
+        return distances;
+    }
+
+    public void OrderDistances(Dictionary<(Box, Box), double> distances)
+    {
+        foreach (KeyValuePair<(Box, Box), double> itm in distances)
+        {
+            orderedDistances.Add((itm.Value, (itm.Key.Item1, itm.Key.Item2)));
+        }
+        orderedDistances = [.. orderedDistances.OrderBy(v => v.Item1)];
     }
 
     public (Box, Box) ConnectShortestDistances(int count = -1)
     {
-        Dictionary<(Box, Box), double> distances = CalculateDistances();
-
-        double currentShortest = 0;
         Box a = null, b = null;
         for (int i = 0; ; i++)
         {
-            double shortest = double.MaxValue;
-
-            foreach (KeyValuePair<(Box,Box), double> entry in distances)
-            {
-                if (entry.Value > currentShortest && entry.Value < shortest)
-                {
-                    a = entry.Key.Item1;
-                    b = entry.Key.Item2;
-                    shortest = entry.Value;
-                }
-            }
-
-            if (a == null || b == null)
-            {
-                throw new Exception("boxes unset");
-            }
+            (_, (a, b)) = orderedDistances[i];
 
             a.Connect(b);
-            currentShortest = shortest;
 
             if (count > 0 && i >= count)
             {
