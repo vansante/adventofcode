@@ -1,4 +1,7 @@
-﻿namespace AdventOfCode;
+﻿using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
+
+namespace AdventOfCode;
 
 public class Day08 : BaseDay
 {
@@ -70,23 +73,7 @@ public class Day08 : BaseDay
             connectedTo.Add(other);
             other.connectedTo.Add(this);
 
-            if (group != null)
-            {
-                SetGroup(group);
-
-                if (other.group != null)
-                {
-                    groups.Remove(other.group);
-                }
-            } else if (other.group != null)
-            {
-                SetGroup(other.group);
-            } else
-            {
-                group = new();
-                groups.Add(group);
-                SetGroup(group);
-            }
+            other.SetGroup(group);
         }
 
         private void SetGroup(Group grp)
@@ -108,6 +95,9 @@ public class Day08 : BaseDay
             }
 
             grp.AddBox(this);
+            if (grp != group) {
+                groups.Remove(group);
+            }
             group = grp;
         }
     }
@@ -181,11 +171,14 @@ public class Day08 : BaseDay
 
             if (count > 0 && i >= count)
             {
-                break;
+                return (a, b);
+            }
+
+            if (groups.Count == 1)
+            {
+                return (a, b);
             }
         }
-
-        return (a, b);
     }
 
     public Dictionary<int, int> GroupConnections()
@@ -220,8 +213,9 @@ public class Day08 : BaseDay
 
     public override ValueTask<string> Solve_2()
     {
-        long sum = 0;
+        (Box, Box) connection = ConnectShortestDistances(-1);
 
-        return new($"{sum} ");
+        int answer = connection.Item1.x * connection.Item2.x;
+        return new($"Multiplied X of last connection: {answer}");
     }
 }
