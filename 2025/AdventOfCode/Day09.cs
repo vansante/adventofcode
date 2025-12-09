@@ -31,6 +31,23 @@ public class Day09 : BaseDay
                 && point.y > yMin && point.y < yMax
             );
         }
+
+        public Coord North()
+        {
+            return new(x, y - 1);
+        }
+        public Coord East()
+        {
+            return new (x + 1, y);
+        }
+        public Coord South()
+        {
+            return new(x, y + 1);
+        }
+        public Coord West()
+        {
+            return new(x - 1, y);
+        }
     }
 
     public enum Tile
@@ -45,15 +62,12 @@ public class Day09 : BaseDay
 
     private readonly List<Coord> coords = [];
 
-    private readonly Dictionary<(int, int), Tile> grid = [];
-
-    private readonly int minX = int.MaxValue;
     private readonly int maxX = 0;
 
-    private readonly int minY = int.MaxValue;
     private readonly int maxY = 0;
 
-    private readonly Dictionary<(int, int), bool?> containCache = [];
+    private readonly Dictionary<int, int> xMap = [];
+    private readonly Dictionary<int, int> yMap = [];
 
     private readonly Tile[][] tiles;
 
@@ -62,12 +76,8 @@ public class Day09 : BaseDay
         _input = File.ReadAllText(InputFilePath).Trim();
         string[] lines = _input.Split("\n");
 
-        tiles = new Tile[100_000][];
-        for (int i = 0; i < tiles.Length; i++)
-        {
-            tiles[i] = new Tile[100_000];
-        }
-
+        HashSet<int> xCoords = [];
+        HashSet<int> yCoords = [];
         for (int i = 0; i < lines.Length; i++)
         {
             int pos = lines[i].IndexOf(',');
@@ -81,18 +91,36 @@ public class Day09 : BaseDay
             {
                 maxX = c.x;
             }
-            if (c.x < minX)
-            {
-                minX = c.x;
-            }
             if (c.y > maxY)
             {
                 maxY = c.y;
             }
-            if (c.y < minY)
-            {
-                minY = c.y;
-            }
+
+            xCoords.Add(c.x);
+            yCoords.Add(c.y);
+        }
+
+        // Add some extra coordinates to keep an outer layer for our floodfill
+        List<int> sortedX = [.. xCoords, 0, maxX + 1];
+        sortedX.Sort();
+        List<int> sortedY = [.. yCoords, 0, maxY + 1];
+        sortedY.Sort();
+
+        // Create mappings for our compressed coordinate system
+        for (int i = 0; i < sortedX.Count; i++)
+        {
+            xMap[sortedX[i]] = i;
+        }
+
+        for (int i = 0; i < sortedY.Count; i++)
+        {
+            yMap[sortedY[i]] = i;
+        }
+
+        tiles = new Tile[yMap.Count][];
+        for (int i = 0; i < yMap.Count; i++)
+        {
+            tiles[i] = new Tile[xMap.Count];
         }
     }
     public override ValueTask<string> Solve_1()
@@ -118,16 +146,27 @@ public class Day09 : BaseDay
         return new($"Largest area is {largest}");
     }
 
+    public Coord GetMappedCoords(Coord c)
+    {
+        return new(
+            xMap[c.x],
+            yMap[c.y]
+        );
+    }
+
     public void DrawBorderTiles()
     {
-        tiles[coords[0].x][coords[0].y] = Tile.Red;
-        grid.Add((coords[0].x, coords[0].y), Tile.Red);
+        Coord cur = GetMappedCoords(coords[0]);
+
+        tiles[cur.y][cur.x] = Tile.Red;
         for (int i = 0; i < coords.Count; i++)
         {
-            Coord cur = coords[i];
+            cur = coords[i];
             Coord nxt = coords[(i + 1) % coords.Count];
-            grid.TryAdd((nxt.x, nxt.y), Tile.Red);
-            tiles[coords[0].x][coords[0].y] = Tile.Red;
+
+            cur = GetMappedCoords(cur);
+            nxt = GetMappedCoords(nxt);
+            tiles[nxt.y][nxt.x] = Tile.Red;
 
             if (cur.x == nxt.x)
             {
@@ -135,8 +174,7 @@ public class Day09 : BaseDay
                 int yMax = Math.Max(cur.y, nxt.y);
                 for (int y = yMin + 1; y < yMax; y++)
                 {
-                    grid.Add((cur.x, y), Tile.Green);
-                    tiles[cur.x][y] = Tile.Green;
+                    tiles[y][cur.x] = Tile.Green;
                 }
             } else if (cur.y == nxt.y)
             {
@@ -144,8 +182,7 @@ public class Day09 : BaseDay
                 int xMax = Math.Max(cur.x, nxt.x);
                 for (int x = xMin + 1; x < xMax; x++)
                 {
-                    grid.Add((x, cur.y), Tile.Green);
-                    tiles[x][cur.y] = Tile.Green;
+                    tiles[cur.y][x] = Tile.Green;
                 }
             } else
             {
@@ -156,46 +193,35 @@ public class Day09 : BaseDay
 
     public void FloodFill()
     {
-        Stack<(int, int)> stack = [];
-        stack.Push((minX - 1, minY - 1));
+        Stack<Coord> stack = [];
+        stack.Push(new(0, 0));
 
         while (stack.Count > 0)
         {
-            (int, int) c = stack.Pop();
-
-            if (c.Item1 < minX - 1 || c.Item1 > maxX + 1)
+            Coord c = stack.Pop();
+            if (tiles[c.y][c.x] != Tile.Unknown)
             {
                 continue;
             }
 
-            if (c.Item2 < minY - 1 || c.Item2 > maxY + 1)
+            List<Coord> ngb = [c.West(), c.East(), c.North(), c.South()];
+            foreach (Coord n in ngb)
             {
-                continue;
+                if (n.y < 0 || n.y >= tiles.Length)
+                {
+                    continue;
+                }
+                if (n.x < 0 || n.x >= tiles[n.y].Length)
+                {
+                    continue;
+                }
+                if (tiles[n.y][n.x] == Tile.Unknown)
+                {
+                    stack.Push(n);
+                }
             }
 
-            if (tiles[c.Item1][c.Item2] != Tile.Unknown)
-            {
-                continue;
-            }
-
-            if (tiles[c.Item1 - 1][c.Item2] == Tile.Unknown)
-            {
-                stack.Push((c.Item1 - 1, c.Item2)); // west
-            }
-            if (tiles[c.Item1 + 1][c.Item2] == Tile.Unknown)
-            {
-                stack.Push((c.Item1 + 1, c.Item2)); // east
-            }
-            if (tiles[c.Item1][c.Item2 - 1] == Tile.Unknown)
-            {
-                stack.Push((c.Item1, c.Item2 - 1)); // north
-            }
-            if (tiles[c.Item1][c.Item2 + 1] == Tile.Unknown)
-            {
-                stack.Push((c.Item1, c.Item2 + 1)); // south
-            }
-
-            tiles[c.Item1][c.Item2] = Tile.Other;
+            tiles[c.y][c.x] = Tile.Other;
         }
     }
 
@@ -212,34 +238,15 @@ public class Day09 : BaseDay
                     continue;
                 }
 
-                bool valid = true;
-                foreach (Coord c in coords)
-                {
-                    if (c.Equals(a) || c.Equals(b))
-                    {
-                        continue;
-                    }
+                Coord mapA = GetMappedCoords(a);
+                Coord mapB = GetMappedCoords(b);
 
-                    if (a.AreaContains(b, c))
-                    {
-                        valid = false;
-                        break;
-                    }
-                }
-                if (!valid)
+                if (!RectangleContained(mapA, mapB))
                 {
-                    // Console.WriteLine($"Invalid square: {a.x},{a.y} / {b.x},{b.y}");
-                    continue;
-                }
-
-                if (!RectangleContained(a, b))
-                {
-                    // Console.WriteLine($"Invalid square: {a.x},{a.y} / {b.x},{b.y}");
                     continue;
                 }
 
                 long area = a.Area(b);
-                // Console.WriteLine($"Found square: {a.x},{a.y} / {b.x},{b.y} : {area}");
                 if (area > largest)
                 {
                     largest = area;
@@ -256,21 +263,7 @@ public class Day09 : BaseDay
         int yMin = Math.Min(a.y, b.y);
         int yMax = Math.Max(a.y, b.y);
 
-        bool cornersContained = PointIsContained(xMin, yMin)
-            && PointIsContained(xMax, yMin)
-            && PointIsContained(xMin, yMax)
-            && PointIsContained(xMax, yMax)
-        ;
-
-        if (!cornersContained)
-        {
-            return false;
-        }
-
-        int xLen = Math.Abs(xMax - xMin);
-        int yLen = Math.Abs(yMax - yMin);
-
-        for (int x = xMin; x < xMax; x++)
+        for (int x = xMin; x <= xMax; x++)
         {
             if (!PointIsContained(x, yMin) || !PointIsContained(x, yMax))
             {
@@ -278,7 +271,7 @@ public class Day09 : BaseDay
             }
         }
 
-        for (int y = yMin; y < yMax; y++)
+        for (int y = yMin; y <= yMax; y++)
         {
             if (!PointIsContained(xMin, y) || !PointIsContained(xMax, y))
             {
@@ -289,68 +282,7 @@ public class Day09 : BaseDay
     }
     public bool PointIsContained(int px, int py)
     {
-        bool? cache = containCache.GetValueOrDefault((px, py), null);
-        if (cache != null)
-        {
-            return (bool) cache;
-        }
-
-        // If we are on the line, then quickly return
-        Tile tile = grid.GetValueOrDefault((px, py), Tile.Other);
-        if (tile != Tile.Other)
-        {
-            containCache.Add((px, py), true);
-            return true;
-        }
-
-        int changes = 0;
-        bool border;
-        bool prevBorder = false;
-        int x = 0;
-        int y = py;
-
-        while (x < px)
-        {
-            x++;
-
-            tile = grid.GetValueOrDefault((x, y), Tile.Other);
-            border = tile != Tile.Other;
-            // Console.WriteLine($"checkY {px},{py} | {x},{y}: {border}");
-            if (!prevBorder && border)
-            {
-                changes++;
-            }
-            prevBorder = border;
-        }
-
-        int pointChanges = changes;
-
-        // Contained == odd number
-        if (pointChanges % 2 != 0)
-        {
-            // Console.WriteLine($"{px},{py} : Contained");
-            containCache.Add((px, py), true);
-            return true;
-        }
-
-        // Console.WriteLine($"{px},{py} : Not contained");
-        containCache.Add((px, py), false);
-        return false;
-        while (x < maxX)
-        {
-            x++;
-
-            tile = grid.GetValueOrDefault((x, y), Tile.Other);
-            border = tile != Tile.Other;
-            // Console.WriteLine($"checkY {px},{py} | {x},{y}: {border}");
-            if (!prevBorder && border)
-            {
-                changes++;
-            }
-            prevBorder = border;
-        }
-
-        return (changes - pointChanges) % 2 != 0;
+        return tiles[py][px] == Tile.Red || tiles[py][px] == Tile.Green || tiles[py][px] == Tile.Unknown;
     }
 
     public override ValueTask<string> Solve_2()
@@ -359,12 +291,9 @@ public class Day09 : BaseDay
 
         FloodFill();
 
-        PrintGrid();
+        // PrintGrid();
 
-        long largest = 0;
-        // long largest = FindLargestContainedSquare();
-
-        // Console.WriteLine($"check max {PointIsContained(9,5)} {PointIsContained(2, 3)} {PointIsContained(9, 3)} {PointIsContained(9, 5)}");
+        long largest = FindLargestContainedSquare();
 
         // < 4653414735
         // < 4615010043
@@ -373,13 +302,15 @@ public class Day09 : BaseDay
 
     public void PrintGrid()
     {
-        for (int y = -2; y < 13; y++)
+        for (int y = 0; y < tiles.Length; y++)
         {
             StringBuilder chars = new();
-            for (int x = -2; x < 24; x++)
+            for (int x = 0; x < tiles[y].Length; x++)
             {
-                Tile tile = grid.GetValueOrDefault((x, y), Tile.Other);
-                switch (tile) {
+                switch (tiles[y][x]) {
+                    case Tile.Unknown:
+                        chars.Append('?');
+                        break;
                     case Tile.Other:
                         chars.Append('.');
                         break;
