@@ -155,6 +155,6 @@ public class Day07 : BaseDay
     {
         long sum = TraceTimelines(grid);
 
-        return new($"There are  {sum} timelines");
+        return new($"There are {sum} timelines");
     }
 }
