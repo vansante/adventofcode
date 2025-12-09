@@ -97,13 +97,15 @@ public class Day09 : BaseDay
             }
 
             xCoords.Add(c.x);
+            xCoords.Add(c.x + 1);
             yCoords.Add(c.y);
+            yCoords.Add(c.y + 1);
         }
 
         // Add some extra coordinates to keep an outer layer for our floodfill
-        List<int> sortedX = [.. xCoords, 0, maxX + 1];
+        List<int> sortedX = [.. xCoords, 0, maxX + 2];
         sortedX.Sort();
-        List<int> sortedY = [.. yCoords, 0, maxY + 1];
+        List<int> sortedY = [.. yCoords, 0, maxY + 2];
         sortedY.Sort();
 
         // Create mappings for our compressed coordinate system
@@ -238,19 +240,20 @@ public class Day09 : BaseDay
                     continue;
                 }
 
+                long area = a.Area(b);
+                if (area < largest)
+                {
+                    continue;
+                }
+
                 Coord mapA = GetMappedCoords(a);
                 Coord mapB = GetMappedCoords(b);
-
                 if (!RectangleContained(mapA, mapB))
                 {
                     continue;
                 }
 
-                long area = a.Area(b);
-                if (area > largest)
-                {
-                    largest = area;
-                }
+                largest = area;
             }
         }
         return largest;
@@ -278,11 +281,13 @@ public class Day09 : BaseDay
                 return false;
             }
         }
+
         return true;
     }
+
     public bool PointIsContained(int px, int py)
     {
-        return tiles[py][px] == Tile.Red || tiles[py][px] == Tile.Green || tiles[py][px] == Tile.Unknown;
+        return tiles[py][px] != Tile.Other;
     }
 
     public override ValueTask<string> Solve_2()
