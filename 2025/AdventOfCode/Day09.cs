@@ -35,6 +35,7 @@ public class Day09 : BaseDay
 
     public enum Tile
     {
+        Unknown,
         Other,
         Red,
         Green,
@@ -46,12 +47,26 @@ public class Day09 : BaseDay
 
     private readonly Dictionary<(int, int), Tile> grid = [];
 
+    private readonly int minX = int.MaxValue;
     private readonly int maxX = 0;
+
+    private readonly int minY = int.MaxValue;
+    private readonly int maxY = 0;
+
+    private readonly Dictionary<(int, int), bool?> containCache = [];
+
+    private readonly Tile[][] tiles;
 
     public Day09()
     {
         _input = File.ReadAllText(InputFilePath).Trim();
         string[] lines = _input.Split("\n");
+
+        tiles = new Tile[100_000][];
+        for (int i = 0; i < tiles.Length; i++)
+        {
+            tiles[i] = new Tile[100_000];
+        }
 
         for (int i = 0; i < lines.Length; i++)
         {
@@ -65,6 +80,18 @@ public class Day09 : BaseDay
             if (c.x > maxX)
             {
                 maxX = c.x;
+            }
+            if (c.x < minX)
+            {
+                minX = c.x;
+            }
+            if (c.y > maxY)
+            {
+                maxY = c.y;
+            }
+            if (c.y < minY)
+            {
+                minY = c.y;
             }
         }
     }
@@ -93,12 +120,14 @@ public class Day09 : BaseDay
 
     public void DrawBorderTiles()
     {
+        tiles[coords[0].x][coords[0].y] = Tile.Red;
         grid.Add((coords[0].x, coords[0].y), Tile.Red);
         for (int i = 0; i < coords.Count; i++)
         {
             Coord cur = coords[i];
             Coord nxt = coords[(i + 1) % coords.Count];
             grid.TryAdd((nxt.x, nxt.y), Tile.Red);
+            tiles[coords[0].x][coords[0].y] = Tile.Red;
 
             if (cur.x == nxt.x)
             {
@@ -107,6 +136,7 @@ public class Day09 : BaseDay
                 for (int y = yMin + 1; y < yMax; y++)
                 {
                     grid.Add((cur.x, y), Tile.Green);
+                    tiles[cur.x][y] = Tile.Green;
                 }
             } else if (cur.y == nxt.y)
             {
@@ -115,11 +145,57 @@ public class Day09 : BaseDay
                 for (int x = xMin + 1; x < xMax; x++)
                 {
                     grid.Add((x, cur.y), Tile.Green);
+                    tiles[x][cur.y] = Tile.Green;
                 }
             } else
             {
                 throw new Exception("not a valid sequential point");
             }
+        }
+    }
+
+    public void FloodFill()
+    {
+        Stack<(int, int)> stack = [];
+        stack.Push((minX - 1, minY - 1));
+
+        while (stack.Count > 0)
+        {
+            (int, int) c = stack.Pop();
+
+            if (c.Item1 < minX - 1 || c.Item1 > maxX + 1)
+            {
+                continue;
+            }
+
+            if (c.Item2 < minY - 1 || c.Item2 > maxY + 1)
+            {
+                continue;
+            }
+
+            if (tiles[c.Item1][c.Item2] != Tile.Unknown)
+            {
+                continue;
+            }
+
+            if (tiles[c.Item1 - 1][c.Item2] == Tile.Unknown)
+            {
+                stack.Push((c.Item1 - 1, c.Item2)); // west
+            }
+            if (tiles[c.Item1 + 1][c.Item2] == Tile.Unknown)
+            {
+                stack.Push((c.Item1 + 1, c.Item2)); // east
+            }
+            if (tiles[c.Item1][c.Item2 - 1] == Tile.Unknown)
+            {
+                stack.Push((c.Item1, c.Item2 - 1)); // north
+            }
+            if (tiles[c.Item1][c.Item2 + 1] == Tile.Unknown)
+            {
+                stack.Push((c.Item1, c.Item2 + 1)); // south
+            }
+
+            tiles[c.Item1][c.Item2] = Tile.Other;
         }
     }
 
@@ -133,12 +209,6 @@ public class Day09 : BaseDay
             {
                 if (a.Equals(b))
                 {
-                    continue;
-                }
-
-                if (!CornersContained(a, b))
-                {
-                    // Console.WriteLine($"Invalid square: {a.x},{a.y} / {b.x},{b.y}");
                     continue;
                 }
 
@@ -162,8 +232,14 @@ public class Day09 : BaseDay
                     continue;
                 }
 
+                if (!RectangleContained(a, b))
+                {
+                    // Console.WriteLine($"Invalid square: {a.x},{a.y} / {b.x},{b.y}");
+                    continue;
+                }
+
                 long area = a.Area(b);
-                Console.WriteLine($"Found square: {a.x},{a.y} / {b.x},{b.y} : {area}");
+                // Console.WriteLine($"Found square: {a.x},{a.y} / {b.x},{b.y} : {area}");
                 if (area > largest)
                 {
                     largest = area;
@@ -173,26 +249,57 @@ public class Day09 : BaseDay
         return largest;
     }
 
-    public bool CornersContained(Coord a, Coord b)
+    public bool RectangleContained(Coord a, Coord b)
     {
         int xMin = Math.Min(a.x, b.x);
         int xMax = Math.Max(a.x, b.x);
         int yMin = Math.Min(a.y, b.y);
         int yMax = Math.Max(a.y, b.y);
 
-        return PointIsContained(xMin, yMin)
+        bool cornersContained = PointIsContained(xMin, yMin)
             && PointIsContained(xMax, yMin)
             && PointIsContained(xMin, yMax)
             && PointIsContained(xMax, yMax)
         ;
-    }
 
+        if (!cornersContained)
+        {
+            return false;
+        }
+
+        int xLen = Math.Abs(xMax - xMin);
+        int yLen = Math.Abs(yMax - yMin);
+
+        for (int x = xMin; x < xMax; x++)
+        {
+            if (!PointIsContained(x, yMin) || !PointIsContained(x, yMax))
+            {
+                return false;
+            }
+        }
+
+        for (int y = yMin; y < yMax; y++)
+        {
+            if (!PointIsContained(xMin, y) || !PointIsContained(xMax, y))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     public bool PointIsContained(int px, int py)
     {
+        bool? cache = containCache.GetValueOrDefault((px, py), null);
+        if (cache != null)
+        {
+            return (bool) cache;
+        }
+
         // If we are on the line, then quickly return
         Tile tile = grid.GetValueOrDefault((px, py), Tile.Other);
         if (tile != Tile.Other)
         {
+            containCache.Add((px, py), true);
             return true;
         }
 
@@ -221,9 +328,14 @@ public class Day09 : BaseDay
         // Contained == odd number
         if (pointChanges % 2 != 0)
         {
+            // Console.WriteLine($"{px},{py} : Contained");
+            containCache.Add((px, py), true);
             return true;
         }
-return false;
+
+        // Console.WriteLine($"{px},{py} : Not contained");
+        containCache.Add((px, py), false);
+        return false;
         while (x < maxX)
         {
             x++;
@@ -245,22 +357,26 @@ return false;
     {
         DrawBorderTiles();
 
+        FloodFill();
+
         PrintGrid();
 
-        long largest = FindLargestContainedSquare();
+        long largest = 0;
+        // long largest = FindLargestContainedSquare();
 
-        Console.WriteLine($"check max {PointIsContained(9,5)} {PointIsContained(2, 3)} {PointIsContained(9, 3)} {PointIsContained(9, 5)}");
+        // Console.WriteLine($"check max {PointIsContained(9,5)} {PointIsContained(2, 3)} {PointIsContained(9, 3)} {PointIsContained(9, 5)}");
 
         // < 4653414735
+        // < 4615010043
         return new($"Largest contained area is {largest}");
     }
 
     public void PrintGrid()
     {
-        for (int y = 0; y < 10; y++)
+        for (int y = -2; y < 13; y++)
         {
             StringBuilder chars = new();
-            for (int x = 0; x < 20; x++)
+            for (int x = -2; x < 24; x++)
             {
                 Tile tile = grid.GetValueOrDefault((x, y), Tile.Other);
                 switch (tile) {
