@@ -149,67 +149,37 @@ public class Day10 : BaseDay
     {
         Lights outcome = m.lights;
         Lights state = outcome.AllOff();
-        Dictionary<(Lights,Button[]),int?> cache = [];
-        return (int) FindFewestButtonPresses(cache, outcome, state, [.. m.buttons]);
+
+        return FindFewestButtonPresses(outcome, state, [.. m.buttons]);
     }
 
-    public int? FindFewestButtonPresses(
-        Dictionary<(Lights,Button[]),int?> cache,
+    public int FindFewestButtonPresses(
         Lights outcome,
         Lights state,
         Button[] buttons
     ) {
-        if (cache.ContainsKey((state, buttons)))
-        {
-            Console.WriteLine("cache hit");
-            return cache[(state, buttons)];
-        }
-
-        List<int> least = [];
+        Queue<(Lights, Button, int)> queue = [];
         foreach (Button btn in buttons)
         {
-            Lights nwState = state.Push(btn);   
-            if (nwState.Equals(outcome))
-            {
-                return 1;
-            }
-
-            if (buttons.Length == 1)
-            {
-                return null;
-            }
-
-            Button[] nwButtons = new Button[buttons.Length - 1];
-            int i = 0;
-            foreach (Button b in buttons)
-            {
-                if (b == btn)
-                {
-                    continue;
-                }
-                nwButtons[i] = b;
-                i++;
-
-            }
-            int? presses = FindFewestButtonPresses(cache, outcome, nwState, nwButtons);
-            if (presses == null)
-            {
-                cache[(state, nwButtons)] = null;
-                continue;
-            }
-            cache[(state, nwButtons)] = presses + 1;
-            least.Add((int) presses + 1);
+            queue.Enqueue((state, btn, 1));
         }
 
-        if (least.Count == 0)
+        while(queue.Count > 0)
         {
-            cache[(state, buttons)] = null;
-            return null;
+            (Lights current, Button btn, int presses) = queue.Dequeue();
+            Lights newState = current.Push(btn);
+            if (newState.Equals(outcome))
+            {
+                return presses;
+            }
+
+            foreach (Button next in buttons)
+            {
+                queue.Enqueue((newState, next, presses + 1));
+            }
         }
 
-        least.Sort();
-        cache[(state, buttons)] = least[0];
-        return least[0];
+        return int.MaxValue;
     }
 
     public override ValueTask<string> Solve_1()
