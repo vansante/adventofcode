@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.Metrics;
+using System.Text;
 
 namespace AdventOfCode;
 
@@ -10,11 +11,11 @@ public class Day10 : BaseDay
         On = 1,
     }
 
-    public class Machine(Lights lights, List<Button> buttons, List<int> requirements)
+    public class Machine(Lights lights, List<Button> buttons, Counters counters)
     {
         public readonly Lights lights = lights;
         public readonly List<Button> buttons = buttons;
-        public readonly List<int> requirements = requirements;
+        public readonly Counters counters = counters;
     }
 
     public class Lights(LightState[] state)
@@ -67,6 +68,78 @@ public class Day10 : BaseDay
                 nw[toggle] = nw[toggle] == LightState.Off ? LightState.On : LightState.Off;
             }
             return new(nw);
+        }
+    }
+
+    public class Counters(int[] state)
+    {
+        public readonly int[] state = state;
+
+        public bool Equals(Counters other)
+        {
+            if (state.Length != other.state.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < state.Length; i++)
+            {
+                if (state[i] != other.state[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public override String ToString()
+        {
+            StringBuilder str = new();
+            str.Append('{');
+            foreach (int s in state)
+            {
+                str.Append(s);
+                str.Append(',');
+            }
+            str.Append('}');
+            return str.ToString();
+        }
+
+        public Counters AllOff()
+        {
+            return new(new int[state.Length]);
+        }
+
+        public Counters Push(Button btn)
+        {
+            int[] nw = new int[state.Length];
+            for (int i = 0; i < state.Length; i++)
+            {
+                nw[i] = state[i];
+            }
+            foreach (int toggle in btn.toggles)
+            {
+                nw[toggle]++;
+            }
+            return new(nw);
+        }
+
+        public bool Overcharged(Counters other)
+        {
+            if (state.Length != other.state.Length)
+            {
+                throw new Exception("invalid correct state");
+            }
+
+            for (int i = 0; i < state.Length; i++)
+            {
+                if (state[i] < other.state[i])
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 
@@ -134,26 +207,26 @@ public class Day10 : BaseDay
                 buttons.Add(new([.. toggles]));
             }
 
-            List<int> reqs = [];
+            List<int> counters = [];
             string reqStr = line[(reqStart + 1) .. reqEnd];
             foreach (string req in reqStr.Split(','))
             {
-                reqs.Add(int.Parse(req));
+                counters.Add(int.Parse(req));
             }
 
-            machines.Add(new(new([.. lights]), buttons, reqs));
+            machines.Add(new(new([.. lights]), buttons, new([.. counters])));
         }
     }
 
-    public int FindFewestButtonPresses(Machine m)
+    public int FindFewestLightButtonPresses(Machine m)
     {
         Lights outcome = m.lights;
         Lights state = outcome.AllOff();
 
-        return FindFewestButtonPresses(outcome, state, [.. m.buttons]);
+        return FindFewestLightButtonPresses(outcome, state, [.. m.buttons]);
     }
 
-    public int FindFewestButtonPresses(
+    public int FindFewestLightButtonPresses(
         Lights outcome,
         Lights state,
         Button[] buttons
@@ -187,17 +260,66 @@ public class Day10 : BaseDay
         long sum = 0;
         foreach (Machine m in machines)
         {
-            long presses = (long) FindFewestButtonPresses(m);
-            Console.WriteLine($"m {m.lights} > {presses}");
+            long presses = (long) FindFewestLightButtonPresses(m);
+            // Console.WriteLine($"m {m.lights} > {presses}");
             sum += (long) presses;
         }
 
         return new($"The sum of fewest button presses is {sum}");
     }
 
+    public int FindFewestJoltageButtonPresses(Machine m)
+    {
+        Counters outcome = m.counters;
+        Counters state = outcome.AllOff();
+
+        return FindFewestJoltageButtonPresses(outcome, state, [.. m.buttons]);
+    }
+
+    public int FindFewestJoltageButtonPresses(
+        Counters outcome,
+        Counters state,
+        Button[] buttons
+    ) {
+        Queue<(Counters, Button, int)> queue = [];
+        foreach (Button btn in buttons)
+        {
+            queue.Enqueue((state, btn, 1));
+        }
+
+        while(queue.Count > 0)
+        {
+            (Counters current, Button btn, int presses) = queue.Dequeue();
+            Counters newState = current.Push(btn);
+            if (newState.Equals(outcome))
+            {
+                return presses;
+            }
+
+            if (outcome.Overcharged(newState))
+            {
+                continue;
+            }
+
+            foreach (Button next in buttons)
+            {
+                queue.Enqueue((newState, next, presses + 1));
+            }
+        }
+
+        return int.MaxValue;
+    }
+
     public override ValueTask<string> Solve_2()
     {
-        long largest = 0;
-        return new($" {largest}");
+        long sum = 0;
+        foreach (Machine m in machines)
+        {
+            long presses = (long) FindFewestJoltageButtonPresses(m);
+            Console.WriteLine($"m {m.lights} > {presses}");
+            sum += (long) presses;
+        }
+
+        return new($"The sum of fewest button presses is {sum}");
     }
 }
