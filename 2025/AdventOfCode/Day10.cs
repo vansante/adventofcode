@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Metrics;
+﻿using Microsoft.Z3;
 using System.Text;
 
 namespace AdventOfCode;
@@ -268,46 +268,37 @@ public class Day10 : BaseDay
         return new($"The sum of fewest button presses is {sum}");
     }
 
-    public int FindFewestJoltageButtonPresses(Machine m)
+    public long FindFewestJoltageButtonPresses(Machine m)
     {
-        Counters outcome = m.counters;
-        Counters state = outcome.AllOff();
+        // use the boring Z3 solving strategy, I am no math wizard :'(
+        using var ctx = new Context();
+        using var opt = ctx.MkOptimize();
 
-        return FindFewestJoltageButtonPresses(outcome, state, [.. m.buttons]);
-    }
+        var presses = Enumerable.Range(0, m.buttons.Count)
+            .Select(i => ctx.MkIntConst($"p{i}"))
+            .ToArray()
+        ;
 
-    public int FindFewestJoltageButtonPresses(
-        Counters outcome,
-        Counters state,
-        Button[] buttons
-    ) {
-        Queue<(Counters, Button, int)> queue = [];
-        foreach (Button btn in buttons)
+        foreach (var press in presses)
         {
-            queue.Enqueue((state, btn, 1));
+            opt.Add(ctx.MkGe(press, ctx.MkInt(0)));
         }
 
-        while(queue.Count > 0)
+        for (int i = 0; i < m.counters.state.Length; i++)
         {
-            (Counters current, Button btn, int presses) = queue.Dequeue();
-            Counters newState = current.Push(btn);
-            if (newState.Equals(outcome))
+            var affecting = presses.Where((_, j) => m.buttons[j].toggles.Contains(i)).ToArray();
+            if (affecting.Length > 0)
             {
-                return presses;
-            }
-
-            if (outcome.Overcharged(newState))
-            {
-                continue;
-            }
-
-            foreach (Button next in buttons)
-            {
-                queue.Enqueue((newState, next, presses + 1));
+                var sum = affecting.Length == 1 ? affecting[0] : ctx.MkAdd(affecting);
+                opt.Add(ctx.MkEq(sum, ctx.MkInt(m.counters.state[i])));
             }
         }
 
-        return int.MaxValue;
+        opt.MkMinimize(presses.Length == 1 ? presses[0] : ctx.MkAdd(presses));
+        opt.Check();
+
+        var model = opt.Model;
+        return presses.Sum(p => ((IntNum)model.Evaluate(p, true)).Int64);
     }
 
     public override ValueTask<string> Solve_2()
