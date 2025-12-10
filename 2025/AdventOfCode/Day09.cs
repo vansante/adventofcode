@@ -19,19 +19,6 @@ public class Day09 : BaseDay
             return ( (long) Math.Abs( x - other.x) + 1) * ((long) Math.Abs(y - other.y) + 1);
         }
 
-        public bool AreaContains(Coord square, Coord point)
-        {
-            int xMin = Math.Min(x, square.x);
-            int xMax = Math.Max(x, square.x);
-            int yMin = Math.Min(y, square.y);
-            int yMax = Math.Max(y, square.y);
-
-            return (
-                point.x > xMin && point.x < xMax
-                && point.y > yMin && point.y < yMax
-            );
-        }
-
         public Coord North()
         {
             return new(x, y - 1);
