@@ -1,7 +1,4 @@
-﻿using Microsoft.Z3;
-using System.Text;
-
-namespace AdventOfCode;
+﻿namespace AdventOfCode;
 
 public class Day11 : BaseDay
 {
@@ -19,40 +16,34 @@ public class Day11 : BaseDay
         }
     }
 
-    Dictionary<string, Node> nodeMap = [];
+    private readonly Dictionary<string, Node> nodeMap = [];
     private readonly List<Node> nodes = [];
-
-    private readonly Node start, end;
 
     public Day11()
     {
         _input = File.ReadAllText(InputFilePath).Trim();
-        string[] lines = _input.Split("\n");
+        var lines = _input.Split("\n");
 
-        foreach (string line in lines)
+        foreach (var line in lines)
         {
-            string id = line.Split(':')[0];
+            var id = line.Split(':')[0];
 
             Node n = new(id);
-            if (id == "you")
-            {
-                start = n;
-            }
             nodeMap.Add(id, n);
             nodes.Add(n);
         }
-        end = new("out");
-        nodes.Add(end);
-        nodeMap.Add(end.id, end);
+        Node nOut = new("out");
+        nodes.Add(nOut);
+        nodeMap.Add(nOut.id, nOut);
 
-        foreach (string line in lines)
+        foreach (var line in lines)
         {
-            string[] parts = line.Split(':');
-            string id = parts[0];
-            string[] conns = parts[1].Trim().Split(' ');
+            var parts = line.Split(':');
+            var id = parts[0];
+            var conns = parts[1].Trim().Split(' ');
             
-            Node n = nodeMap[id] ?? throw new Exception("node not found");
-            foreach (string conn in conns)
+            var n = nodeMap[id] ?? throw new Exception("node not found");
+            foreach (var conn in conns)
             {
                 n.connections.Add(nodeMap[conn] ?? throw new Exception("connection node not found"));
             }
@@ -60,7 +51,7 @@ public class Day11 : BaseDay
     }
 
     // https://stackoverflow.com/a/59604254
-    public Dictionary<Node, HashSet<Node>> FindAllPredecessors(Node n)
+    public static Dictionary<Node, HashSet<Node>> FindAllPredecessors(Node n)
     {
         Dictionary<Node, HashSet<Node>> predecessors = [];
         Queue<Node> queue = [];
@@ -85,7 +76,7 @@ public class Day11 : BaseDay
         return predecessors;
     }
 
-    public List<List<Node>> FindAllPaths(Dictionary<Node, HashSet<Node>> predecessors, Node start, Node end)
+    public static List<List<Node>> FindAllPaths(Dictionary<Node, HashSet<Node>> predecessors, Node start, Node end)
     {
         List<List<Node>> paths = [];
         if (start == end)
@@ -101,7 +92,7 @@ public class Day11 : BaseDay
         }
 
         // Iterate over all parents
-        foreach (Node parent in parents)
+        foreach (var parent in parents)
         {
             // Recursively find all paths from startNode to the current parent
             var pathsFromParent = FindAllPaths(predecessors, start, parent);
@@ -124,15 +115,41 @@ public class Day11 : BaseDay
 
     public override ValueTask<string> Solve_1()
     {
-        var paths = FindAllPaths(FindAllPredecessors(start), start, end);
+        var paths = FindAllPaths(FindAllPredecessors(nodeMap["you"]), nodeMap["you"], nodeMap["out"]);
 
         return new($"Path count is {paths.Count}");
     }
 
+    public static long CountPaths(Node start, Node end)
+    {
+        return CountPaths([], start, end);
+    }
+
+    public static long CountPaths(Dictionary<Node, long> cache, Node start, Node end)
+    {
+        if (cache.TryGetValue(start, out var count))
+        {
+            return count;
+        }
+
+        if (start.connections.Contains(end))
+        {
+            return 1;
+        }
+
+        var sum = start.connections.Sum(n => CountPaths(cache, n, end));
+        cache[start] = sum;
+        return sum;
+    }
+
     public override ValueTask<string> Solve_2()
     {
-        long sum = 0;
+        var pathsFft = CountPaths(nodeMap["svr"], nodeMap["fft"]);
+        var pathsDac = CountPaths(nodeMap["fft"], nodeMap["dac"]);
+        var pathsOut = CountPaths(nodeMap["dac"], nodeMap["out"]);
 
-        return new($"{sum}");
+        var total = pathsFft * pathsDac * pathsOut;
+
+        return new($"Path count is {total}");
     }
 }
